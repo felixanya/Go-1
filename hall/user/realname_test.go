@@ -43,14 +43,17 @@ func Test_verifyName(t *testing.T) {
 }
 
 func Test_X(t *testing.T) {
-	x := map[string]interface{}{}
+	var x struct {
+		A int `json:"abc"`
+		B int `json:"def"`
+	}
 	s := `
 		{
-			"abc":0
+			"abc":1,"efg":2
 		}
 		`
 	assert.Nil(t, json.Unmarshal([]byte(s), &x))
-	assert.Equal(t, 0, int(x["abc"].(float64)))
+	assert.Equal(t, 1, x.A)
 
 }
 

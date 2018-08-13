@@ -15,12 +15,35 @@ import (
 	"steve/server_pb/gold"
 	"steve/structs/exchanger"
 	"steve/structs/proto/gate_rpc"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
+
+// updateAccountWxInfo 同步微信账号信息
+func updateAccountWxInfo(playerID uint64) {
+	entry := logrus.WithField("player_id", playerID)
+	dbPlayer, err := data.GetPlayerInfo(playerID, cache.AccountID)
+	if err != nil {
+		entry.WithError(err).Errorln("获取玩家信息失败")
+		return
+	}
+	wxAccountInfo, ok := getAccountWxInfo(uint64(dbPlayer.Accountid))
+	if !ok {
+		return
+	}
+	data.SetPlayerFields(playerID, []string{cache.NickName, cache.Gender, cache.Avatar}, &db.TPlayer{
+		Playerid: int64(playerID),
+		Nickname: wxAccountInfo.nickName,
+		Gender:   wxAccountInfo.gender,
+		Avatar:   wxAccountInfo.avatar,
+	})
+	data.RecordLastUpdateWxInfoTime(playerID)
+	entry.Debugln("同步玩家微信信息完成")
+}
 
 // HandleGetPlayerInfoReq 处理获取玩家个人资料请求
 func HandleGetPlayerInfoReq(playerID uint64, header *steve_proto_gaterpc.Header, req hall.HallGetPlayerInfoReq) (rspMsg []exchanger.ResponseMsg) {
@@ -35,6 +58,11 @@ func HandleGetPlayerInfoReq(playerID uint64, header *steve_proto_gaterpc.Header,
 			MsgID: uint32(msgid.MsgID_HALL_GET_PLAYER_INFO_RSP),
 			Body:  response,
 		},
+	}
+	// 超过 8 小时，同步微信信息
+	wxLastUpdateTime, err := data.GetLastUpdateWxInfoTime(playerID)
+	if err == nil && time.Now().Sub(wxLastUpdateTime) >= time.Hour*8 {
+		updateAccountWxInfo(playerID)
 	}
 
 	// 获取玩家基本个人资料

@@ -860,6 +860,30 @@ func AddPlayerTodayCharge(playerID uint64, charge uint64) error {
 	}, time.Hour*24)
 }
 
+// RecordLastUpdateWxInfoTime 设置上次更新微信信息的时间
+func RecordLastUpdateWxInfoTime(playerID uint64) error {
+	timeStr := time.Now().Format(time.UnixDate)
+	playerKey := cache.FmtPlayerWxInfoUpdateTimeKey(playerID)
+	return setRedisVal(playerRedisName, playerKey, timeStr, time.Hour*24)
+}
+
+// GetLastUpdateWxInfoTime 获取玩家上次同步微信信息的时间
+func GetLastUpdateWxInfoTime(playerID uint64) (time.Time, error) {
+	playerKey := cache.FmtPlayerWxInfoUpdateTimeKey(playerID)
+	timeStr, err := getRedisVal(playerRedisName, playerKey)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("读取 redis 数据失败：%s", err.Error())
+	}
+	if timeStr == "" {
+		return time.Time{}, nil
+	}
+	updateTime, err := time.Parse(time.UnixDate, timeStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("解析时间失败，time=%s, err=%s", timeStr, err.Error())
+	}
+	return updateTime, nil
+}
+
 func init() {
 	node := viper.GetInt("node")
 	var err error

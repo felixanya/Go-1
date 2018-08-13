@@ -315,24 +315,19 @@ func createPlayer(accID uint64) (uint64, error) {
 		return 0, fmt.Errorf("获取账号信息失败：%v", err)
 	}
 
-	channel, _ := accInfo["channel"].(float64)
-	province, _ := accInfo["province"].(float64)
-	city, _ := accInfo["city"].(float64)
-	phone, _ := accInfo["phone"].(string)
-
 	if err := data.InitPlayerData(db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(showUID),
 		Showuid:      showUID,
 		Type:         1,
-		Channelid:    int(channel),
-		Nickname:     generateNickName(playerID, accInfo),
-		Gender:       getGender(playerID, accInfo),
-		Avatar:       generateAvartaURL(playerID, accInfo),
-		Provinceid:   int(province),
-		Cityid:       int(city),
+		Channelid:    accInfo.Channel,
+		Nickname:     generateNickName(playerID, &accInfo),
+		Gender:       generateGender(playerID, &accInfo),
+		Avatar:       generateAvartaURL(playerID, &accInfo),
+		Provinceid:   accInfo.Province,
+		Cityid:       accInfo.City,
 		Name:         "",
-		Phone:        phone,
+		Phone:        accInfo.Phone,
 		Idcard:       "",
 		Iswhitelist:  0,
 		Zipcode:      0,
@@ -346,6 +341,7 @@ func createPlayer(accID uint64) (uint64, error) {
 	}); err != nil {
 		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
 	}
+	data.RecordLastUpdateWxInfoTime(playerID)
 	if err := data.InitPlayerCoin(db.TPlayerCurrency{
 		Playerid:       int64(playerID),
 		Coins:          100000,
