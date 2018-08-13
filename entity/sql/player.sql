@@ -159,10 +159,6 @@ CREATE TABLE `t_player_game` (
   `updateTime` datetime DEFAULT NULL COMMENT '更新时间',
   `updateBy` varchar(64) DEFAULT NULL COMMENT '更新人',
   PRIMARY KEY (`id`) USING BTREE
-<<<<<<< HEAD
-) ENGINE=InnoDB AUTO_INCREMENT=1072 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='玩家游戏汇总信息';
-
-=======
 ) ENGINE=InnoDB AUTO_INCREMENT=117513 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='玩家游戏信息表';
 
 -- ----------------------------
@@ -185,11 +181,26 @@ CREATE TABLE `t_player_mail` (
 -- Table structure for t_player_props
 -- ----------------------------
 DROP TABLE IF EXISTS `t_player_props`;
->>>>>>> c28007e298171ece81956fba9d95aeffc84db699
 CREATE TABLE `t_player_props` (
   `playerID` bigint(20) NOT NULL COMMENT '玩家ID',
   `propID` bigint(20) NOT NULL COMMENT '道具ID',
   `count` bigint(20) NOT NULL COMMENT '道具数量',
+  `createTime` datetime DEFAULT NULL COMMENT '创建时间',
+  `createBy` varchar(100) DEFAULT NULL COMMENT '创建人',
+  `updateTime` datetime DEFAULT NULL COMMENT '更新时间',
+  `updateBy` varchar(100) DEFAULT NULL COMMENT '更新人',
+  PRIMARY KEY (`playerID`,`propID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='玩家道具表';
+
+SET FOREIGN_KEY_CHECKS = 1;
+-- ----------------------------
+-- Table structure for t_player_packsack
+-- ----------------------------
+DROP TABLE IF EXISTS `t_player_packsack`;
+CREATE TABLE `t_player_packsack` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `playerID` bigint(20) NOT NULL COMMENT '玩家ID',
+  `packsackCoins` bigint(20) NOT NULL COMMENT '背包金币',
   `createTime` datetime DEFAULT NULL COMMENT '创建时间',
   `createBy` varchar(100) DEFAULT NULL COMMENT '创建人',
   `updateTime` datetime DEFAULT NULL COMMENT '更新时间',

@@ -140,6 +140,29 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
             }
     ]
     '
+)
+( 
+    'prop', 
+    'speedy',
+    '[
+            {
+                "propID": 1,
+                "name": "比赛卷",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-1,
+                "attrLimit":10000
+            },
+            {
+                "propID": 2,
+                "name": "兑换卷",
+                "attrType": 2,
+                "attrID":2,
+                "attrValue":-1,
+                "attrLimit":10000
+            },
+    ]
+    '
 );
 
 /*游戏配置*/ 

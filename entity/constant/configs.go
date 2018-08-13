@@ -10,8 +10,11 @@ type ConfigKey struct {
 // PropKey 道具配置主键
 var PropKey = "prop"
 
-// PropSubKey 道具配置子健
+// PropSubKey 道具配置子健 互动道具，表情道具，非便捷道具
 var PropSubKey = "interactive"
+
+// PropSubKeySpeedy 道具配置子健 便捷道具（比赛卷。。。）
+var PropSubKeySpeedy = "speedy"
 
 var (
 	// ChargeItemListKey 充值系统商品列表配置
@@ -20,6 +23,8 @@ var (
 	ChargeDayMaxKey = ConfigKey{Key: "charge", SubKey: "day_max"}
 	// PropInteractiveKey 互动道具PropSubKey 道具配置子健
 	PropInteractiveKey = ConfigKey{Key: PropKey, SubKey: PropSubKey}
+	// PropSpeedyKey 便捷道具PropSubKeySpeedy 道具配置子健
+	PropSpeedyKey = ConfigKey{Key: PropKey, SubKey: PropSubKeySpeedy}
 )
 
 // PropAttr 道具属性
