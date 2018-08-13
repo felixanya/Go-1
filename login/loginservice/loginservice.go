@@ -93,10 +93,11 @@ func (ls *LoginService) Login(ctx context.Context, request *login.LoginRequest) 
 
 	var accID uint64
 	if viper.GetBool("inner_auth") {
-		accID := request.GetAccountId()
+		accID = request.GetAccountId()
 		if accID == 0 {
 			accID = uint64(ls.idAllocNode.Generate())
 		}
+		entry.WithField("account_id", accID).Debugln("内部测试模式登录")
 	} else {
 		accID, err = ls.accountSysAuth(request)
 		if err != nil {
@@ -104,6 +105,7 @@ func (ls *LoginService) Login(ctx context.Context, request *login.LoginRequest) 
 			response.ErrCode = uint32(common.ErrCode_EC_FAIL)
 			return
 		}
+		entry.WithField("account_id", accID).Debugln("通过账号平台认证")
 	}
 	playerID, errCode := playerIDGetter(accID)
 	if errCode != int(common.ErrCode_EC_SUCCESS) {

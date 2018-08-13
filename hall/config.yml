@@ -46,3 +46,9 @@ node: 1
 
 # 实名认证奖励金豆数
 real_name_reward: 5000
+
+# 获取账号信息 url
+account_info_url: http://192.168.7.26:8086/mock/24/account/getByGuid
+
+# 账号系统中本产品 ID 
+product_id: 9999

@@ -308,20 +308,32 @@ func createPlayer(accID uint64) (uint64, error) {
 		return 0, fmt.Errorf("分配玩家 ID 失败")
 	}
 	showUID := data.AllocShowUID()
+
+	// 获取账号信息
+	accInfo, err := getAccountInfo(accID)
+	if err != nil {
+		return 0, fmt.Errorf("获取账号信息失败：%v", err)
+	}
+
+	channel, _ := accInfo["channel"].(float64)
+	province, _ := accInfo["province"].(float64)
+	city, _ := accInfo["city"].(float64)
+	phone, _ := accInfo["phone"].(string)
+
 	if err := data.InitPlayerData(db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(playerID),
 		Showuid:      showUID,
 		Type:         1,
-		Channelid:    0,                                // TODO ，渠道 ID
-		Nickname:     fmt.Sprintf("player%d", showUID), // TODO,昵称
-		Gender:       2,
-		Avatar:       getRandomAvator(), // TODO , 头像
-		Provinceid:   0,                 // TODO， 省ID
-		Cityid:       0,                 // TODO 市ID
-		Name:         "",                // TODO: 真实姓名
-		Phone:        "",                // TODO: 电话
-		Idcard:       "",                // TODO 身份证
+		Channelid:    int(channel),
+		Nickname:     generateNickName(playerID, accInfo),
+		Gender:       getGender(playerID, accInfo),
+		Avatar:       generateAvartaURL(playerID, accInfo),
+		Provinceid:   int(province),
+		Cityid:       int(city),
+		Name:         "",
+		Phone:        phone,
+		Idcard:       "",
 		Iswhitelist:  0,
 		Zipcode:      0,
 		Shippingaddr: "",

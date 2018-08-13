@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/Sirupsen/logrus"
@@ -39,6 +40,18 @@ func Test_verifyName(t *testing.T) {
 	assert.False(t, verifyName("玙/王"))
 	assert.False(t, verifyName("22王"))
 	assert.False(t, verifyName("ab王"))
+}
+
+func Test_X(t *testing.T) {
+	x := map[string]interface{}{}
+	s := `
+		{
+			"abc":0
+		}
+		`
+	assert.Nil(t, json.Unmarshal([]byte(s), &x))
+	assert.Equal(t, 0, int(x["abc"].(float64)))
+
 }
 
 func init() {
