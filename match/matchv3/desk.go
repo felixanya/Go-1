@@ -2,48 +2,12 @@ package matchv3
 
 import (
 	"fmt"
-	"net"
-	"strconv"
-	"strings"
+	"steve/external/hallclient"
+	"steve/server_pb/user"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 )
-
-// IPUInt32ToString 整形IP地址转为字符串型IP
-func IPUInt32ToString(intIP uint32) string {
-	var bytes [4]byte
-	bytes[0] = byte(intIP & 0xFF)
-	bytes[1] = byte((intIP >> 8) & 0xFF)
-	bytes[2] = byte((intIP >> 16) & 0xFF)
-	bytes[3] = byte((intIP >> 24) & 0xFF)
-
-	return net.IPv4(bytes[3], bytes[2], bytes[1], bytes[0]).String()
-}
-
-// IPStringToUInt32 字符串型IP转为uint32型
-func IPStringToUInt32(ipStr string) uint32 {
-	bits := strings.Split(ipStr, ".")
-
-	if len(bits) != 4 {
-		logrus.Errorln("IPStringToUInt32() 参数错误，ipStr = ", ipStr)
-		return 0
-	}
-
-	b0, _ := strconv.Atoi(bits[0])
-	b1, _ := strconv.Atoi(bits[1])
-	b2, _ := strconv.Atoi(bits[2])
-	b3, _ := strconv.Atoi(bits[3])
-
-	var sum uint32
-
-	sum += uint32(b0) << 24
-	sum += uint32(b1) << 16
-	sum += uint32(b2) << 8
-	sum += uint32(b3)
-
-	return sum
-}
 
 // deskPlayer 牌桌玩家
 type deskPlayer struct {
@@ -121,4 +85,54 @@ func createMatchDesk(deskID uint64, gameID uint32, levelID uint32, needPlayerCou
 		players:         make([]matchPlayer, 0, needPlayerCount),
 		createTime:      time.Now().Unix(),
 	}
+}
+
+// dealErrorDesk 处理出现错误的桌子
+// 把桌子内的所有玩家更改为空闲状态
+func dealErrorDesk(pDesk *matchDesk) bool {
+	if pDesk == nil {
+		logrus.Errorln("DealDeskError() 参数错误，pDesk == nil")
+		return false
+	}
+
+	logEntry := logrus.WithFields(logrus.Fields{
+		"pDesk": pDesk,
+	})
+
+	// 处理桌子内所有玩家
+	for i := 0; i < len(pDesk.players); i++ {
+		if !dealErrorPlayer(&pDesk.players[i]) {
+			logEntry.Errorf("处理错误桌子时，处理错误玩家失败，玩家ID:%v", pDesk.players[i].playerID)
+		}
+	}
+
+	return true
+}
+
+// dealErrorPlayer 处理出现错误的玩家
+func dealErrorPlayer(pPlayer *matchPlayer) bool {
+	if pPlayer == nil {
+		logrus.Errorln("dealErrorPlayer() 参数错误，pPlayer == nil")
+		return false
+	}
+
+	logEntry := logrus.WithFields(logrus.Fields{
+		"pPlayer": pPlayer,
+	})
+
+	// 设置为匹配状态，后面匹配过程中出错删除时再标记为空闲状态，匹配成功时不需处理(room服会标记为游戏状态)
+	bSuc, err := hallclient.UpdatePlayerState(pPlayer.playerID, user.PlayerState_PS_MATCHING, user.PlayerState_PS_IDIE, 0, 0)
+	if err != nil || !bSuc {
+		logEntry.WithError(err).Errorf("处理错误玩家时，通知hall服设置玩家状态为空闲状态时失败，玩家ID:%v", pPlayer.playerID)
+		return false
+	}
+
+	// 更新玩家所在match服务器的地址
+	bSuc, err = hallclient.UpdatePlayeServerAddr(pPlayer.playerID, user.ServerType_ST_MATCH, "")
+	if err != nil || !bSuc {
+		logEntry.WithError(err).Errorf("处理错误玩家时，通知hall服设置玩家的match服务器地址时失败，玩家ID:%v", pPlayer.playerID)
+		return false
+	}
+
+	return true
 }
