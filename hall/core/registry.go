@@ -30,5 +30,6 @@ func registerHandles(e exchanger.Exchanger) error {
 	panicRegister(msgid.MsgID_CHECK_AUTH_CODE_REQ, user.HandleCheckAuthCodeReq)
 	panicRegister(msgid.MsgID_GET_BIND_PHONE_REWARD_REQ, user.HandleGetBindphoneRewardInfoReq)
 	panicRegister(msgid.MsgID_BIND_PHONE_REQ, user.HandleBindPhoneReq)
+	panicRegister(msgid.MsgID_CHANGE_PHONE_REQ, user.HandleChangePhoneReq)
 	return nil
 }

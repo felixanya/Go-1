@@ -12,6 +12,10 @@ import (
 	"github.com/spf13/viper"
 )
 
+/*
+由于验证码发送和校验无法 mock， 所以此单元测试主要通过输出来查看逻辑是否正确
+*/
+
 func init() {
 	logrus.SetLevel(logrus.DebugLevel)
 	// 测试不加载配置
@@ -54,5 +58,23 @@ func TestHandleBindPhoneReq(t *testing.T) {
 		Phone:    proto.String("13512321231"),
 		DymcCode: proto.String("2252"),
 		Passwd:   proto.String("abcd"),
+	})
+}
+
+func TestHandleChangePhoneReq(t *testing.T) {
+	viper.SetDefault("change_phone_url", "http://192.168.7.26:8086/mock/24/account/resetPhone")
+	dbPlayerGetter = func(playerID uint64, fields ...string) (*db.TPlayer, error) {
+		fmt.Printf("获取玩家信息:playerID=%d, fields=%v\n", playerID, fields)
+		return &db.TPlayer{Accountid: 100, Phone: "13526785555"}, nil
+	}
+	dbPlayerSetter = func(playerID uint64, fields []string, dbPlayer *db.TPlayer) error {
+		fmt.Printf("设置玩家信息：playerID=%d, fields=%v, player=%#v\n", playerID, fields, dbPlayer)
+		return nil
+	}
+	HandleChangePhoneReq(1, nil, hall.ChangePhoneReq{
+		OldPhone:     proto.String("13526785555"),
+		NewPhone:     proto.String("13526785555"),
+		OldPhoneCode: proto.String("1234"),
+		NewPhoneCode: proto.String("1234"),
 	})
 }

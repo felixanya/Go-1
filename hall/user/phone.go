@@ -9,6 +9,7 @@ import (
 	"steve/client_pb/common"
 	"steve/client_pb/hall"
 	"steve/client_pb/msgid"
+	"steve/entity/db"
 	"steve/external/configclient"
 	"steve/external/goldclient"
 	"steve/hall/data"
@@ -68,6 +69,8 @@ func init() {
 	viper.SetDefault("check_code_url", "http://192.168.7.26:8086/mock/24/account/checkCode")
 	// 绑定手机 url
 	viper.SetDefault("bind_phone_url", "http://192.168.7.26:8086/mock/24/account/bindPhone")
+	// 修改手机 url
+	viper.SetDefault("change_phone_url", "http://192.168.7.26:8086/mock/24/account/resetPhone")
 }
 
 // normalHTTPResponse 常规 http 回复数据结构
@@ -178,6 +181,7 @@ func HandleCheckAuthCodeReq(playerID uint64, header *steve_proto_gaterpc.Header,
 	} else {
 		result.ErrDesc = proto.String(httpResponseData.Msg)
 	}
+	entry.WithField("response", result.String()).Debugln("验证码校验完成")
 	return
 }
 
@@ -266,5 +270,68 @@ func HandleBindPhoneReq(playerID uint64, header *steve_proto_gaterpc.Header, req
 	response.Reward.MoneyType = common.MoneyType(rewardCfg.MoneyType).Enum()
 	response.NewMoney.MoneyNum = proto.Uint64(uint64(newMoney))
 	response.NewMoney.MoneyType = common.MoneyType(rewardCfg.MoneyType).Enum()
+	entry.Debugln("手机绑定成功")
+	return
+}
+
+// HandleChangePhoneReq 处理修改手机号请求
+func HandleChangePhoneReq(playerID uint64, header *steve_proto_gaterpc.Header, req hall.ChangePhoneReq) (rspMsg []exchanger.ResponseMsg) {
+	response := hall.ChangePhoneRsp{
+		Result: &common.Result{
+			ErrCode: common.ErrCode_EC_FAIL.Enum(),
+			ErrDesc: proto.String("绑定失败"),
+		},
+	}
+	rspMsg = []exchanger.ResponseMsg{
+		exchanger.ResponseMsg{
+			MsgID: uint32(msgid.MsgID_BIND_PHONE_RSP),
+			Body:  &response,
+		},
+	}
+	entry := logrus.WithFields(logrus.Fields{"player_id": playerID, "request": req.String()})
+	dbPlayer, err := dbPlayerGetter(playerID, "phone", "accountID")
+	if err != nil {
+		entry.WithError(err).Errorln("获取玩家信息失败")
+		return
+	}
+	entry = entry.WithField("old_phone", dbPlayer.Phone)
+	if dbPlayer.Phone == "" {
+		entry.Debugln("已经绑定手机")
+		response.Result.ErrDesc = proto.String("还未绑定手机")
+		return
+	}
+	if dbPlayer.Phone == req.GetNewPhone() {
+		entry.Debugln("新旧手机号相同")
+		response.Result.ErrDesc = proto.String("新手机号与旧手机号不能相同")
+		return
+	}
+
+	httpResponse := normalHTTPResponse{}
+	err = requestJSONHTTP(viper.GetString("change_phone_url"), map[string]interface{}{
+		"product_id":     viper.GetInt("product_id"),
+		"old_phone_code": req.GetOldPhoneCode(),
+		"new_phone_code": req.GetNewPhoneCode(),
+		"send_case":      int(hall.AuthCodeSendScene_RESET_CELLPHONE),
+		"guid":           dbPlayer.Accountid,
+		"new_phone_num":  req.GetNewPhone(),
+	}, &httpResponse)
+	if err != nil {
+		entry.WithError(err).Errorln("HTTP 请求失败")
+		return
+	}
+
+	if httpResponse.Code != 0 {
+		entry.WithFields(logrus.Fields{"code": httpResponse.Code, "msg": httpResponse.Msg}).Infoln("修改手机失败")
+		response.Result.ErrDesc = proto.String(httpResponse.Msg)
+		return
+	}
+	response.Result.ErrCode = common.ErrCode_EC_SUCCESS.Enum()
+	response.Result.ErrDesc = proto.String("")
+
+	// 更新到数据库
+	if err := dbPlayerSetter(playerID, []string{"phone"}, &db.TPlayer{Phone: req.GetNewPhone()}); err != nil {
+		entry.WithError(err).Errorln("更新手机号到数据库失败")
+	}
+	entry.Debugln("手机更换成功")
 	return
 }
