@@ -17,6 +17,7 @@ func (gangSettle *GangSettle) Settle(params interfaces.GangSettleParams) *majong
 	logEntry := logrus.WithFields(logrus.Fields{
 		"func_name":      "GangSettle",
 		"settleOptionID": params.SettleOptionID,
+		"baseCoin":       params.BaseCoin,
 		"gangType":       params.GangType,
 		"gangPlayer":     params.GangPlayer,
 		"srcPlayer":      params.SrcPlayer,
@@ -31,7 +32,7 @@ func (gangSettle *GangSettle) Settle(params interfaces.GangSettleParams) *majong
 		return nil
 	}
 	// 底数
-	ante := GetDi()
+	ante := params.BaseCoin
 	// 杠倍数
 	gangValue := GetGangValue(settleOption, params.GangType)
 	// 总分 (杠倍数*底分)
