@@ -11,40 +11,8 @@ import (
 )
 
 const (
-	almsConfigKey = "alms_config_key" // 救济金配置redis key
 	almsPlayerKey = "almsPlayerID:%v" // 救济玩家对应已经领取的数量
-	// AlmsGetNorm 救济线
-	AlmsGetNorm = "getNorm"
-	// AlmsGetTimes 最多领取次数
-	AlmsGetTimes = "getTimes"
-	// AlmsGetNumber 领取数量
-	AlmsGetNumber = "getNumber"
-	// AlmsCountDonw   救济倒计时，时间是秒
-	AlmsCountDonw = "almsCountDown"
-	// DepositCountDonw 快充倒计时，时间是秒
-	DepositCountDonw = "depositCountDown"
-	// GameLeveConfigs 游戏场次配置
-	GameLeveConfigs = "gameLeveConfigs"
-	// AlmsVersion 救济金配置表版本号,初始1
-	AlmsVersion = "version"
-	// AlmsLowScores 下限金币
-	AlmsLowScores = "lowscores"
 )
-
-//AlmsConfig redis 救济金配置
-type AlmsConfig struct {
-	GameLeveConfigs  []*GameLeveConfig // 游戏场次是否开启救济金
-	PlayerGotTimes   int               // 玩家已领取数量
-	
-}
-
-//GameLeveConfig redis 游戏场次是否有救济金
-type GameLeveConfig struct {
-	GameID    int32 // 游戏ID
-	LevelID   int32 // 场次ID
-	LowScores int64 // 下限金币
-	IsOpen    int   // 是否为救济金场，0：关闭，1：开启
-}
 
 var redisClifunc = getAlmsRedis //获取redisClien
 var errRobotRedisGain = errors.New("robot_redis 获取失败")

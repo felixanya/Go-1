@@ -4,6 +4,7 @@ import (
 	"steve/alms/data"
 	client_alms "steve/client_pb/alms"
 	"steve/client_pb/msgid"
+	"steve/external/configclient"
 	"steve/external/goldclient"
 	"steve/server_pb/gold"
 	"steve/structs/exchanger"
@@ -29,6 +30,9 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 			Body:  response,
 		},
 	}
+
+	// 校验玩家背包是否有金豆 TODO，有返回false
+
 	gameID := int32(*req.GetGameId().Enum()) // 游戏ID
 	levelID := req.GetLevelId()              // 场次ID
 	almsGetType := req.GetAlmsApplyType()    // 救济金领取类型
@@ -50,7 +54,6 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 			AlmsGetNumber:    proto.Int64(ac.GetNumber),               // 领取数量
 			AlmsCountDonw:    proto.Int32(int32(ac.AlmsCountDonw)),    //救济倒计时
 			DepositCountDonw: proto.Int32(int32(ac.DepositCountDonw)), //救济倒计时
-			GameLeveIsOpen:   dataToClentPbGameLeveIsOpen(ac.GameLeveConfigs),
 		}
 		response.NewAlmsConfig = newAlmsConfig
 	}
@@ -83,48 +86,42 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 		entry.Errorf("救济金获取类型不存在 (%v) ", almsGetType)
 		response.Result = proto.Bool(false)
 		return
-	} // 选场和游戏结束时
+	}
+	// 选场和游戏结束下一局时,有下限，判断下限参数是否正确
 	if almsGetType == client_alms.AlmsApplyType_AAT_SELECTIONS || almsGetType == client_alms.AlmsApplyType_AAT_GAME_OVER {
-		//根据游戏ID和场ID，判断该场是否可以有救济金
-		flag := true
-		gameLevels := ac.GameLeveConfigs
-		for _, gameLevel := range gameLevels {
-			currGameID := gameLevel.GameID
-			currLevelID := gameLevel.LevelID
-			if gameID == currGameID && levelID == currLevelID {
-				currLowScores := gameLevel.LowScores
-				if totalGold == gameLevel.LowScores { // 所需金币与所选场的下限金币不同
-					flag = gameLevel.IsOpen == 0 // 是否时关闭的
+		gameLevelConfigs, err := configclient.GetGameLevelConfigMap()
+		if err != nil || len(gameLevelConfigs) == 0 {
+			entry.WithError(err).Debugln("游戏场次配置获取失败")
+			response.Result = proto.Bool(false)
+			return
+		}
+		for _, glc := range gameLevelConfigs {
+			if int32(glc.GameID) == gameID && int32(glc.LevelID) == levelID {
+				if int64(glc.LowScores) != totalGold {
+					entry.Errorf("needGold(%d) no eq lowScores(%d)", totalGold, glc.LowScores)
+					response.Result = proto.Bool(false)
+					return
 				}
-				entry.WithFields(logrus.Fields{
-					"currGameID":    currGameID,
-					"currLevelID":   currLevelID,
-					"currLowScores": currLowScores,
-					"flag":          flag,
-				}).Debugln("救济金的场次")
 				break
 			}
 		}
-		if flag {
-			response.Result = proto.Bool(false)
-			return
-		}
-		// 判断游戏和选场状态所需的金币是否足够
-		if totalGold > (playerGold + ac.GetNumber) {
-			entry.Errorf("救济金数量不够 totalGold(%v) playerGold(%v) GetNumber(%v) ", totalGold, playerGold, ac.GetNumber)
-			response.Result = proto.Bool(false)
-			return
-		}
 	}
-	//更改玩家金豆数，和领取数量，返回成功(改变的金豆数，和剩余领取数量)或失败
+	// 不是登录情况，有所需金币，如果救济金+身上金还是不足所需金币，应该是弹快冲
+	if almsGetType != client_alms.AlmsApplyType_AAT_LOGIN && totalGold > (playerGold+ac.GetNumber) {
+		entry.Errorf("所需金币不足 totalGold(%v) playerGold(%v) GetNumber(%v) ", totalGold, playerGold, ac.GetNumber)
+		response.Result = proto.Bool(false)
+		return
+	}
+	//验证通过，玩家领取次数加1
 	if err := data.UpdatePlayerGotTimesByPlayerID(playerID, ac.PlayerGotTimes+1); err != nil {
-		entry.WithError(err).Errorf(" playerID(%v) - 更改玩家金豆数失败", playerID)
+		entry.WithError(err).Errorf(" playerID(%d) times(%d)- 更改玩家救济金领取次数失败", playerID, ac.PlayerGotTimes)
 		response.Result = proto.Bool(false)
 		return
 	}
 	// 更改玩家身上的金币 TODO almsFuncID 渠道ID
 	almsFuncID := int32(10)
-	changeGold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), ac.GetNumber, almsFuncID, 0, gameID, levelID)
+	almschannl := int64(10)
+	changeGold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), ac.GetNumber, almsFuncID, almschannl, gameID, levelID)
 	if err != nil || changeGold != playerGold+ac.GetNumber {
 		entry.WithError(err).Errorf(" playerID(%v) - 设置玩家身上金币失败 changeGold(%v) , needGold(%v)", playerID, changeGold, playerGold+ac.GetNumber)
 		response.Result = proto.Bool(false)
@@ -132,10 +129,6 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	}
 	response.PlayerAlmsTimes = proto.Int32(int32(ac.PlayerGotTimes + 1))
 	response.ChangeGold = proto.Int64(changeGold)
-	entry.WithFields(logrus.Fields{
-		"playerID": playerID,
-		"oldGold":  playerGold,
-		"newGold":  changeGold,
-	}).Infoln("申请救济成功")
+	entry.WithFields(logrus.Fields{"playerID": playerID, "oldGold": playerGold, "newGold": changeGold}).Infoln("申请救济成功")
 	return
 }

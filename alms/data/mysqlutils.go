@@ -5,18 +5,14 @@ import (
 	"steve/entity/db"
 	"steve/structs"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/go-xorm/xorm"
 )
 
 const (
-	// MysqlConfigdbName 数据库名
-	MysqlConfigdbName = "config"
 	// MysqlPlayerdbName 数据库名
-	MysqlPlayerdbName        = "player"
-	hallInfoTableName        = "t_hall_info"         // 大厅信息表
-	almsConfigTableName      = "t_alms_config"       // 救济金配置表
-	playerTableName          = "t_player"            // 玩家表
-	gameLevelConfigTableName = "t_game_level_config" //游戏场次配置表
+	MysqlPlayerdbName = "player"
+	hallInfoTableName = "t_hall_info" // 大厅信息表
 )
 
 //MysqlEnginefunc 单元测试需要
@@ -50,7 +46,9 @@ func getMysqlPlayerGotTimesByPlayerID(playerID uint64) (int, error) {
 	if !exist { // 不存在插入新的
 		hi := &db.THallInfo{}
 		hi.Playerid = int64(playerID)
+		hi.Almsgottimes = 0
 		_, err := engine.Table(hallInfoTableName).Insert(hi)
+		logrus.WithError(err).Debugln("插入新的数据 t_hal playerID(%d)", playerID)
 		return 0, err
 	}
 	return almsGotTimes, nil
