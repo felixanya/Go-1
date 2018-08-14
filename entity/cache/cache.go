@@ -114,3 +114,10 @@ func FmtGameReportKey(gameId int, level int) string {
 func FmtPlayerWxInfoUpdateTimeKey(playerID uint64) string {
 	return fmt.Sprintf(playerWxInfoUpdateTimeKeyFmt, playerID)
 }
+func FmtGameReportKeyGame() string {
+	return fmt.Sprintf("gamereport:")
+}
+
+func FmtRedisLockKeyReport() string {
+	return "datareportlock"
+}
