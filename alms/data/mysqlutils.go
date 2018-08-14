@@ -48,7 +48,7 @@ func getMysqlPlayerGotTimesByPlayerID(playerID uint64) (int, error) {
 		hi.Playerid = int64(playerID)
 		hi.Almsgottimes = 0
 		_, err := engine.Table(hallInfoTableName).Insert(hi)
-		logrus.WithError(err).Debugln("插入新的数据 t_hal playerID(%d)", playerID)
+		logrus.WithError(err).Debugln("插入新的数据 t_hal playerID:", playerID)
 		return 0, err
 	}
 	return almsGotTimes, nil
