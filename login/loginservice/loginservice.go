@@ -201,6 +201,7 @@ func init() {
 	viper.SetDefault("auth_key", "some-secret-key")
 	viper.SetDefault("inner_auth", true) // 内部认证，不通过账号系统
 	viper.SetDefault("product_id", 9999)
+	viper.SetDefault("login_url", "http://192.168.7.26:8086/mock/24/account/regiserHall")
 
 	idAllocNode, err := gutils.NewNode(viper.GetInt64("node"))
 	if err != nil {
