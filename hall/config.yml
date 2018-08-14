@@ -50,5 +50,14 @@ real_name_reward: 5000
 # 获取账号信息 url
 account_info_url: http://192.168.7.26:8086/mock/24/account/getByGuid
 
+# 发送验证码 url 
+send_code_url: http://192.168.7.26:8086/mock/24/account/sendCode
+
+# 校验验证码 url 
+check_code_url: http://192.168.7.26:8086/mock/24/account/checkCode
+
+# 绑定手机 url
+bind_phone_url: http://192.168.7.26:8086/mock/24/account/bindPhone
+
 # 账号系统中本产品 ID 
 product_id: 9999

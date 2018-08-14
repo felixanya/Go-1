@@ -94,6 +94,16 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     }'
 );
 
+/*绑定手机奖励*/
+INSERT `t_common_config`(`key`, `subkey`, `value`) values (
+    'bindphone',
+    'reward',
+    '{
+    "type": 2,
+    "num": 5 
+    }'
+);
+
 INSERT INTO `t_common_config` (`id`, `key`, `subkey`, `value`)
 VALUES
   ('71', 'game', 'config', '[ 
