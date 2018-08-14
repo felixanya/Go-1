@@ -155,7 +155,7 @@ func HandleCheckAuthCodeReq(playerID uint64, header *steve_proto_gaterpc.Header,
 	}
 	rspMsg = []exchanger.ResponseMsg{
 		exchanger.ResponseMsg{
-			MsgID: uint32(msgid.MsgID_AUTH_CODE_RSP),
+			MsgID: uint32(msgid.MsgID_CHECK_AUTH_CODE_RSP),
 			Body:  &response,
 		},
 	}
@@ -196,7 +196,7 @@ func HandleGetBindphoneRewardInfoReq(playerID uint64, header *steve_proto_gaterp
 	}
 	rspMsg = []exchanger.ResponseMsg{
 		exchanger.ResponseMsg{
-			MsgID: uint32(msgid.MsgID_AUTH_CODE_RSP),
+			MsgID: uint32(msgid.MsgID_GET_BIND_PHONE_REWARD_RSP),
 			Body:  &response,
 		},
 	}
@@ -284,7 +284,7 @@ func HandleChangePhoneReq(playerID uint64, header *steve_proto_gaterpc.Header, r
 	}
 	rspMsg = []exchanger.ResponseMsg{
 		exchanger.ResponseMsg{
-			MsgID: uint32(msgid.MsgID_BIND_PHONE_RSP),
+			MsgID: uint32(msgid.MsgID_CHANGE_PHONE_RSP),
 			Body:  &response,
 		},
 	}
