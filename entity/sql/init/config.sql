@@ -89,7 +89,7 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
             },
             {
                 "item_id": 5,
-                "name": "金豆 1280000",
+                "name": "金豆 1280000", 
                 "tag": "特惠",
                 "price": 18800,
                 "coin": 1280000,
