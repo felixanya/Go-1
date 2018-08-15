@@ -19,6 +19,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	"github.com/spf13/viper"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
@@ -51,6 +52,8 @@ func HandleGetPlayerInfoReq(playerID uint64, header *steve_proto_gaterpc.Header,
 		} else {
 			response.RealnameStatus = proto.Uint32(0)
 		}
+		realNameReward := viper.GetInt("real_name_reward")
+		response.RealnameReward = proto.Uint64(uint64(realNameReward))
 	}
 
 	// 获取玩家货币信息
@@ -221,6 +224,11 @@ func HandleGetPlayerGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Hea
 	// 不存在直接返回
 	if !exist && playerID == uid {
 		response.ErrCode = proto.Uint32(0)
+		response.TotalBureau = proto.Uint32(uint32(0))
+		response.WinningRate = proto.Float32(float32(0))
+		response.MaxWinningStream = proto.Uint32(uint32(0))
+		response.MaxMultiple = proto.Uint32(uint32(0))
+		logrus.Debugf("Handle get player game info response : %v", response)
 		return
 	}
 
@@ -240,6 +248,8 @@ func HandleGetPlayerGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Hea
 	// 获取自己游戏信息直接返回
 	if playerID == uid {
 		response.ErrCode = proto.Uint32(0)
+		logrus.Debugf("Handle get player game info response : %v", response)
+
 		return
 	}
 

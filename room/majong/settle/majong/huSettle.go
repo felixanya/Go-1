@@ -19,6 +19,7 @@ func (huSettle *HuSettle) Settle(params interfaces.HuSettleParams) []*majongpb.S
 	logEntry := logrus.WithFields(logrus.Fields{
 		"func_name":      "HuSettle",
 		"settleOptionID": params.SettleOptionID,
+		"baseCoin":       params.BaseCoin,
 		"winnersID":      params.HuPlayers,
 		"settleType":     params.SettleType,
 		"huType":         params.HuType,
@@ -35,7 +36,7 @@ func (huSettle *HuSettle) Settle(params interfaces.HuSettleParams) []*majongpb.S
 	// 结算信息
 	settleInfos := make([]*majongpb.SettleInfo, 0)
 	// 底数
-	ante := GetDi()
+	ante := int64(params.BaseCoin)
 
 	if params.SettleType == majongpb.SettleType_settle_zimo {
 		huSettleInfo := new(majongpb.SettleInfo)
@@ -114,7 +115,7 @@ func (huSettle *HuSettle) newCallTransferSettleInfo(params *interfaces.HuSettleP
 	// 赢家人数
 	winSum := int64(len(params.HuPlayers))
 	// 底数
-	ante := GetDi()
+	ante := int64(params.BaseCoin)
 	// 杠的分数
 	gangScore := ante * int64(gangValue)
 	// 点炮者
@@ -160,12 +161,6 @@ func (huSettle *HuSettle) newCallTransferSettleInfo(params *interfaces.HuSettleP
 		}
 	}
 	return callTransferS
-}
-
-// GetDi 获取底注
-func GetDi() int64 {
-	//return r.Option.(*pb.Option_SiChuangXueLiu).Di
-	return 100
 }
 
 // newHuSettleInfo 生成胡结算信息

@@ -2,7 +2,10 @@
 配置数据库初始化脚本
 */
 
+
+
 /*商品表*/
+DELETE FROM `t_common_config` WHERE `key`="charge" AND `subkey`="item_list";
 INSERT `t_common_config`(`key`, `subkey`, `value`) values(
     'charge', 'item_list', 
     '{
@@ -10,36 +13,42 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 100",
+                "name": "金豆 40000",
                 "tag": "热卖",
                 "price": 600,
-                "coin": 100,
+                "coin": 40000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 1000",
+                "name": "金豆 80000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
-            }
-        ],
-        "city400200": [
-            {
-                "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 100,
+                "price": 1200,
+                "coin": 80000,
                 "present_coin": 0
             },
             {
-                "item_id": 2,
-                "name": "金豆 1000",
+                "item_id": 3,
+                "name": "金豆 200000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
+                "price": 3000,
+                "coin": 200000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 4,
+                "name": "金豆 680000",
+                "tag": "特惠",
+                "price": 9800,
+                "coin": 680000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 5,
+                "name": "金豆 1280000",
+                "tag": "特惠",
+                "price": 18800,
+                "coin": 1280000,
                 "present_coin": 0
             }
         ]
@@ -48,36 +57,42 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 100",
+                "name": "金豆 40000",
                 "tag": "热卖",
                 "price": 600,
-                "coin": 100,
+                "coin": 40000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 1000",
+                "name": "金豆 80000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
-            }
-        ],
-        "city400200": [
-            {
-                "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 100,
+                "price": 1200,
+                "coin": 80000,
                 "present_coin": 0
             },
             {
-                "item_id": 2,
-                "name": "金豆 1000",
+                "item_id": 3,
+                "name": "金豆 200000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
+                "price": 3000,
+                "coin": 200000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 4,
+                "name": "金豆 680000",
+                "tag": "特惠",
+                "price": 9800,
+                "coin": 680000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 5,
+                "name": "金豆 1280000", 
+                "tag": "特惠",
+                "price": 18800,
+                "coin": 1280000,
                 "present_coin": 0
             }
         ]
@@ -410,7 +425,197 @@ VALUES
 "tag":null,
 "isAlms":1,
 "remark":null
-}]'); 
+}]');
+
+
+INSERT INTO `t_common_config` (`key`, `subkey`, `value`)
+VALUES
+  ( 'horse', 'config', '[
+    {
+        "id": 1,
+        "prov": 1,
+        "city": 0,
+        "channel": 0,
+        "isOpen": 1,
+        "isUseParent": 1,
+        "tickTime": 5,
+        "sleepTime": 100,
+        "horse": [
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯1"
+            },
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯2"
+            },
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯3"
+            },
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯4"
+            },
+            {
+                "isOpen": 1,
+                "playType": 2,
+                "weekDate": [],
+                "beginDate": "2018-07-30",
+                "endDate": "2018-09-15",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "指定时间播放"
+            }
+        ],
+        "lastUpdateTime": "2018-08-07 12:08:22"
+    },
+    {
+        "id": 2,
+        "prov": 2,
+        "city": 0,
+        "channel": 0,
+        "isOpen": 1,
+        "isUseParent": 1,
+        "tickTime": 5,
+        "sleepTime": 105,
+        "horse": [
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯1"
+            },
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯2"
+            },
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯3"
+            },
+            {
+                "isOpen": 1,
+                "playType": 1,
+                "weekDate": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "beginDate": "",
+                "endDate": "",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "循环播放:跑马灯4"
+            },
+            {
+                "isOpen": 1,
+                "playType": 2,
+                "weekDate": [],
+                "beginDate": "2018-07-30",
+                "endDate": "2018-09-15",
+                "beginTime": "02:00",
+                "endTime": "22:00",
+                "content": "指定时间播放"
+            }
+        ],
+        "lastUpdateTime": "2018-08-07 12:08:22"
+    }
+]');
+
+
 
 /*游戏配置*/ 
 INSERT INTO `t_game_config` VALUES (1, 1, '血流麻将', 1, 4, 4, NULL, NULL, NULL, NULL, NULL, '2018-08-07 19:01:33', NULL, NULL, NULL);
@@ -418,12 +623,6 @@ INSERT INTO `t_game_config` VALUES (2, 2, '血战麻将', 1, 4, 4, NULL, NULL, N
 INSERT INTO `t_game_config` VALUES (3, 3, '斗地主', 2, 3, 3, NULL, NULL, NULL, NULL, NULL, '2018-08-07 20:36:58', NULL, NULL, NULL);
 INSERT INTO `t_game_config` VALUES (4, 4, '二人麻将', 1, 2, 2, NULL, NULL, NULL, NULL, NULL, '2018-08-07 20:37:11', NULL, NULL, NULL);
 
--- /*游戏配置*/
-INSERT INTO `t_game_config` VALUES (1, 1, '血流麻将', 1, 4, 4, NULL, NULL, NULL, NULL, NULL, '2018-08-07 19:01:33', NULL, NULL, NULL);
-INSERT INTO `t_game_config` VALUES (2, 2, '血战麻将', 1, 4, 4, NULL, NULL, NULL, NULL, NULL, '2018-08-07 19:03:29', NULL, NULL, NULL);
-INSERT INTO `t_game_config` VALUES (3, 3, '斗地主', 2, 3, 3, NULL, NULL, NULL, NULL, NULL, '2018-08-07 20:36:58', NULL, NULL, NULL);
-INSERT INTO `t_game_config` VALUES (4, 4, '二人麻将', 1, 2, 2, NULL, NULL, NULL, NULL, NULL, '2018-08-07 20:37:11', NULL, NULL, NULL);
---
 -- /*游戏场次配置*/
 INSERT INTO `t_game_level_config` VALUES (1, 1, 1, '新手场', 1, 1, 0, 1000000, 1, 1, 1, NULL, 1, NULL, '2018-08-08 18:17:31', NULL, NULL, NULL);
 INSERT INTO `t_game_level_config` VALUES (2, 2, 1, '新手场', 1, 1, 0, 1000000, 1, 1, 1, NULL, 1, NULL, '2018-08-08 18:17:31', NULL, NULL, NULL);

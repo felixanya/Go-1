@@ -73,6 +73,7 @@ func (s *GangSettleState) doGangSettle(flow interfaces.MajongFlow) {
 		GiveupPlayers:  utils.GetGiveupPlayers(mjContext),
 		GangType:       gangCard.GetType(),
 		SettleID:       mjContext.CurrentSettleId,
+		BaseCoin:       mjContext.BaseCoin,
 	}
 
 	settlerFactory := settle.SettlerFactory{}

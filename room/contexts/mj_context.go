@@ -31,7 +31,7 @@ var errPlayerNotExist = errors.New("玩家不存在")
 var errPlayerNeedXingPai = errors.New("玩家需要参与行牌")
 
 // CreateMajongContext 创建麻将现场
-func CreateMajongContext(players []uint64, gameID int, zhuang uint32, fixZhuang bool) (*MajongDeskContext, error) {
+func CreateMajongContext(players []uint64, gameID int, zhuang, baseCoin uint32, fixZhuang bool) (*MajongDeskContext, error) {
 	if !fixZhuang {
 		zhuang = 0
 	}
@@ -52,6 +52,7 @@ func CreateMajongContext(players []uint64, gameID int, zhuang uint32, fixZhuang 
 		MajongOption:   []byte{},
 		ZhuangIndex:    zhuang,
 		FixZhuangIndex: true,
+		BaseCoin:       baseCoin,
 	}
 	var mjContext server_pb.MajongContext
 	var err error
@@ -91,6 +92,7 @@ func initMajongContext(param server_pb.InitMajongContextParams) (mjContext serve
 	mjContext.Players = initPlayers(param.GetPlayers())
 	mjContext.ActivePlayer = param.GetPlayers()[param.GetZhuangIndex()]
 	mjContext.ZhuangjiaIndex = param.GetZhuangIndex()
+	mjContext.BaseCoin = param.BaseCoin
 	// mjContext.FixZhuangjiaIndex = param.GetFixZhuangIndex()
 
 	mjContext.Option = param.GetOption()

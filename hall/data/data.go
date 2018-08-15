@@ -337,15 +337,11 @@ func UpdatePlayerGateInfo(playerID uint64, idAddr, gateAddr string) (result bool
 		cache.GateAddr: gateAddr,
 	}
 
-	_, err = redisCli.Get(playerKey).Result()
-	if err != nil {
-		return false, fmt.Errorf("设置失败(%s)", err.Error())
-	}
-
 	status := redisCli.HMSet(playerKey, kv)
 	if status.Err() != nil {
 		return false, fmt.Errorf("设置失败(%s)", status.Err())
 	}
+	redisCli.Expire(playerKey, redisTimeOut)
 
 	enrty.WithError(err).Warningln("update_player_gateInfo finish")
 	return
@@ -377,14 +373,11 @@ func UpdatePlayerServerAddr(playerID uint64, serverType uint32, serverAddr strin
 	kv := map[string]interface{}{
 		serverField: serverAddr,
 	}
-	_, err = redisCli.Get(playerKey).Result()
-	if err != nil {
-		return false, fmt.Errorf("设置失败(%s)", err.Error())
-	}
 	status := redisCli.HMSet(playerKey, kv)
 	if status.Err() != nil {
 		return false, fmt.Errorf("设置失败(%s)", status.Err())
 	}
+	redisCli.Expire(playerKey, redisTimeOut)
 
 	enrty.WithError(err).Warningln("update_player_serveraddr finish")
 	return
@@ -400,17 +393,17 @@ func setPlayerStateByWatch(redisName string, key string, oldState uint32, fields
 	}
 
 	err = redisCli.Watch(func(tx *redis.Tx) error {
-		currentState, rerr := tx.HGet(key, cache.GameState).Result()
-		if rerr != nil {
-			err = fmt.Errorf("修改玩家游戏状态出错，key:(%s)不存在,err:(%s)", key, rerr.Error())
-			return err
-		}
-		stateInt, _ := strconv.Atoi(currentState)
+		// currentState, rerr := tx.HGet(key, cache.GameState).Result()
+		// if rerr != nil {
+		// 	err = fmt.Errorf("修改玩家游戏状态出错，key:(%s)不存在,err:(%s)", key, rerr.Error())
+		// 	return err
+		// }
+		// stateInt, _ := strconv.Atoi(currentState)
 
-		if uint32(stateInt) != oldState {
-			err = fmt.Errorf("修改玩家游戏状态出错，玩家当前状态不为：(%d)", oldState)
-			return err
-		}
+		// if uint32(stateInt) != oldState {
+		// 	err = fmt.Errorf("修改玩家游戏状态出错，玩家当前状态不为：(%d)", oldState)
+		// 	return err
+		// }
 
 		_, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
 			pipe.HMSet(key, list)

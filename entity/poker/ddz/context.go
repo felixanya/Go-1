@@ -110,8 +110,9 @@ type DDZContext struct {
 	CurState        StateID   `protobuf:"varint,2,opt,name=cur_state,json=curState,enum=ddz.StateID" json:"cur_state,omitempty"`
 	CurStage        DDZStage  `protobuf:"varint,3,opt,name=cur_stage,json=curStage,enum=ddz.DDZStage" json:"cur_stage,omitempty"`
 	Players         []*Player `protobuf:"bytes,4,rep,name=players" json:"players,omitempty"`
-	Dipai           []uint32  `protobuf:"varint,5,rep,packed,name=dipai" json:"dipai,omitempty"`
-	CurrentPlayerId uint64    `protobuf:"varint,6,opt,name=current_player_id,json=currentPlayerId" json:"current_player_id,omitempty"`
+	BaseScore       uint64
+	Dipai           []uint32 `protobuf:"varint,5,rep,packed,name=dipai" json:"dipai,omitempty"`
+	CurrentPlayerId uint64   `protobuf:"varint,6,opt,name=current_player_id,json=currentPlayerId" json:"current_player_id,omitempty"`
 	// 叫地主阶段
 	CallPlayerId      uint64 `protobuf:"varint,7,opt,name=call_player_id,json=callPlayerId" json:"call_player_id,omitempty"`
 	FirstGrabPlayerId uint64 `protobuf:"varint,8,opt,name=first_grab_player_id,json=firstGrabPlayerId" json:"first_grab_player_id,omitempty"`

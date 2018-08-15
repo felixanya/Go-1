@@ -1,17 +1,21 @@
 package matchv3
 
 import (
+	"fmt"
 	"steve/client_pb/common"
 	"steve/client_pb/match"
 	"steve/client_pb/msgid"
+	"steve/entity/constant"
 	"steve/external/hallclient"
 	server_pb_match "steve/server_pb/match"
 	"steve/server_pb/user"
+	"steve/structs"
 	"steve/structs/exchanger"
 	"steve/structs/proto/gate_rpc"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	nsq "github.com/nsqio/go-nsq"
 )
 
 // HandleMatchReq 匹配请求的处理(来自网关服)
@@ -102,7 +106,7 @@ func HandleMatchReq(playerID uint64, header *steve_proto_gaterpc.Header, req mat
 		response.ErrCode = proto.Int32(int32(common.ErrCode_EC_FAIL))
 		response.ErrDesc = &errString
 
-		logEntry.Errorf("内部错误，处理客户端的请求匹配失败，请求匹配的游戏ID:%v，场次ID:%v \n", reqGameID, reqLevelID)
+		logEntry.Errorf("处理客户端的请求匹配失败，请求匹配的游戏ID:%v，场次ID:%v \n", reqGameID, reqLevelID)
 		return
 	}
 
@@ -222,4 +226,72 @@ func AddContinueDesk(request *server_pb_match.AddContinueDeskReq) *server_pb_mat
 	//matchMgr.addContinueDesk(players, int(request.GetGameId()), request.GetFixBanker(), int(request.GetBankerSeat()))
 
 	return response
+}
+
+// ClearAllMatch 清空所有的匹配
+func ClearAllMatch(req *server_pb_match.ClearAllMatchReq) *server_pb_match.ClearAllMatchRsp {
+
+	logrus.Debugln("开始处理玩家清空所有匹配的请求")
+
+	rsp := &server_pb_match.ClearAllMatchRsp{}
+
+	matchMgr.ClearAllMatch()
+
+	return rsp
+}
+
+/////////////////////////////////////////////////////// 玩家登陆的处理 //////////////////////////////////////////////////////
+
+type playerLoginHandler struct {
+}
+
+func (plh *playerLoginHandler) HandleMessage(message *nsq.Message) error {
+
+	// 参数检测
+	if message == nil {
+		logrus.Errorf("match服处理玩家登陆,HandleMessage(),参数错误,message == nil")
+		return fmt.Errorf("match服处理玩家登陆,HandleMessage(),参数错误,message == nil")
+	}
+
+	loginMsg := user.PlayerLogin{}
+	if err := proto.Unmarshal(message.Body, &loginMsg); err != nil {
+		logrus.WithError(err).Errorln("处理玩家登陆时,消息反序列化失败")
+		return fmt.Errorf("处理玩家登陆时,消息反序列化失败：%v", err)
+	}
+
+	// 从hall服获取该玩家当前状态
+	rsp, err := hallclient.GetPlayerState(loginMsg.GetPlayerId())
+	if err != nil || rsp == nil {
+		logrus.WithError(err).Errorln("match服处理玩家登陆时,从hall服获取玩家状态出错")
+		return fmt.Errorf("match服处理玩家登陆时,从hall服获取玩家状态出错：%v", err)
+	}
+
+	curState := rsp.GetState()
+	curGameID := rsp.GetGameId()
+	curLevelID := rsp.GetLevelId()
+
+	// 只处理处于匹配中的,目前只需检测状态,以后分游戏了还需检测是本游戏,本场次的
+	if curState != user.PlayerState_PS_MATCHING {
+		return nil
+	}
+
+	// 操作:取消匹配
+
+	// 分发该游戏，该场次的匹配请求通道
+	errString := matchMgr.dispatchCancelMatchReq(loginMsg.GetPlayerId(), curGameID, curLevelID)
+
+	// 分发过程有错，回复客户端，且服务器自身报错
+	if errString != "" {
+		logrus.Errorln("match服处理玩家登陆时,分发至游戏通道时出错")
+		return fmt.Errorf("match服处理玩家登陆时,分发至游戏通道时出错")
+	}
+
+	return nil
+}
+
+func init() {
+	exposer := structs.GetGlobalExposer()
+	if err := exposer.Subscriber.Subscribe(constant.PlayerLogin, "match", &playerLoginHandler{}); err != nil {
+		logrus.WithError(err).Panicln("match服订阅玩家登录消息失败")
+	}
 }
