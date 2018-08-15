@@ -271,6 +271,9 @@ func GetPlayerState(playerID uint64, fields ...string) (pState *PlayerState, err
 
 	pState, err = getPlayerStateFromRedis(playerID, fields...)
 
+	if pState.State == uint64(user.PlayerState_PS_NIL) {
+		pState.State = uint64(user.PlayerState_PS_IDIE)
+	}
 	if err != nil {
 		enrty.WithError(err).Warningln("get player state from redis fail")
 		return pState, err
