@@ -281,7 +281,7 @@ func HandleGetPlayerGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Hea
 		userProperty := new(common.Property)
 		userProperty.PropId = proto.Int32(propConfig.PropID)
 		userProperty.PropName = proto.String(propConfig.PropName)
-		userProperty.PropType = common.PropType(propConfig.Type).Enum()
+		userProperty.PropType = common.PropType(propConfig.PropID).Enum()
 		userProperty.PropCost = proto.Int64(int64(math.Abs(float64(propConfig.Value))))
 		userProperty.PropCount = proto.Uint32(uint32(propCount[propConfig.PropID]))
 		response.UserProperty = append(response.UserProperty, userProperty)
