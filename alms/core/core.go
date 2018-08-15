@@ -5,6 +5,7 @@ package core
 
 */
 import (
+	"runtime"
 	"steve/alms/data"
 	"steve/structs"
 	"steve/structs/service"
@@ -21,6 +22,7 @@ func NewService() service.Service {
 }
 
 func (a *AlmsCore) Init(e *structs.Exposer, param ...string) error {
+	runtime.GOMAXPROCS(1) //单线程序
 	entry := logrus.WithField("name", "AlmsCore.Init")
 	// 注册客户端Client消息处理器
 	if err := registerHandles(e.Exchanger); err != nil {
