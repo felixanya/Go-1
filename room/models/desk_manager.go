@@ -105,7 +105,7 @@ func (mgr *DeskManager) CreateDesk(ctx context.Context, req *roommgr.CreateDeskR
 func createDeskContext(gameID int, players []uint64, zhuang int, baseCoin uint64, fixzhuang bool) (interface{}, error) {
 	switch gameID {
 	case GameId_GAMEID_DOUDIZHU:
-		return contexts.CreateInitDDZContext(players), nil
+		return contexts.CreateInitDDZContext(players, baseCoin), nil
 	default:
 		deskcontext, err := contexts.CreateMajongContext(players, gameID, uint32(zhuang), uint32(baseCoin), fixzhuang)
 		if err != nil {

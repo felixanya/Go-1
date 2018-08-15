@@ -14,7 +14,7 @@ type DDZDeskContext struct {
 }
 
 // CreateInitDDZContext 创建初始斗地主现场
-func CreateInitDDZContext(players []uint64) *DDZDeskContext {
+func CreateInitDDZContext(players []uint64, baseScore uint64) *DDZDeskContext {
 	return &DDZDeskContext{
 		DDZContext: ddz.DDZContext{
 			GameId:            int32(room.GameId_GAMEID_DOUDIZHU),
@@ -30,6 +30,7 @@ func CreateInitDDZContext(players []uint64) *DDZDeskContext {
 			TotalBomb:         1,
 			Spring:            true,
 			AntiSpring:        true,
+			BaseScore:         baseScore,
 		}}
 }
 
