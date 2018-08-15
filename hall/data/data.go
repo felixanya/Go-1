@@ -337,14 +337,6 @@ func UpdatePlayerGateInfo(playerID uint64, idAddr, gateAddr string) (result bool
 		cache.GateAddr: gateAddr,
 	}
 
-<<<<<<< HEAD
-	// _, err = redisCli.Get(playerKey).Result()
-	// if err != nil {
-	// 	return false, fmt.Errorf("设置失败(%s)", err.Error())
-	// }
-
-=======
->>>>>>> develop
 	status := redisCli.HMSet(playerKey, kv)
 	if status.Err() != nil {
 		return false, fmt.Errorf("设置失败(%s)", status.Err())

@@ -43,13 +43,18 @@ var loadBindPhoneRewardConfig = func(maxRetry int) {
 		logrus.WithError(err).Errorln("配置获取失败")
 		return
 	}
+	parseBindPhoneRewardConfig(cfg)
+}
+
+// 解析绑定手机奖励配置
+func parseBindPhoneRewardConfig(cfg string) {
 	var rewardConfig bindPhoneRewardConfig
 	if err := json.Unmarshal([]byte(cfg), &rewardConfig); err != nil {
 		logrus.WithError(err).Errorln("反序列化配置失败")
 		return
 	}
 	defaultBindPhoneRewardConfig = &rewardConfig
-	logrus.Infof("加载手机绑定奖励配置成功:%#v", rewardConfig)
+	logrus.Infof("绑定手机配置解析成功:%#v", rewardConfig)
 }
 
 var loadBindPhoneRewardConfigOnce = sync.Once{}
@@ -71,6 +76,12 @@ func init() {
 	viper.SetDefault("bind_phone_url", "http://192.168.7.26:8086/mock/24/account/bindPhone")
 	// 修改手机 url
 	viper.SetDefault("change_phone_url", "http://192.168.7.26:8086/mock/24/account/resetPhone")
+
+	// 绑定手机配置修改订阅
+	configclient.SubConfigChange("bindphone", "reward", func(key, subkey, val string) error {
+		parseBindPhoneRewardConfig(val)
+		return nil
+	})
 }
 
 // normalHTTPResponse 常规 http 回复数据结构
