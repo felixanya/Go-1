@@ -262,6 +262,7 @@ func createDDZPlayerExpectors(client interfaces.Client) map[msgid.MsgID]interfac
 		//msgid.MsgID_ROOM_DDZ_RESUME_RSP,    // 斗地主 回复对局响应
 		msgid.MsgID_HALL_GET_PLAYER_GAME_INFO_RSP,
 		msgid.MsgID_ROOM_USE_PROP_NTF,
+		msgid.MsgID_ROOM_USE_PROP_RSP,
 	}
 
 	result := map[msgid.MsgID]interfaces.MessageExpector{}
