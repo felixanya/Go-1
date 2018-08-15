@@ -34,6 +34,7 @@ func init() {
 			for _,key := range keys.Val() {
 				val:= strings.Split(strings.Split(key,":")[1],"-")
 				redisVal := cli.Get(key).Val()
+				cli.Del(key)
 				gameId := val[0]
 				level := val[1]
 				count := redisVal
