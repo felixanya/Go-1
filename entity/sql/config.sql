@@ -18,25 +18,6 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for t_alms_config
--- ----------------------------
-DROP TABLE IF EXISTS `t_alms_config`;
-CREATE TABLE `t_alms_config` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `almsCountDonw` int(11) DEFAULT NULL COMMENT '救济倒计时，时间是秒',
-  `depositCountDonw` int(11) DEFAULT NULL COMMENT '快充倒计时，时间是秒',
-  `getNorm` int(11) DEFAULT NULL COMMENT '救济线',
-  `getTimes` int(11) DEFAULT NULL COMMENT '救济领取次数',
-  `getNumber` int(11) DEFAULT NULL COMMENT '领取数量',
-  `version` int(11) DEFAULT NULL COMMENT '配置版本号，每次改变增加1,初始1',
-  `createTime` datetime DEFAULT NULL,
-  `createBy` varchar(64) DEFAULT NULL,
-  `updateTime` datetime DEFAULT NULL,
-  `updateBy` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='救济金场配置表';
-
--- ----------------------------
 -- Table structure for t_common_config
 -- ----------------------------
 DROP TABLE IF EXISTS `t_common_config`;
