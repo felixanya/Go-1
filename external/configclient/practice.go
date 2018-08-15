@@ -14,6 +14,26 @@ func ParseToGameLevelConfigMap(jsonStr string) (conf []entityConf.GameLevelConfi
 	return
 }
 
+
+//获取角色初始配置
+func GetRoleInitConfigMap() (roleConf []entityConf.RoleInitConfig, err error) {
+	roleConfStr, err := GetConfig("role", "init")
+	if err != nil {
+		logrus.WithError(err).Errorln("获取角色初始属性配置失败")
+		return nil, err
+	}
+	if err := json.Unmarshal([]byte(roleConfStr), &roleConf); err != nil {
+		logrus.WithError(err).Errorf("游戏级别配置数据反序列化失败：%s", err.Error())
+		return nil, err
+	}
+
+
+	for _,config := range roleConf{
+		config.InitItem()
+	}
+	return
+}
+
 //获取救济金配置
 func GetAlmsConfigMap() (conf []entityConf.AlmsConfig, err error) {
 	almsStr, err := GetConfig("game", "alms")
