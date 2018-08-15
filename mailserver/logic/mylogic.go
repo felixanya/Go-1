@@ -125,6 +125,7 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 	list := provSendList[prov]
 	for _, mail := range list {
 
+
 		// 检测是否符合省包和渠道ID
 		isOk := checkMailProvChannel(uid,mail, channel, prov)
 		if !isOk {
@@ -141,6 +142,10 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 
 		} else {
 			isRead = 1
+		}
+		// 已经删除的，不返回
+		if one != nil && one.IsDel {
+			continue
 		}
 		title.IsRead = &isRead
 
@@ -198,13 +203,15 @@ func GetMailDetail(uid uint64, mailId uint64) (*mailserver.MailDetail, error) {
 		newGoods.GoodsType = &t
 		newGoods.GoodsId = &ach.GoodsId
 		newGoods.GoodsNum = &ach.GoodsNum
+
+		detail.AttachGoods = append(detail.AttachGoods, newGoods)
 	}
 
 	isRead := int32(0)
 	detail.IsRead = &isRead
 
 	isHaveAttach := int32(0)
-	if len(mail.Attach) > 0 {
+	if len(mail.AttachGoods) > 0 {
 		isHaveAttach = 1
 	}
 	if one != nil && one.IsGetAttach {
