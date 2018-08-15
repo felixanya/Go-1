@@ -1109,7 +1109,7 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 
 	// 该游戏不存在
 	if !exist {
-		logrus.Errorln("请求匹配的游戏不存在")
+		logEntry.Errorln("请求匹配的游戏不存在")
 		return fmt.Sprintf("请求匹配的游戏ID:%v不存在，请求的玩家ID:%v", gameID, playerID)
 	}
 
@@ -1118,32 +1118,32 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 
 	// 该场次不存在
 	if !exist {
-		logrus.Errorln("请求匹配的游戏存在，但场次不存在")
+		logEntry.Errorln("请求匹配的游戏存在，但场次不存在")
 		return fmt.Sprintf("请求匹配的游戏ID:%v存在，但场次ID:%v不存在，请求的玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	// 获取玩家金币数
 	playerGold, err := goldclient.GetGold(playerID, int16(gold.GoldType_GOLD_COIN))
 	if err != nil {
-		logrus.WithError(err).Errorln("从gold服获取玩家金币失败")
+		logEntry.WithError(err).Errorln("从gold服获取玩家金币失败")
 		return fmt.Sprintf("从gold服获取玩家金币失败，游戏ID:%v，场次ID:%v，请求的玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	// 金币范围检测
 	if playerGold < levelConfig.minGold {
-		logrus.Errorf("玩家金币数小于游戏场次金币要求最小值，要求最小值：%v，玩家金币:%v", levelConfig.minGold, playerGold)
+		logEntry.Errorf("玩家金币数小于游戏场次金币要求最小值，要求最小值：%v，玩家金币:%v", levelConfig.minGold, playerGold)
 		return fmt.Sprintf("玩家金币数小于游戏场次金币要求最小值，请求匹配的游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	if playerGold > levelConfig.maxGold {
-		logrus.Errorf("玩家金币数大于游戏场次金币要求最大值，要求最大值：%v，玩家金币:%v", levelConfig.maxGold, playerGold)
+		logEntry.Errorf("玩家金币数大于游戏场次金币要求最大值，要求最大值：%v，玩家金币:%v", levelConfig.maxGold, playerGold)
 		return fmt.Sprintf("玩家金币数大于游戏场次金币要求最大值，请求匹配的游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	// 获取该玩家的游戏信息
 	playerGameInfo, err := hallclient.GetPlayerGameInfo(playerID, gameID)
 	if err != nil || playerGameInfo == nil {
-		logrus.WithError(err).Errorln("从hall服获取玩家游戏信息失败")
+		logEntry.WithError(err).Errorln("从hall服获取玩家游戏信息失败")
 		return fmt.Sprintf("从hall服获取玩家游戏信息失败，游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 	logEntry.Debugln("从hall服获取的玩家游戏信息：", playerGameInfo)
@@ -1162,7 +1162,7 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 	// 最终需在[0-100]内
 	if playerWinRate < 0 || playerWinRate > 100 {
 		playerWinRate = web.GetDefaultWinRate()
-		logrus.Errorln("从hall服获取玩家游戏信息后，计算胜率不在0-100内，已设置为默认胜率进行匹配")
+		logEntry.Errorln("从hall服获取玩家游戏信息后，计算胜率不在0-100内，已设置为默认胜率进行匹配")
 	}
 
 	// 全部检测通过
@@ -1170,7 +1170,7 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 	// 获取该场次的申请通道
 	reqMatchChan, exist := gameInfo.allLevelChan[levelID]
 	if !exist {
-		logrus.Errorln("内部错误，请求匹配的游戏存在，场次存在，但找不到该场次的匹配申请通道")
+		logEntry.Errorln("内部错误，请求匹配的游戏存在，场次存在，但找不到该场次的匹配申请通道")
 		return fmt.Sprintf("请求匹配的游戏存在，场次存在，但找不到该场次的匹配申请通道，请求匹配的游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 
