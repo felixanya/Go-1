@@ -23,7 +23,7 @@ func init() {
 
 // TestHandleChangePasswordReq 修改密码测试
 func TestHandleChangePasswordReq(t *testing.T) {
-	viper.SetDefault("change_password_url", "http://192.168.7.26:8086/mock/24/account/checkPwd")
+	viper.SetDefault("change_password_url", "http://192.168.7.26:18101/account/checkPwd")
 	dbPlayerGetter = func(playerID uint64, fields ...string) (*db.TPlayer, error) {
 		fmt.Printf("获取玩家信息:playerID=%d, fields=%v\n", playerID, fields)
 		return &db.TPlayer{Accountid: 100}, nil
@@ -35,7 +35,7 @@ func TestHandleChangePasswordReq(t *testing.T) {
 
 // 重置密码测试
 func TestHandleResetPasswordReq(t *testing.T) {
-	viper.SetDefault("reset_password_url", "http://192.168.7.26:8086/mock/24/account/checkPwd")
+	viper.SetDefault("reset_password_url", "http://192.168.7.26:18101/account/checkPwd")
 	dbPlayerGetter = func(playerID uint64, fields ...string) (*db.TPlayer, error) {
 		fmt.Printf("获取玩家信息:playerID=%d, fields=%v\n", playerID, fields)
 		return &db.TPlayer{Accountid: 100}, nil
@@ -49,7 +49,7 @@ func TestHandleResetPasswordReq(t *testing.T) {
 
 // 校验密码测试
 func TestHandleCheckPasswordReq(t *testing.T) {
-	viper.SetDefault("check_password_url", "http://192.168.7.26:8086/mock/24/account/checkPwd")
+	viper.SetDefault("check_password_url", "http://192.168.7.26:18101/account/checkPwd")
 	dbPlayerGetter = func(playerID uint64, fields ...string) (*db.TPlayer, error) {
 		fmt.Printf("获取玩家信息:playerID=%d, fields=%v\n", playerID, fields)
 		return &db.TPlayer{Accountid: 100}, nil

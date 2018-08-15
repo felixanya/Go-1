@@ -18,11 +18,11 @@ import (
 
 func init() {
 	// 修改密码 url
-	viper.SetDefault("change_password_url", "http://192.168.7.26:8086/mock/24/account/resetPwd")
+	viper.SetDefault("change_password_url", "http://192.168.7.26:18101/account/resetPwd")
 	// 重置密码 url
-	viper.SetDefault("reset_password_url", "http://192.168.7.26:8086/mock/24/account/resetPwd")
+	viper.SetDefault("reset_password_url", "http://192.168.7.26:18101/account/resetPwd")
 	// 校验密码 url
-	viper.SetDefault("check_password_url", "http://192.168.7.26:8086/mock/24/account/checkPwd")
+	viper.SetDefault("check_password_url", "http://192.168.7.26:18101/account/checkPwd")
 }
 
 // HandleChangePasswordReq 处理修改密码请求

@@ -32,10 +32,10 @@ redis_list:
 node: 1
 
 # 内部认证，不通过账号系统
-inner_auth: true  
+inner_auth: false  
 
 # 账号系统登录 url 
-login_url: http://192.168.7.26:8086/mock/24/account/regiserHall
+login_url: http://192.168.7.26:18101/account/registerHall
 
 # 产品 ID 
 product_id: 9999

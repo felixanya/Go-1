@@ -41,10 +41,7 @@ func Test_AnotherLogin(t *testing.T) {
 	assert.NotNil(t, player)
 	player.AddExpectors(msgid.MsgID_GATE_ANOTHER_LOGIN_NTF)
 
-	accountID := player.GetAccountID()
-	accountName := utils.GenerateAccountName(accountID)
-
-	newPlayer, err := utils.LoginPlayer(accountID, accountName)
+	newPlayer, err := utils.LoginPlayerByToken(player.GetID(), player.GetToken())
 	assert.Nil(t, err)
 	assert.NotNil(t, newPlayer)
 

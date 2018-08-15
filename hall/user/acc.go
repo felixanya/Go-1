@@ -13,7 +13,7 @@ import (
 
 func init() {
 	// 账号信息获取 url 默认值
-	viper.SetDefault("account_info_url", "http://192.168.7.26:8086/mock/24/account/getByGuid")
+	viper.SetDefault("account_info_url", "http://192.168.7.26:18101/account/getByGuid")
 
 	// 账号系统本产品 ID 默认值
 	viper.SetDefault("prodcut_id", 9999)
@@ -32,14 +32,14 @@ type accountInfo struct {
 	Image           string `json:"image"`            // 头像
 	Sex             int    `json:"sex"`              //	性别，1男 2女
 	Country         string `json:"country"`          // 国家
-	Province        int    `json:"province"`         // 省 ID
-	City            int    `json:"city"`             // 市 ID
+	Province        string `json:"province"`         // 省 ID
+	City            string `json:"city"`             // 市 ID
 	Channel         int    `json:"channel"`          // 渠道 ID
 	Phone           string `json:"phone"`            // 电话
 	ExtInfo         string `json:"ext_info"`         // 扩展信息(json格式)
 	ThirdType       int    `json:"third_type"`       // 第三方账号类型， 0无 1微信
 	ThirdInfo       string `json:"third_info"`       // 第三方账号用户扩展信息(json格式)
-	RegisterProduct string `json:"register_product"` // 产品id，标识用户在哪个产品注册的
+	RegisterProduct int    `json:"register_product"` // 产品id，标识用户在哪个产品注册的
 	RegisterTime    string `json:"register_time"`    // 注册时间
 }
 
@@ -70,6 +70,7 @@ func getAccountInfo(accID uint64) (accountInfo, error) {
 	// 解析回复数据
 	var getAccountInfoRsp getAccountInfoRsp
 	if err := json.Unmarshal(respData, &getAccountInfoRsp); err != nil {
+		println("账号数据反序列化失败:", string(respData))
 		return accountInfo, fmt.Errorf("反序列化回复数据失败: %v", err)
 	}
 	// 错误码

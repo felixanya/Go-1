@@ -24,7 +24,7 @@ func init() {
 }
 
 func TestHandleSendAuthCodeReq(t *testing.T) {
-	viper.SetDefault("send_code_url", "http://192.168.7.26:8086/mock/24/account/sendCode")
+	viper.SetDefault("send_code_url", "http://192.168.7.26:18101/account/sendCode")
 	fmt.Printf("%#v", HandleSendAuthCodeReq(1, nil, hall.AuthCodeReq{
 		CellphoneNum: proto.Uint64(13521653125),
 		SendCase:     hall.AuthCodeSendScene_BIND_PHONE.Enum(),
@@ -32,7 +32,7 @@ func TestHandleSendAuthCodeReq(t *testing.T) {
 }
 
 func TestCheckAuthCodeReq(t *testing.T) {
-	viper.SetDefault("check_code_url", "http://192.168.7.26:8086/mock/24/account/checkCode")
+	viper.SetDefault("check_code_url", "http://192.168.7.26:18101/account/checkCode")
 	HandleCheckAuthCodeReq(1, nil, hall.CheckAuthCodeReq{
 		SendCase: hall.AuthCodeSendScene_BIND_WECHAT.Enum(),
 		Code:     proto.String("2125"),
@@ -41,7 +41,7 @@ func TestCheckAuthCodeReq(t *testing.T) {
 }
 
 func TestHandleBindPhoneReq(t *testing.T) {
-	viper.SetDefault("bind_phone_url", "http://192.168.7.26:8086/mock/24/account/bindPhone")
+	viper.SetDefault("bind_phone_url", "http://192.168.7.26:18101/account/bindPhone")
 	dbPlayerGetter = func(playerID uint64, fields ...string) (*db.TPlayer, error) {
 		fmt.Printf("获取玩家信息:playerID=%d, fields=%v\n", playerID, fields)
 		return &db.TPlayer{Accountid: 100, Phone: ""}, nil
@@ -62,7 +62,7 @@ func TestHandleBindPhoneReq(t *testing.T) {
 }
 
 func TestHandleChangePhoneReq(t *testing.T) {
-	viper.SetDefault("change_phone_url", "http://192.168.7.26:8086/mock/24/account/resetPhone")
+	viper.SetDefault("change_phone_url", "http://192.168.7.26:18101/account/resetPhone")
 	dbPlayerGetter = func(playerID uint64, fields ...string) (*db.TPlayer, error) {
 		fmt.Printf("获取玩家信息:playerID=%d, fields=%v\n", playerID, fields)
 		return &db.TPlayer{Accountid: 100, Phone: "13526785555"}, nil

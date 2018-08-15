@@ -35,7 +35,7 @@ node: 1
 inner_auth: true  
 
 # 账号系统登录 url 
-login_url: http://192.168.7.26:8086/mock/24/account/regiserHall
+login_url: http://192.168.7.26:18101/account/regiserHall
 
 # 产品 ID 
 product_id: 9999

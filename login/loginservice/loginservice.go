@@ -151,6 +151,7 @@ func (ls *LoginService) accountSysAuth(request *login.LoginRequest) (uint64, err
 	}
 	loginResponse := loginResponse{}
 	if err := json.Unmarshal(respData, &loginResponse); err != nil {
+		logrus.WithError(err).Errorln("数据错误：", string(respData))
 		return 0, fmt.Errorf("回复数据序列化失败：%v", err)
 	}
 	if loginResponse.Code != 0 {
@@ -201,7 +202,7 @@ func init() {
 	viper.SetDefault("auth_key", "some-secret-key")
 	viper.SetDefault("inner_auth", true) // 内部认证，不通过账号系统
 	viper.SetDefault("product_id", 9999)
-	viper.SetDefault("login_url", "http://192.168.7.26:8086/mock/24/account/regiserHall")
+	viper.SetDefault("login_url", "http://192.168.7.26:18101/account/regiserHall")
 
 	idAllocNode, err := gutils.NewNode(viper.GetInt64("node"))
 	if err != nil {

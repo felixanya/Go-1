@@ -8,6 +8,7 @@ import (
 	"steve/entity/db"
 	"steve/hall/data"
 	"steve/server_pb/user"
+	"strconv"
 	"time"
 
 	"steve/datareport/fixed"
@@ -335,6 +336,8 @@ func createPlayer(accID uint64) (uint64, error) {
 	if has, err := data.ExistPlayerID(playerID); err != nil || has {
 		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
 	}
+	province, _ := strconv.Atoi(accInfo.Province)
+	city, _ := strconv.Atoi(accInfo.City)
 
 	if err := data.InitPlayerData(db.TPlayer{
 		Accountid:    int64(accID),
@@ -345,8 +348,8 @@ func createPlayer(accID uint64) (uint64, error) {
 		Nickname:     generateNickName(playerID, &accInfo),
 		Gender:       generateGender(playerID, &accInfo),
 		Avatar:       generateAvartaURL(playerID, &accInfo),
-		Provinceid:   accInfo.Province,
-		Cityid:       accInfo.City,
+		Provinceid:   province,
+		Cityid:       city,
 		Name:         "",
 		Phone:        accInfo.Phone,
 		Idcard:       "",

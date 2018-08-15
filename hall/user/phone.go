@@ -69,13 +69,13 @@ func getBindPhoneRewardConfig() *bindPhoneRewardConfig {
 
 func init() {
 	// 发送验证码 url
-	viper.SetDefault("send_code_url", "http://192.168.7.26:8086/mock/24/account/sendCode")
+	viper.SetDefault("send_code_url", "http://192.168.7.26:18101/account/sendCode")
 	// 校验验证码 url
-	viper.SetDefault("check_code_url", "http://192.168.7.26:8086/mock/24/account/checkCode")
+	viper.SetDefault("check_code_url", "http://192.168.7.26:18101/account/checkCode")
 	// 绑定手机 url
-	viper.SetDefault("bind_phone_url", "http://192.168.7.26:8086/mock/24/account/bindPhone")
+	viper.SetDefault("bind_phone_url", "http://192.168.7.26:18101/account/bindPhone")
 	// 修改手机 url
-	viper.SetDefault("change_phone_url", "http://192.168.7.26:8086/mock/24/account/resetPhone")
+	viper.SetDefault("change_phone_url", "http://192.168.7.26:18101/account/resetPhone")
 
 	// 绑定手机配置修改订阅
 	configclient.SubConfigChange("bindphone", "reward", func(key, subkey, val string) error {
@@ -250,7 +250,7 @@ func HandleBindPhoneReq(playerID uint64, header *steve_proto_gaterpc.Header, req
 	}
 	httpResponse := normalHTTPResponse{}
 	err = requestJSONHTTP(viper.GetString("bind_phone_url"), map[string]interface{}{
-		"product_id":       viper.GetInt("product_id"),
+		"productid":        viper.GetInt("product_id"),
 		"cellphone_number": req.GetPhone(),
 		"dymc_code":        req.GetDymcCode(),
 		"send_case":        int(hall.AuthCodeSendScene_BIND_PHONE),

@@ -119,13 +119,32 @@ func LoginPlayerByToken(playerID uint64, token string) (interfaces.ClientPlayer,
 	return loginPlayer(request)
 }
 
-// LoginPlayer 登录玩家
-// TODO: delete
-func LoginPlayer(accountID uint64, accountName string) (interfaces.ClientPlayer, error) {
+// LoginPlayerYouke 登录游客
+func LoginPlayerYouke(imei string) (interfaces.ClientPlayer, error) {
+	loginData := login.LoginData{
+		Type:     login.LoginType(1).Enum(),
+		Channel:  login.ChannelType_VISITOR.Enum(),
+		Username: proto.String(imei),
+		ProId:    proto.Uint64(55555),
+		CityId:   proto.Uint64(1111),
+		BindInfo: &login.BindInfo{},
+	}
+	buf, err := proto.Marshal(&loginData)
+	if err != nil {
+		return nil, fmt.Errorf("序列化登录数据失败")
+	}
 	return loginPlayer(&login.LoginAuthReq{
-		AccountId: proto.Uint64(accountID),
+		RequestData: buf,
 	})
 }
+
+// Channel          *ChannelType `protobuf:"varint,2,opt,name=channel,enum=login.ChannelType" json:"channel,omitempty"`
+// Username         *string      `protobuf:"bytes,3,opt,name=username" json:"username,omitempty"`
+// DymcCode         *string      `protobuf:"bytes,4,opt,name=dymc_code,json=dymcCode" json:"dymc_code,omitempty"`
+// Password         *string      `protobuf:"bytes,5,opt,name=password" json:"password,omitempty"`
+// ProId            *uint64      `protobuf:"varint,6,opt,name=pro_id,json=proId" json:"pro_id,omitempty"`
+// CityId           *uint64      `protobuf:"varint,7,opt,name=city_id,json=cityId" json:"city_id,omitempty"`
+// BindInfo         *BindInfo    `protobuf:"bytes,8,opt,name=bind_info,json=bindInfo" json:"bind_info,omitempty"`
 
 func UpdatePlayerClientInfo(client interfaces.Client, player interfaces.ClientPlayer, deskData *DeskData) {
 	oldPlayer, exist := deskData.Players[player.GetID()]
