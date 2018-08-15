@@ -521,7 +521,7 @@ VALUES
                     6
                 ],
                 "beginDate": "",
-                "endDate": "",
+                "endDate": "", {
                 "beginTime": "02:00",
                 "endTime": "22:00",
                 "content": "循环播放:跑马灯1"

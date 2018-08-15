@@ -34,18 +34,21 @@ func GetPlayerPropInfoAll(playerID uint64) ([]PropPacksackInfo, error) {
 		return propInfos, err
 	}
 	for _, prop := range props {
-		flag := false
+		if prop.Count == 0 {
+			continue
+		}
+		flag := true
 		for _, pConfig := range propConfig {
 			if pConfig.PropID == prop.PropID {
 				p := PropPacksackInfo{
 					PropID:    pConfig.PropID,
 					PropName:  pConfig.PropName,
-					PropType:  pConfig.Type,
+					PropType:  pConfig.Type, //道具类型
 					PropCount: prop.Count,
-					Describe:  "说明",
+					Describe:  pConfig.Describe,
 				}
 				propInfos = append(propInfos, p)
-				flag = true
+				flag = false
 				break
 			}
 		}

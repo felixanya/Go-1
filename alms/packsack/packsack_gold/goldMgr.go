@@ -1,8 +1,9 @@
 package packsack_gold
 
 import (
+	"fmt"
 	"steve/alms/packsack/packsack_utils"
-	"steve/gold/define"
+
 	"sync"
 
 	"github.com/Sirupsen/logrus"
@@ -61,7 +62,7 @@ func (gm *GoldMgr) getUserFromCacheOrDB(uid uint64) (*userGold, error) {
 
 	m, err = packsack_utils.GetGoldFromDB(uid)
 	if err != nil {
-		return nil, define.ErrLoadDB
+		return nil, fmt.Errorf("load from db failed err(%v)", err)
 	}
 	// 从DB获取到后，马上缓存到Redis
 	err = packsack_utils.SaveGoldToRedis(uid, m)
@@ -103,7 +104,7 @@ func (gm *GoldMgr) AddGold(uid uint64, value int64) (int64, error) {
 	if u == nil {
 		entry.Errorln("get user error")
 		_ = err
-		return 0, define.ErrNoUser
+		return 0, fmt.Errorf("no user")
 	}
 	// 加金币前，玩家当前金币值
 	before, err = u.Get()
@@ -145,9 +146,12 @@ func (gm *GoldMgr) GetGold(uid uint64) (int64, error) {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	u, _ := gm.getUser(uid)
+	u, err := gm.getUser(uid)
+	if err != nil {
+		logrus.WithError(err).Debugln("get user err")
+	}
 	if u == nil {
-		return 0, define.ErrNoUser
+		return 0, fmt.Errorf("no user")
 	}
 	// 获取玩家金币
 	g, err := u.Get()

@@ -3,43 +3,48 @@ package packsack
 import (
 	"fmt"
 	"steve/alms/packsack/packsack_gold"
+	"steve/alms/packsack/packsack_utils"
 	"testing"
+
+	"github.com/go-redis/redis"
+	"github.com/go-sql-driver/mysql"
+	"github.com/go-xorm/xorm"
 )
 
 func init() {
-	// packsack_utils.Mydb = func(mysqlName string) (*xorm.Engine, error) {
-	// 	conf := mysql.Config{
-	// 		User:                 "root",
-	// 		Passwd:               "123456",
-	// 		Net:                  "tcp",
-	// 		Addr:                 "192.168.8.210:3306",
-	// 		DBName:               "steve",
-	// 		Params:               map[string]string{"charset": "utf8"},
-	// 		AllowNativePasswords: true,
-	// 	}
-	// 	engine, _ := xorm.NewEngine("mysql", conf.FormatDSN())
+	packsack_utils.Mydb = func(mysqlName string) (*xorm.Engine, error) {
+		conf := mysql.Config{
+			User:                 "root",
+			Passwd:               "123456",
+			Net:                  "tcp",
+			Addr:                 "192.168.8.210:3306",
+			DBName:               "steve",
+			Params:               map[string]string{"charset": "utf8"},
+			AllowNativePasswords: true,
+		}
+		engine, _ := xorm.NewEngine("mysql", conf.FormatDSN())
 
-	// 	if err := engine.Ping(); err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// 	return engine, nil
-	// }
-	// packsack_utils.Myredis = func() *redis.Client {
-	// 	myredis := redis.NewClient(&redis.Options{
-	// 		Addr:     "127.0.0.1:6379",
-	// 		Password: "",
-	// 		DB:       0,
-	// 	})
-	// 	cmd := myredis.Ping()
-	// 	if cmd.Err() != nil {
-	// 		fmt.Println("连接 redis 失败")
-	// 	}
-	// 	return myredis
-	// }
+		if err := engine.Ping(); err != nil {
+			fmt.Println(err)
+		}
+		return engine, nil
+	}
+	packsack_utils.Myredis = func() *redis.Client {
+		myredis := redis.NewClient(&redis.Options{
+			Addr:     "127.0.0.1:6379",
+			Password: "",
+			DB:       0,
+		})
+		cmd := myredis.Ping()
+		if cmd.Err() != nil {
+			fmt.Println("连接 redis 失败")
+		}
+		return myredis
+	}
 }
 
 func Test_Get(t *testing.T) {
-	gold, err := packsack_gold.GetGoldMgr().GetGold(11)
+	gold, err := packsack_gold.GetGoldMgr().GetGold(22222)
 	fmt.Printf("err(%v)\n", err)
 	fmt.Println(gold)
 }

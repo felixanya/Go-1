@@ -6,9 +6,11 @@ package core
 */
 import (
 	"runtime"
-	"steve/alms/data"
+	"steve/alms/almsserver"
 	"steve/structs"
 	"steve/structs/service"
+
+	s_alms "steve/server_pb/alms"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -24,22 +26,27 @@ func NewService() service.Service {
 func (a *AlmsCore) Init(e *structs.Exposer, param ...string) error {
 	runtime.GOMAXPROCS(1) //单线程序
 	entry := logrus.WithField("name", "AlmsCore.Init")
+	// 注册当前模块RPC服务处理器
+	if err := e.RPCServer.RegisterService(s_alms.RegisterPacksackServerServer, &almsserver.PacksackServer{}); err != nil {
+		entry.WithError(err).Error("PacksackServer 注册RPC服务处理器失败")
+		return err
+	}
 	// 注册客户端Client消息处理器
 	if err := registerHandles(e.Exchanger); err != nil {
 		entry.WithError(err).Error("注册客户端Client消息处理器失败")
 		return err
 	}
 	// 获取救济金配置存入,存入redis，用于检验
-	acd, err := data.GetDBAlmsConfigData()
-	if err != nil {
-		entry.WithError(err).Errorln("Init get alms config 失败")
-		return err
-	}
-	// 存储到redis
-	if err = data.SetAlmsConfigWatchs(data.AlmsConfigToMap(acd)); err != nil {
-		entry.WithError(err).Errorln("Init set alms config redis 失败")
-		return err
-	}
+	// acd, err := data.GetDBAlmsConfigData()
+	// if err != nil {
+	// 	entry.WithError(err).Errorln("Init get alms config 失败")
+	// 	return err
+	// }
+	// // 存储到redis
+	// if err = data.SetAlmsConfigWatchs(data.AlmsConfigToMap(acd)); err != nil {
+	// 	entry.WithError(err).Errorln("Init set alms config redis 失败")
+	// 	return err
+	// }
 	entry.Debugf("AlmsCoreserver init succeed ...")
 	return nil
 }

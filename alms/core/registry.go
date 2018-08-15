@@ -15,6 +15,8 @@ func registerHandles(e exchanger.Exchanger) error {
 			logrus.WithField("msg_id", msgID).Panic(err)
 		}
 	}
-	panicRegister(msgid.MsgID_ALMS_GET_GOLD_REQ, almsserver.HandleGetAlmsReq)
+	// panicRegister(msgid.MsgID_ALMS_GET_GOLD_REQ, almsserver.HandleGetAlmsReq)
+	panicRegister(msgid.MsgID_PACKSACK_INFO_REQ, almsserver.HandlePacksackInfo)
+	panicRegister(msgid.MsgID_PACKSACK_GOLD_REQ, almsserver.HandlePackSackGold)
 	return nil
 }

@@ -23,12 +23,22 @@ startserver gateway gateway gate
 startserver room room room
 startserver hall hall hall
 startserver login login login
-startserver robot robot robot
+
 startserver gold gold gold
 startserver msgserver msgserver msgserver
-startserver alms alms alms
+
 startserver match match match
 
 pushd back
 serviceloader back --config=config.yml &
 popd
+
+sleep 3
+
+pushd robot
+serviceloader robot --config=config.yml &
+popd
+
+
+
+
