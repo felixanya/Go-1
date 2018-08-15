@@ -3,8 +3,10 @@ package robotservice
 import (
 	"context"
 	"fmt"
+	"steve/external/goldclient"
 	"steve/external/hallclient"
 	"steve/robot/data"
+	"steve/server_pb/gold"
 	"steve/server_pb/robot"
 	"steve/server_pb/user"
 
@@ -87,6 +89,13 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 			i++
 			suitRobot := make([]uint64, 0, 10)
 			for playerID, robotPlayer := range notInitRobotMap {
+				// 从金币服获取，初始化金币
+				gold, err := goldclient.GetGold(uint64(playerID), int16(gold.GoldType_GOLD_COIN))
+				if err != nil {
+					logrus.WithError(err).Errorf("获取金币失败 playerID(%v)", playerID)
+					continue
+				}
+				robotPlayer.Gold = gold
 				if checkFunc(playerID, robotPlayer) {
 					suitRobot = append(suitRobot, uint64(playerID))
 				}
