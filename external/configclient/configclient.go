@@ -72,6 +72,36 @@ func GetGameConfigMap() (gameConf []entityConf.GameConfig, err error) {
 	return
 }
 
+func main() {
+	val:= `[{"gameId":1,"channel":1,"goldNum":100,"cardNum":10,"ybNum":0,"item":"1|1;2|1;3|5"}]`
+	roleConf := make([]entityConf.RoleInitConfig,1)
+	err := json.Unmarshal([]byte(val), &roleConf)
+	fmt.Printf("%v",err)
+	for _,config := range roleConf{
+		(&config).InitItem()
+	}
+}
+
+//获取角色初始配置
+func GetRoleInitConfigMap() (roleConf []entityConf.RoleInitConfig, err error) {
+	roleConfStr, err := GetConfig("role", "init")
+	if err != nil {
+		logrus.WithError(err).Errorln("获取角色初始属性配置失败")
+		return nil, err
+	}
+	if err := json.Unmarshal([]byte(roleConfStr), &roleConf); err != nil {
+		logrus.WithError(err).Errorf("游戏级别配置数据反序列化失败：%s", err.Error())
+		return nil, err
+	}
+
+
+	for _,config := range roleConf{
+		config.InitItem()
+	}
+	return
+}
+
+
 // GetGameLevelConfigMap 获取游戏级别配置信息
 func GetGameLevelConfigMap() (levelConf []entityConf.GameLevelConfig, err error) {
 	levelStr, err := GetConfig("game", "levelconfig")
