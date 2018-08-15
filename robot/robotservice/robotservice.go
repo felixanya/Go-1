@@ -3,8 +3,10 @@ package robotservice
 import (
 	"context"
 	"fmt"
+	"steve/external/goldclient"
 	"steve/external/hallclient"
 	"steve/robot/data"
+	"steve/server_pb/gold"
 	"steve/server_pb/robot"
 	"steve/server_pb/user"
 
@@ -71,6 +73,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 				rsp.Coin = robotPlayer.Gold
 				rsp.WinRate = robotPlayer.GameWinRates[gameID]
 				rsp.ErrCode = robot.ErrCode_EC_SUCCESS
+				logrus.WithFields(logrus.Fields{"RobotPlayerId": rsp.GetRobotPlayerId(), "coin": rsp.GetCoin(), "winRate": rsp.GetWinRate()}).Debugln("获取空闲机器人成功")
 				return rsp, data.UpdataRobotState(playerID, true)
 			}
 		}
@@ -87,6 +90,13 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 			i++
 			suitRobot := make([]uint64, 0, 10)
 			for playerID, robotPlayer := range notInitRobotMap {
+				// 从金币服获取
+				gold, err := goldclient.GetGold(uint64(playerID), int16(gold.GoldType_GOLD_COIN))
+				if err != nil {
+					logrus.WithError(err).Errorf("获取金币失败 playerID(%v)", playerID)
+					continue
+				}
+				robotPlayer.Gold = gold
 				if checkFunc(playerID, robotPlayer) {
 					suitRobot = append(suitRobot, uint64(playerID))
 				}
@@ -112,6 +122,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 				rsp.Coin = robotInfo.Gold
 				rsp.WinRate = robotInfo.GameWinRates[gameID]
 				rsp.ErrCode = robot.ErrCode_EC_SUCCESS
+				logrus.WithFields(logrus.Fields{"RobotPlayerId": rsp.GetRobotPlayerId(), "coin": rsp.GetCoin(), "winRate": rsp.GetWinRate()}).Debugln("初始化获取空闲机器人成功")
 				return rsp, data.UpdataRobotState(playerID, true)
 			}
 			notInitRobotMap = data.GetNoInitRobot()
@@ -119,17 +130,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 	} else {
 		logrus.Debugln("未初始化 notInitRobotMap 为0")
 	}
-	defer func() {
-		if rsp.ErrCode == robot.ErrCode_EC_SUCCESS {
-			logrus.WithFields(logrus.Fields{
-				"RobotPlayerId": rsp.GetRobotPlayerId(),
-				"coin":          rsp.GetCoin(),
-				"winRate":       rsp.GetWinRate(),
-			}).Infoln("获取空闲机器人成功")
-		} else {
-			logrus.Debugln("获取空闲机器人失败")
-		}
-	}()
+	logrus.Debugln("获取空闲机器人失败")
 	return rsp, fmt.Errorf("找不到适合的机器人")
 }
 
