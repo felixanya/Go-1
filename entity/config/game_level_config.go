@@ -14,6 +14,6 @@ type GameLevelConfig struct {
 	ShowOnlinePeople int    `json:"showOnlinePeople"`
 	Status           int    `json:"status"`
 	Tag              int    `json:"tag"`
-	IsAlms           int    `json:"isAlms"`
+	//IsAlms           int    `json:"isAlms"`
 	Remark           string `json:"remark"`
 }
