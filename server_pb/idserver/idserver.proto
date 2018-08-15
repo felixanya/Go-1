@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package idsvr;
+
+// 返回结果
+enum ResultStat {
+    SUCCEED = 0;       			   // 成功
+    FAILED = 1;        			   // 失败
+}
+
+// 生成一个新的playerId请求
+message NewPlayerIdReq {
+
+}
+// 生成一个新的playerId回复
+message NewPlayerIdRsp {
+    ResultStat err_code	= 1;			// 错误码
+    string  err_desc	= 2;			// 错误描述
+    uint64  new_id  = 3;               // 返回ID
+}
+
+// 生成一个新的showId请求
+message NewShowIdReq {
+
+}
+// 生成一个新的showId回复
+message NewShowIdRsp {
+    ResultStat err_code	= 1;			// 错误码
+    string  err_desc	= 2;			// 错误描述
+    uint64  new_id  = 3;               // 返回ID
+}
+
+// 生成一个新的playerId和showId请求
+message NewPlayerShowIdReq {
+
+}
+// 生成一个新的playerId和showId回复
+message NewPlayerShowIdRsp {
+    ResultStat err_code	= 1;			// 错误码
+    string  err_desc	= 2;			// 错误描述
+    uint64  player_id  = 3;            // 返回playerID
+    uint64  show_id  = 4;            // 返回showID
+}
+
+service idservice {
+
+    // 生成一个新的playerId和showId
+    rpc NewPlayerShowId(NewPlayerShowIdReq) returns (NewPlayerShowIdRsp) {}
+
+	// 生成一个新的playerId
+    rpc NewPlayerId(NewPlayerIdReq) returns (NewPlayerIdRsp) {}
+	// 生成一个新的showId
+    rpc NewShowId(NewShowIdReq) returns (NewShowIdRsp) {}
+	
+}

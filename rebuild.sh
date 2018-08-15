@@ -57,6 +57,10 @@ pushd propserver
 sh ./build.sh
 popd
 
+pushd idserver
+sh ./build.sh
+popd
+
 
 sh ./simulate/packtests.sh
 
