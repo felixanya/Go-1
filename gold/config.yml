@@ -17,7 +17,6 @@ rpc_lb: hash
 #RPC服务组名
 #group_name: 1000,1001
 
-
 #consul 服务中心配置
 consul_addr: 127.0.0.1:8500
 
@@ -45,4 +44,5 @@ mysql_list:
 #nsq 消息队列配置
 nsqd_addr: 127.0.0.1:4150
 nsqlookupd_addrs:
-  - 127.0.0.1:4161
+  - 127.0.0.1:4161   
+ 

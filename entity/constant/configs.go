@@ -20,6 +20,10 @@ var (
 	ChargeDayMaxKey = ConfigKey{Key: "charge", SubKey: "day_max"}
 	// PropInteractiveKey 互动道具PropSubKey 道具配置子健
 	PropInteractiveKey = ConfigKey{Key: PropKey, SubKey: PropSubKey}
+	//GameConfigKey 游戏玩法配置
+	GameConfigKey = ConfigKey{Key: "game", SubKey: "config"}
+	// GameLevelConfigKey 游戏场次配置
+	GameLevelConfigKey = ConfigKey{Key: "game", SubKey: "levelconfig"}
 )
 
 // PropAttr 道具属性
