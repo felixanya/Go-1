@@ -119,22 +119,37 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 			}
 		case majong.Action_action_chi:
 			s := SplitCards(NonPointer(player.HandCards))
-			if len(s.SingleChas)+len(s.DoubleChas) > 0 {
-				for _, cha := range append(s.SingleChas, s.DoubleChas...) { //优先处理单茬
-					validCards := getValidCard(cha)
-					if ContainsCard(validCards, lastOutCard) {
-						event.Context = &majong.ChiRequestEvent{
-							Head: &majong.RequestEventHead{
-								PlayerId: player.GetPlayerId(),
-							},
-							Cards: []*majong.Card{&cha.cards[0], &cha.cards[1], &lastOutCard},
-						}
-						event.ID = int32(majong.EventID_event_chi_request)
-						logEntry.WithField("吃牌", lastOutCard).Infoln("中级AI吃牌")
-						return &event
-					}
+			notOKCards := append(s.GetNotOKCards(), lastOutCard)
+			notOKSplits := SplitCards(notOKCards)
+			if len(notOKSplits.ShunZis) >= 1 && len(notOKSplits.Pairs) >= 1 {
+				shunZi := notOKSplits.ShunZis[0].cards
+				event.Context = &majong.ChiRequestEvent{
+					Head: &majong.RequestEventHead{
+						PlayerId: player.GetPlayerId(),
+					},
+					Cards: []*majong.Card{&shunZi[0], &shunZi[1], &shunZi[3]},
 				}
+				event.ID = int32(majong.EventID_event_chi_request)
+				logEntry.WithField("吃牌", lastOutCard).Infoln("中级AI吃牌")
+				return &event
 			}
+			// 老的吃策略
+			//if len(s.SingleChas)+len(s.DoubleChas) > 0 {
+			//	for _, cha := range append(s.SingleChas, s.DoubleChas...) { //优先处理单茬
+			//		validCards := getValidCard(cha)
+			//		if ContainsCard(validCards, lastOutCard) {
+			//			event.Context = &majong.ChiRequestEvent{
+			//				Head: &majong.RequestEventHead{
+			//					PlayerId: player.GetPlayerId(),
+			//				},
+			//				Cards: []*majong.Card{&cha.cards[0], &cha.cards[1], &lastOutCard},
+			//			}
+			//			event.ID = int32(majong.EventID_event_chi_request)
+			//			logEntry.WithField("吃牌", lastOutCard).Infoln("中级AI吃牌")
+			//			return &event
+			//		}
+			//	}
+			//}
 		default:
 			event.Context = &majong.QiRequestEvent{
 				Head: &majong.RequestEventHead{
