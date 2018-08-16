@@ -6,6 +6,7 @@ import (
 	"steve/idserver/data"
 	"sync"
 	"time"
+	"fmt"
 )
 
 /*
@@ -48,6 +49,7 @@ func makeNewShowId() {
 	//num := ""
 	num := make([]byte, 10, 10)
 	for k := 0; k < sum; k++ {
+		strNum := ""
 		for i := 0; i < 10; i++ {
 			if i == 0 {
 				d = rand.Intn(9) + 1
@@ -55,13 +57,13 @@ func makeNewShowId() {
 				d = rand.Intn(10)
 			}
 			num[i] = byte(d)
+			strNum += fmt.Sprintf("%d", d)
 			//num += fmt.Sprintf("%d", d)
 		}
 		// 过滤靓号
 		if isGoodId(num) {
 			continue
 		}
-		strNum := string(num[:])
 		logrus.Debugln(strNum)
 		uids = append(uids, strNum)
 
