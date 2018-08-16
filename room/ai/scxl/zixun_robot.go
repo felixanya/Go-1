@@ -249,18 +249,20 @@ func SplitCards(cards []majong.Card) Splits {
 	}
 
 	gangs := SplitGang(cards)
-	remain := RemoveSplits(cards, gangs)
-	splits3 := splitCardsWithoutGang(remain, true)
-	splits3.Gangs = gangs
-	splits4 := splitCardsWithoutGang(remain, false)
-	splits4.Gangs = gangs
+	if len(gangs) > 0 {
+		remain := RemoveSplits(cards, gangs)
+		splits3 := splitCardsWithoutGang(remain, true)
+		splits3.Gangs = gangs
+		splits4 := splitCardsWithoutGang(remain, false)
+		splits4.Gangs = gangs
 
-	if splits3.BetterThan(splits) {
-		splits = splits3
-	}
+		if splits3.BetterThan(splits) {
+			splits = splits3
+		}
 
-	if splits4.BetterThan(splits) {
-		splits = splits4
+		if splits4.BetterThan(splits) {
+			splits = splits4
+		}
 	}
 
 	logrus.WithFields(logrus.Fields{"手牌": cards, "拆牌": splits}).Debugln("中级AI拆牌结果")
@@ -344,6 +346,27 @@ type Splits struct {
 	DoubleChas []Split
 	SingleChas []Split
 	Singles    []Split
+}
+
+func (s Splits) GetOKCount() int {
+	return len(s.Gangs) + len(s.ShunZis) + len(s.KeZis)
+}
+
+func (s Splits) GetNotOKCards() []majong.Card {
+	var result []majong.Card
+	for _, pair := range s.Pairs {
+		result = append(result, pair.cards...)
+	}
+	for _, doubleCha := range s.DoubleChas {
+		result = append(result, doubleCha.cards...)
+	}
+	for _, singleCha := range s.SingleChas {
+		result = append(result, singleCha.cards...)
+	}
+	for _, single := range s.Singles {
+		result = append(result, single.cards...)
+	}
+	return result
 }
 
 func (s Splits) String() string {
