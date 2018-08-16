@@ -1,21 +1,22 @@
 #日志配置
 log_level: debug
 log_dir: ./log
-log_prefix: gold
+log_prefix: propserver
 log_stderr: true 
 
 #RPC服务地址
 rpc_addr: 127.0.0.1
 #RPC服务监听Port
-rpc_port: 36331
+rpc_port: 36371
 #RPC服务健康监控Port
-health_port: 36332
+health_port: 36372
 #RPC服务名
-rpc_server_name: gold
+rpc_server_name: propserver
 #路由方式
 rpc_lb: hash
 #RPC服务组名
 #group_name: 1000,1001
+
 
 #consul 服务中心配置
 consul_addr: 127.0.0.1:8500
@@ -43,6 +44,5 @@ mysql_list:
 
 #nsq 消息队列配置
 nsqd_addr: 127.0.0.1:4150
-nsqlookupd_addrs:
-  - 127.0.0.1:4161   
- 
+nsqlookupd_addrs: 
+  - 127.0.0.1:4161

@@ -2,7 +2,10 @@
 配置数据库初始化脚本
 */
 
+
+
 /*商品表*/
+DELETE FROM `t_common_config` WHERE `key`="charge" AND `subkey`="item_list";
 INSERT `t_common_config`(`key`, `subkey`, `value`) values(
     'charge', 'item_list', 
     '{
@@ -10,36 +13,42 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 100",
+                "name": "金豆 40000",
                 "tag": "热卖",
                 "price": 600,
-                "coin": 100,
+                "coin": 40000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 1000",
+                "name": "金豆 80000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
-            }
-        ],
-        "city400200": [
-            {
-                "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 100,
+                "price": 1200,
+                "coin": 80000,
                 "present_coin": 0
             },
             {
-                "item_id": 2,
-                "name": "金豆 1000",
+                "item_id": 3,
+                "name": "金豆 200000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
+                "price": 3000,
+                "coin": 200000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 4,
+                "name": "金豆 680000",
+                "tag": "特惠",
+                "price": 9800,
+                "coin": 680000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 5,
+                "name": "金豆 1280000",
+                "tag": "特惠",
+                "price": 18800,
+                "coin": 1280000,
                 "present_coin": 0
             }
         ]
@@ -48,36 +57,42 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 100",
+                "name": "金豆 40000",
                 "tag": "热卖",
                 "price": 600,
-                "coin": 100,
+                "coin": 40000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 1000",
+                "name": "金豆 80000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
-            }
-        ],
-        "city400200": [
-            {
-                "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 100,
+                "price": 1200,
+                "coin": 80000,
                 "present_coin": 0
             },
             {
-                "item_id": 2,
-                "name": "金豆 1000",
+                "item_id": 3,
+                "name": "金豆 200000",
                 "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
+                "price": 3000,
+                "coin": 200000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 4,
+                "name": "金豆 680000",
+                "tag": "特惠",
+                "price": 9800,
+                "coin": 680000,
+                "present_coin": 0
+            },
+            {
+                "item_id": 5,
+                "name": "金豆 1280000", 
+                "tag": "特惠",
+                "price": 18800,
+                "coin": 1280000,
                 "present_coin": 0
             }
         ]
@@ -93,6 +108,55 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     "max_charge": 200000
     }'
 );
+
+INSERT `t_common_config`(`key`, `subkey`, `value`) values ( 
+    'prop', 
+    'interactive',
+    '[
+            {
+                "propID": 1,
+                "name": "rose",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 2,
+                "name": "beer",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 3,
+                "name": "bomb",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 4,
+                "name": "grabChicken",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 5,
+                "name": "eggGun",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-10000,
+                "attrLimit":500000
+            }
+    ]
+    '
+); 
+
 
 INSERT INTO `t_common_config` (`id`, `key`, `subkey`, `value`)
 VALUES
