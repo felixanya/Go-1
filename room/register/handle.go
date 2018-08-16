@@ -261,7 +261,6 @@ func HandlePlayerGameGiveUp(playerID uint64, header *steve_proto_gaterpc.Header,
 			Body:  &rsp,
 		},
 	}
-	result := false
 	player := room_player.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		logEntry.Debugln("获取玩家失败")
@@ -285,13 +284,7 @@ func HandlePlayerGameGiveUp(playerID uint64, header *steve_proto_gaterpc.Header,
 
 	// 麻将settle, 修改该破产玩家为认输
 	majongSettle := desk.GetConfig().Settle.(*models.MajongSettle)
-
-	majongSettle.BrokerPlayers, result = utils.DeletePlayerIDFromLast(majongSettle.BrokerPlayers, playerID)
-
-	if !result {
-		logEntry.Debugln("玩家playerId:(%d)不为破产玩家", playerID)
-		return
-	}
+	majongSettle.HandleBrokerPlayer(desk, []uint64{playerID}, []uint64{})
 
 	// 广播该玩家认输
 	ntf := room.RoomGiveUpNtf{
@@ -326,7 +319,6 @@ func HandleRoomBrokerPlayerContinue(playerID uint64, header *steve_proto_gaterpc
 			Body:  &rsp,
 		},
 	}
-	result := false
 	player := room_player.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		logEntry.Debugln("获取玩家失败")
@@ -353,15 +345,7 @@ func HandleRoomBrokerPlayerContinue(playerID uint64, header *steve_proto_gaterpc
 
 	// 麻将settle, 修改该破产玩家为认输
 	majongSettle := desk.GetConfig().Settle.(*models.MajongSettle)
-
-	logEntry.Debugf("gameSettle brokerPlayers:(%d),playerID:(%d)", majongSettle.BrokerPlayers, playerID)
-	majongSettle.BrokerPlayers, result = utils.DeletePlayerIDFromLast(majongSettle.BrokerPlayers, playerID)
-	logEntry.Debugf("gameSettle brokerPlayers:(%d),playerID:(%d)", majongSettle.BrokerPlayers, playerID)
-
-	if !result {
-		logEntry.Debugln("玩家playerId:(%d)不为破产玩家", playerID)
-		return
-	}
+	majongSettle.HandleBrokerPlayer(desk, []uint64{}, []uint64{playerID})
 
 	rsp.ErrCode = room.RoomError_SUCCESS.Enum()
 	return
