@@ -3,6 +3,8 @@ package configclient
 import (
 	"encoding/json"
 	entityConf "steve/entity/config"
+	"steve/entity/constant"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -50,7 +52,7 @@ func GetAlmsConfigMap() (conf []entityConf.AlmsConfig, err error) {
 
 // GetGameConfigMap 获取游戏配置信息
 func GetGameConfigMap() (gameConf []entityConf.GameConfig, err error) {
-	gameStr, err := GetConfig("game", "config")
+	gameStr, err := GetConfigUntilSucc(constant.GameConfigKey.Key, constant.GameConfigKey.SubKey, 20, 3*time.Second)
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏配置失败")
 		return nil, err
@@ -66,7 +68,7 @@ func GetGameConfigMap() (gameConf []entityConf.GameConfig, err error) {
 
 // GetGameLevelConfigMap 获取游戏级别配置信息
 func GetGameLevelConfigMap() (levelConf []entityConf.GameLevelConfig, err error) {
-	levelStr, err := GetConfig("game", "levelconfig")
+	levelStr, err := GetConfigUntilSucc(constant.GameLevelConfigKey.Key, constant.GameLevelConfigKey.SubKey, 20, 3*time.Second)
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏级别配置失败")
 		return nil, err

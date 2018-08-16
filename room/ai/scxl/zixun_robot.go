@@ -1,6 +1,7 @@
 package scxlai
 
 import (
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
 	"steve/common/mjoption"
@@ -54,21 +55,21 @@ func (h *zixunStateAI) generateRobot(player *majong.Player, mjContext *majong.Ma
 
 	if len(zxRecord.CanTingCardInfo) > 0 {
 		max := -1
-		var card majong.Card
-		remainCardCount := transMap(getRemainCardCount(handCards, mjContext))
+		var maxCard majong.Card
+		remainCardCount := getRemainCardCount(handCards, mjContext)
 		for _, canTingInfo := range zxRecord.CanTingCardInfo {
 			total := 0
 			for _, tingInfo := range canTingInfo.TingCardInfo {
-				count := remainCardCount[tingInfo.TingCard]
+				count := remainCardCount[gutils.Uint32ToServerCard(tingInfo.TingCard)]
 				total += count * int(tingInfo.Times)
 			}
 			if max < total {
 				max = total
-				card = gutils.Uint32ToServerCard(canTingInfo.OutCard)
+				maxCard = gutils.Uint32ToServerCard(canTingInfo.OutCard)
 			}
 		}
-		aiEvent = h.chupai(player, &card)
-		logEntry.WithField("outCard", card).Infoln("中级AI听牌")
+		aiEvent = h.chupai(player, &maxCard)
+		logEntry.WithField("outCard", maxCard).Infoln("中级AI听牌")
 		return
 	}
 
@@ -77,39 +78,31 @@ func (h *zixunStateAI) generateRobot(player *majong.Player, mjContext *majong.Ma
 	return
 }
 
-func transMap(counts map[majong.Card]int) map[uint32]int {
-	result := make(map[uint32]int)
-	for card, count := range counts {
-		result[utils.ServerCard2Uint32(&card)] = count
-	}
-	return result
-}
-
 func getOutCard(handCards []*majong.Card, mjContext *majong.MajongContext) (majong.Card, bool) {
 	// 拆牌，比较顺子优先、刻子优先两种拆牌方式，选出最好的结果
-	_, _, pairs, doubleChas, singleChas, singles, gangs := SplitBestCards(NonPointer(handCards))
-	if len(gangs) > 0 {
-		return gangs[0].cards[0], true //有杠就杠
+	s := SplitCards(NonPointer(handCards))
+	if len(s.Gangs) > 0 {
+		return s.Gangs[0].cards[0], true //有杠就杠
 	}
 
-	if len(singles) == 1 {
-		return singles[0].cards[0], false //只有一张单牌，直接出牌
+	if len(s.Singles) == 1 {
+		return s.Singles[0].cards[0], false //只有一张单牌，直接出牌
 	}
 	remainCardCount := getRemainCardCount(handCards, mjContext)
-	if len(singles) > 1 {
-		outCard := whichSingle(remainCardCount, singles, len(pairs) >= 1)
+	if len(s.Singles) > 1 {
+		outCard := whichSingle(remainCardCount, s.Singles, len(s.Pairs) >= 1)
 		return outCard, false
 	}
 
 	var twoCards []Split
-	for _, singleCha := range singleChas {
+	for _, singleCha := range s.SingleChas {
 		twoCards = append(twoCards, singleCha)
 	}
-	for _, doubleCha := range doubleChas {
+	for _, doubleCha := range s.DoubleChas {
 		twoCards = append(twoCards, doubleCha)
 	}
-	if len(pairs) > 1 { //只有一个对子保留作将，多于一个对子才拆对子
-		for _, pair := range pairs {
+	if len(s.Pairs) > 1 { //只有一个对子保留作将，多于一个对子才拆对子
+		for _, pair := range s.Pairs {
 			twoCards = append(twoCards, pair)
 		}
 	}
@@ -140,8 +133,8 @@ func getOutCard(handCards []*majong.Card, mjContext *majong.MajongContext) (majo
 			needChai = *split
 		}
 	}
-	singles = SplitSingle(needChai.cards)
-	outCard := whichSingle(remainCardCount, singles, needChai.t == PAIR && len(pairs) >= 2 || needChai.t != PAIR && len(pairs) >= 1)
+	singles := SplitSingle(needChai.cards)
+	outCard := whichSingle(remainCardCount, singles, needChai.t == PAIR && len(s.Pairs) >= 2 || needChai.t != PAIR && len(s.Pairs) >= 1)
 	return outCard, false
 }
 
@@ -244,91 +237,58 @@ func getValidCard(split Split) (result []majong.Card) {
 	return
 }
 
-func SplitBestCards(cards []majong.Card) (shunZis []Split, keZis []Split, pairs []Split, doubleChas []Split, singleChas []Split, singles []Split, gangs []Split) {
-	shunZis1, keZis1, pairs1, doubleChas1, singleChas1, singles1 := SplitCards(cards, true)
-	shunZis2, keZis2, pairs2, doubleChas2, singleChas2, singles2 := SplitCards(cards, false)
-	if len(shunZis1)+len(keZis1) > len(shunZis2)+len(keZis2) {
-		remain := RemoveSplits(cards, shunZis1)
-		gangs = SplitGang(remain)
-		goto assign1
-	} else if len(shunZis1)+len(keZis1) == len(shunZis2)+len(keZis2) {
-		remain1 := RemoveSplits(cards, shunZis1)
-		gangs = SplitGang(remain1)
-		if len(gangs) > 0 {
-			goto assign1
-		}
+func SplitCards(cards []majong.Card) Splits {
+	var splits Splits
+	splits1 := splitCardsWithoutGang(cards, true)
+	splits2 := splitCardsWithoutGang(cards, false)
 
-		remain2 := RemoveSplits(cards, shunZis1)
-		gangs = SplitGang(remain2)
-		if len(gangs) > 0 {
-			goto assign2
-		}
-		if len(pairs1) > len(pairs2) {
-			goto assign1
-		} else if len(pairs1) == len(pairs2) {
-			if len(doubleChas1) > len(doubleChas2) {
-				goto assign1
-			} else if len(doubleChas1) == len(doubleChas2) {
-				if len(singleChas1) > len(singleChas2) {
-					goto assign1
-				} else if len(singleChas1) == len(singleChas2) {
-					goto assign2
-				} else {
-					goto assign2
-				}
-			} else {
-				goto assign2
-			}
-		} else {
-			goto assign2
-		}
+	if splits1.BetterThan(splits2) {
+		splits = splits1
 	} else {
-		remain := RemoveSplits(cards, shunZis2)
-		gangs = SplitGang(remain)
-		goto assign2
+		splits = splits2
 	}
-assign1:
-	shunZis = shunZis1
-	keZis = keZis1
-	pairs = pairs1
-	doubleChas = doubleChas1
-	singleChas = singleChas1
-	singles = singles1
-	goto analysis
-assign2:
-	shunZis = shunZis2
-	keZis = keZis2
-	pairs = pairs2
-	doubleChas = doubleChas2
-	singleChas = singleChas2
-	singles = singles2
-	goto analysis
-analysis:
-	logrus.WithFields(logrus.Fields{"手牌": cards, "拆牌": append(append(append(append(append(shunZis, keZis...), pairs...), doubleChas...), singleChas...), singles...)}).Debugln("中级AI拆牌结果")
-	return
+
+	gangs := SplitGang(cards)
+	remain := RemoveSplits(cards, gangs)
+	splits3 := splitCardsWithoutGang(remain, true)
+	splits3.Gangs = gangs
+	splits4 := splitCardsWithoutGang(remain, false)
+	splits4.Gangs = gangs
+
+	if splits3.BetterThan(splits) {
+		splits = splits3
+	}
+
+	if splits4.BetterThan(splits) {
+		splits = splits4
+	}
+
+	logrus.WithFields(logrus.Fields{"手牌": cards, "拆牌": splits}).Debugln("中级AI拆牌结果")
+	return splits
 }
 
-func SplitCards(cards []majong.Card, shunZiFirst bool) (shunZis []Split, keZis []Split, pairs []Split, doubleChas []Split, singleChas []Split, singles []Split) {
+func splitCardsWithoutGang(cards []majong.Card, shunZiFirst bool) Splits {
+	var s Splits
 	remain := cards
 	if shunZiFirst {
-		shunZis = SplitShunZi(remain)
-		remain = RemoveSplits(remain, shunZis)
-		keZis = SplitKeZi(remain)
-		remain = RemoveSplits(remain, keZis)
+		s.ShunZis = SplitShunZi(remain)
+		remain = RemoveSplits(remain, s.ShunZis)
+		s.KeZis = SplitKeZi(remain)
+		remain = RemoveSplits(remain, s.KeZis)
 	} else {
-		keZis = SplitKeZi(remain)
-		remain = RemoveSplits(remain, keZis)
-		shunZis = SplitShunZi(remain)
-		remain = RemoveSplits(remain, shunZis)
+		s.KeZis = SplitKeZi(remain)
+		remain = RemoveSplits(remain, s.KeZis)
+		s.ShunZis = SplitShunZi(remain)
+		remain = RemoveSplits(remain, s.ShunZis)
 	}
-	pairs = SplitPair(remain)
-	remain = RemoveSplits(remain, pairs)
-	doubleChas = SplitDoubleCha(remain)
-	remain = RemoveSplits(remain, doubleChas)
-	singleChas = SplitSingleCha(remain)
-	remain = RemoveSplits(remain, singleChas)
-	singles = SplitSingle(remain)
-	return
+	s.Pairs = SplitPair(remain)
+	remain = RemoveSplits(remain, s.Pairs)
+	s.DoubleChas = SplitDoubleCha(remain)
+	remain = RemoveSplits(remain, s.DoubleChas)
+	s.SingleChas = SplitSingleCha(remain)
+	remain = RemoveSplits(remain, s.SingleChas)
+	s.Singles = SplitSingle(remain)
+	return s
 }
 
 type SplitType int
@@ -374,6 +334,54 @@ func (s Split) String() string {
 	default:
 		return strconv.Itoa(int(s.t))
 	}
+}
+
+type Splits struct {
+	Gangs      []Split
+	ShunZis    []Split
+	KeZis      []Split
+	Pairs      []Split
+	DoubleChas []Split
+	SingleChas []Split
+	Singles    []Split
+}
+
+func (s Splits) String() string {
+	return fmt.Sprint(append(append(append(append(append(append(s.Gangs, s.ShunZis...), s.KeZis...), s.Pairs...), s.DoubleChas...), s.SingleChas...), s.Singles...))
+}
+
+func (s Splits) BetterThan(o Splits) bool {
+	if len(s.Gangs)+len(s.ShunZis)+len(s.KeZis) > len(o.Gangs)+len(o.ShunZis)+len(o.KeZis) {
+		return true
+	} else if len(s.Gangs)+len(s.ShunZis)+len(s.KeZis) < len(o.Gangs)+len(o.ShunZis)+len(o.KeZis) {
+		return false
+	}
+
+	if len(s.Gangs) > len(o.Gangs) {
+		return true
+	} else if len(s.Gangs) < len(o.Gangs) {
+		return false
+	}
+
+	if len(s.Pairs) > len(o.Pairs) {
+		return true
+	} else if len(s.Pairs) < len(o.Pairs) {
+		return false
+	}
+
+	if len(s.DoubleChas) > len(o.DoubleChas) {
+		return true
+	} else if len(s.DoubleChas) < len(o.DoubleChas) {
+		return false
+	}
+
+	if len(s.SingleChas) > len(o.SingleChas) {
+		return true
+	} else if len(s.SingleChas) < len(o.SingleChas) {
+		return false
+	}
+
+	return len(s.Singles) < len(o.Singles)
 }
 
 // 拆出所有杠
