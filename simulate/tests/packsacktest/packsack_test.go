@@ -45,7 +45,7 @@ func Test_Add_Packsack_Gold(t *testing.T) {
 	player.AddExpectors(msgid.MsgID_PACKSACK_GOLD_RSP)
 	client := player.GetClient()
 	req := &alms.PacksackGoldReq{}
-	req.ChangeGold = proto.Int64(500)
+	req.ChangeGold = proto.Int64(60000)
 	client.SendPackage(utils.CreateMsgHead(msgid.MsgID_PACKSACK_GOLD_REQ), req)
 
 	expector := player.GetExpector(msgid.MsgID_PACKSACK_GOLD_RSP)
@@ -60,13 +60,20 @@ func Test_TakeOut_Packsack_Gold(t *testing.T) {
 	assert.NotNil(t, player)
 
 	player.AddExpectors(msgid.MsgID_PACKSACK_GOLD_RSP)
-	client := player.GetClient()
-	req := &alms.PacksackGoldReq{}
-	req.ChangeGold = proto.Int64(-500)
-	client.SendPackage(utils.CreateMsgHead(msgid.MsgID_PACKSACK_GOLD_REQ), req)
+	client2 := player.GetClient()
+	req2 := &alms.PacksackGoldReq{}
+	req2.ChangeGold = proto.Int64(60000)
+	client2.SendPackage(utils.CreateMsgHead(msgid.MsgID_PACKSACK_GOLD_REQ), req2)
 
-	expector := player.GetExpector(msgid.MsgID_PACKSACK_GOLD_RSP)
+	expector2 := player.GetExpector(msgid.MsgID_PACKSACK_GOLD_RSP)
+	rsq2 := &alms.PacksackGoldRsp{}
+	assert.Nil(t, expector2.Recv(global.DefaultWaitMessageTime, rsq2))
+	fmt.Println(rsq2)
+	req := &alms.PacksackGoldReq{}
+	req.ChangeGold = proto.Int64(-30000)
+	client2.SendPackage(utils.CreateMsgHead(msgid.MsgID_PACKSACK_GOLD_REQ), req)
+
 	rsq := &alms.PacksackGoldRsp{}
-	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, rsq))
+	assert.Nil(t, expector2.Recv(global.DefaultWaitMessageTime, rsq))
 	fmt.Println(rsq)
 }

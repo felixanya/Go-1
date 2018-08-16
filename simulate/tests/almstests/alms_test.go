@@ -8,6 +8,7 @@ import (
 	"steve/simulate/utils"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,17 +22,41 @@ func Test_Alms_Login(t *testing.T) {
 	fmt.Println(ntf)
 }
 
-// Test_Apply_Alms 测试申请救济金
+// Test_Apply_Alms_Login 测试申请救济金登录
 
-func Test_Apply_Alms(t *testing.T) {
+func Test_Apply_Alms_Login(t *testing.T) {
 	player, _ := utils.LoginNewPlayer()
 	assert.NotNil(t, player)
 
 	player.AddExpectors(msgid.MsgID_ALMS_GET_GOLD_RSP)
 	client := player.GetClient()
-	req := &alms.AlmsGetGoldReq{}
-	version := int32(19)
-	req.Version = &version
+	reqType := alms.AlmsReqType_LOGIN
+	req := &alms.AlmsGetGoldReq{
+		ReqType: &reqType,
+		Version: proto.Int32(55),
+	}
+	client.SendPackage(utils.CreateMsgHead(msgid.MsgID_ALMS_GET_GOLD_REQ), req)
+
+	expector := player.GetExpector(msgid.MsgID_ALMS_GET_GOLD_RSP)
+	rsq := &alms.AlmsGetGoldRsp{}
+	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, rsq))
+	fmt.Println(rsq)
+}
+
+// Test_Apply_Alms_XuanChang 测试申请救济金选场
+func Test_Apply_Alms_XuanChang(t *testing.T) {
+	player, _ := utils.LoginNewPlayer()
+	assert.NotNil(t, player)
+
+	player.AddExpectors(msgid.MsgID_ALMS_GET_GOLD_RSP)
+	client := player.GetClient()
+	reqType := alms.AlmsReqType_SELECTED
+	req := &alms.AlmsGetGoldReq{
+		ReqType: &reqType,
+		Version: proto.Int32(55),
+		GameId:  proto.Int32(4),
+		LevelId: proto.Int32(4),
+	}
 	client.SendPackage(utils.CreateMsgHead(msgid.MsgID_ALMS_GET_GOLD_REQ), req)
 
 	expector := player.GetExpector(msgid.MsgID_ALMS_GET_GOLD_RSP)
