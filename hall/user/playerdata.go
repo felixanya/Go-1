@@ -239,9 +239,10 @@ func (pds *PlayerDataService) UpdatePlayerState(ctx context.Context, req *user.U
 
 	// 更新状态
 	result, err := false, nil
+	logrus.Debugf("UpdatePlayerState oldState :(%v),newState:(%v),serverType:(%v)", oldState, newState, serverType)
+
 	if oldState != 0 && newState != 0 {
 		result, err = data.UpdatePlayerState(playerID, oldState, newState, gameID, levelID)
-
 	}
 	// 更新服务地址
 	if serverType != 0 {
@@ -251,6 +252,8 @@ func (pds *PlayerDataService) UpdatePlayerState(ctx context.Context, req *user.U
 	if result && err == nil {
 		rsp.Result, rsp.ErrCode = true, int32(user.ErrCode_EC_SUCCESS)
 	}
+	logrus.Debugf("UpdatePlayerState rsp :(%v),err:(%v)", rsp, err)
+
 	return
 }
 

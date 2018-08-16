@@ -115,6 +115,7 @@ func (s *GameOverState) doRoundSettle(flow interfaces.MajongFlow) {
 		NotTingPlayers:   noTingPlayers,
 		SettleInfos:      mjContext.SettleInfos,
 		SettleID:         mjContext.CurrentSettleId,
+		BaseCoin:         mjContext.BaseCoin,
 	}
 	settlerFactory := settle.SettlerFactory{}
 	settleInfos, raxbeatIds := settlerFactory.CreateRoundSettle(mjContext.GameId).Settle(params)

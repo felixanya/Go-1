@@ -90,8 +90,8 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 			logEntry.WithField("点炮牌", lastOutCard).Infoln("中级AI点炮胡牌")
 			return &event
 		case majong.Action_action_gang:
-			_, keZis, _, _, _, _, _ := SplitBestCards(NonPointer(player.HandCards))
-			if len(keZis) > 0 && Contains(keZis, lastOutCard) {
+			s := SplitCards(NonPointer(player.HandCards))
+			if len(s.KeZis) > 0 && Contains(s.KeZis, lastOutCard) {
 				event.Context = &majong.GangRequestEvent{
 					Head: &majong.RequestEventHead{
 						PlayerId: player.GetPlayerId(),
@@ -103,10 +103,10 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 				return &event
 			}
 		case majong.Action_action_peng:
-			_, _, pairs, _, _, _, _ := SplitBestCards(NonPointer(player.HandCards))
-			if len(pairs) > 0 && Contains(pairs, lastOutCard) {
+			s := SplitCards(NonPointer(player.HandCards))
+			if len(s.Pairs) > 0 && Contains(s.Pairs, lastOutCard) {
 				r := rand.Intn(100)
-				if len(pairs) >= 2 && r < 90 || len(pairs) == 1 && r < 10 { //多于1对时，碰牌概率90%；等于1对时，碰牌概率10%
+				if len(s.Pairs) >= 2 && r < 90 || len(s.Pairs) == 1 && r < 10 { //多于1对时，碰牌概率90%；等于1对时，碰牌概率10%
 					event.Context = &majong.PengRequestEvent{
 						Head: &majong.RequestEventHead{
 							PlayerId: player.GetPlayerId(),
@@ -118,9 +118,9 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 				}
 			}
 		case majong.Action_action_chi:
-			_, _, _, doubleChas, singleChas, _, _ := SplitBestCards(NonPointer(player.HandCards))
-			if len(singleChas)+len(doubleChas) > 0 {
-				for _, cha := range append(singleChas, doubleChas...) { //优先处理单茬
+			s := SplitCards(NonPointer(player.HandCards))
+			if len(s.SingleChas)+len(s.DoubleChas) > 0 {
+				for _, cha := range append(s.SingleChas, s.DoubleChas...) { //优先处理单茬
 					validCards := getValidCard(cha)
 					if ContainsCard(validCards, lastOutCard) {
 						event.Context = &majong.ChiRequestEvent{

@@ -112,6 +112,7 @@ func (s *HuSettleState) doHuSettle(flow interfaces.MajongFlow) {
 		GenCount:       genCount,
 		HuaCount:       huaCount,
 		SettleID:       mjContext.CurrentSettleId,
+		BaseCoin:       mjContext.BaseCoin,
 	}
 	if s.isAfterGang(mjContext) {
 		GangCards := utils.GetMajongPlayer(mjContext.GetLastChupaiPlayer(), mjContext).GangCards
