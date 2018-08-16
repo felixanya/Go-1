@@ -90,7 +90,7 @@ func GetGameLevelConfig(gameId int, levelId int) (levelConf entityConf.GameLevel
 	}
 	levelConf, exists = levelMap[levelId]
 	if !exists {
-		logrus.WithField("gameLevelMap", gameLevelMap).WithField("levelId", levelId).Errorln("找不到游戏场次")
+		logrus.WithField("gameLevelMap", gameLevelMap).WithField("gameId", gameId).WithField("levelId", levelId).Errorln("找不到游戏场次")
 		return
 	}
 	return
