@@ -7,11 +7,14 @@ import (
 	"steve/stress/stressclient/sprite"
 
 	"steve/stress/sprites/login"
+	"steve/stress/common"
+	"github.com/Sirupsen/logrus"
 )
 
 func main() {
 	core.SetGetSpriteFunc(getSpriteByName)
-	select {}
+	<-common.Waitc
+	logrus.Info("EXIT")
 }
 
 func getSpriteByName(name string) (sprite.Sprite, error) {

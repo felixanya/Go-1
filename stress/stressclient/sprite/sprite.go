@@ -19,6 +19,6 @@ type Stage struct {
 
 type Sprite interface {
 	Init() error
-	Start() error
+	Start(params []string) error
 	Stop() error
 }

@@ -21,6 +21,7 @@ func init() {
 
 var ticker *time.Ticker
 var sp sprite.Sprite
+var args []string
 var getSprite func(name string) (sprite.Sprite, error)
 
 func SetGetSpriteFunc(f func(name string) (sprite.Sprite, error)) {
@@ -46,6 +47,7 @@ func doServerCommand(in *client.ServerCommand) {
 		num, _ := strconv.Atoi(params[1])
 		interval, _ := strconv.Atoi(params[2])
 		fun := params[3]
+		args = params[4:]
 		StartStress(times, num, interval, fun)
 	case 2: //stop
 		StopStress()
@@ -82,7 +84,7 @@ func gostart(s sprite.Sprite, total int) {
 }
 func start(s sprite.Sprite) {
 	defer recoverPanic()
-	s.Start()
+	s.Start(args)
 }
 
 func recoverPanic() {

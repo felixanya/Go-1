@@ -8,6 +8,7 @@ import (
 	"steve/simulate/utils"
 	"steve/stress/stressclient/sprite"
 	"time"
+	"steve/simulate/config"
 )
 
 type login struct {
@@ -23,7 +24,9 @@ func (s login) Init() error {
 	s.ch = make(chan int)
 	return nil
 }
-func (s login) Start() error {
+func (s login) Start(params []string) error {
+	gatewayServerAddr := params[0]
+	config.SetGatewayServerAddr(gatewayServerAddr)
 	stage := sprite.GetStage()
 	start := time.Now()
 	player, _ := utils.LoginNewPlayer()

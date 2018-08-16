@@ -31,14 +31,12 @@
     $("#refreshCB").click(function () {
         if(refreshInterval != -1) {
             stopRefresh();
-            updateTxt();
 		}else{
             startRefresh();
 		}
     })
     $("#refreshTF").change(function () {
         if(refreshInterval != -1) {
-            stopRefresh();
             startRefresh();
         }
     })
@@ -77,8 +75,9 @@
     }
 
     function refresh() {
-        count = getInterval();
-        updateTxt();
+        if(refreshInterval != -1) {
+            startRefresh();
+        }
         $.get("/api/clients", onClients);
     }
     refresh();
@@ -94,6 +93,7 @@
 	}
     function startRefresh() {
         var interval = getInterval();
+        stopRefresh();
         refreshInterval = setInterval(refresh, interval * 1000);
         txtInterval = setInterval(updateCount, 1000);
         count = interval;
@@ -104,6 +104,7 @@
         clearInterval(txtInterval);
         refreshInterval = -1;
         txtInterval = -1;
+        updateTxt();
 	}
     startRefresh();
 	function updateCount() {
@@ -151,6 +152,7 @@
 								"个数<input id='numTF' type='text' style='width:60px' value='1'></input>" +
 								"间隔(s)<input id='intervalTF' type='text' style='width:100px' value='1'></input>" +
                                 "功能<input id='funTF' type='text' style='width:100px' value='login'></input>" +
+                                "服务器<input id='paramTF' type='text' style='width:120px' value='127.0.0.1:36001'></input>" +
 								" <button id='btn'>START</button>"
                     }
 				],
@@ -191,10 +193,14 @@
                     input.value = params[3];
                     input.disabled = true;
                 }
+                if(input.id == "paramTF") {
+                    input.value = params[4];
+                    input.disabled = true;
+                }
                 // btns[j].disabled = true;
                 btns[j].innerHTML = "STOP";
 			}
-            if(input.id == "funTF") {
+            if(input.id == "paramTF") {
                 j++;
             }
         }
@@ -222,7 +228,7 @@
         $('#example tbody').on( 'click', 'button', function () {
             var data = table.row( $(this).parents('tr') ).data();
             var inputs = $(this).closest('tr').find("input");
-            var config = {params: [inputs[0].value, inputs[1].value, inputs[2].value, inputs[3].value]};
+            var config = {params: [inputs[0].value, inputs[1].value, inputs[2].value, inputs[3].value, inputs[4].value]};
             if(data[4].start != true) {
                 $.post( "/api/startClient", { id: data[0], config: JSON.stringify(config)})
                         .done(function( data ) {

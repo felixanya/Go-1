@@ -11,6 +11,7 @@ import (
 	"io"
 	"github.com/Sirupsen/logrus"
 	"context"
+	"steve/stress/common"
 )
 
 var rpcconn *grpc.ClientConn
@@ -35,16 +36,22 @@ func recv() {
 		for{
 			in, err := stream.Recv()
 			if err == io.EOF {
-				close(waitc)
+				close(common.Waitc)
 			}
 			if err != nil {
-				logrus.Fatalf("Failed to receive a note : %v", err)
+				close(waitc)
+				//logrus.Fatalf("Failed to receive a note : %v", err)
+				break
 			}
 			logrus.Printf("Got server command: %d, %s", in.Cmd, in.Params)
 			doServerCommand(in)
 		}
 	}()
 	<-waitc
+	if sp != nil {
+		sp.Stop()
+	}
+	close(common.Waitc)
 }
 
 func createRPCClient() (*grpc.ClientConn, error) {

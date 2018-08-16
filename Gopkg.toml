@@ -114,10 +114,6 @@ noverify = ["github.com/bsm/grpclb"]
   name = "github.com/shirou/gopsutil"
   version = "v2.18.07"
 
-[[constraint]]
-  name = "github.com/StackExchange/wmi"
-  version = "1.0.0"
-
 [prune]
   go-tests = true
   unused-packages = true

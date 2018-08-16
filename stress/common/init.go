@@ -12,9 +12,11 @@ import (
 
 var (
 	config  = flag.String("config", "./config.yml", "config.yml")
+	Waitc chan struct{}
 )
 
 func Init() {
+	Waitc = make(chan struct{})
 	flag.Parse()
 	configFile := initConfig()
 	initLogger()

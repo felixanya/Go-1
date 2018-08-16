@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"steve/stress/stressclient/sprite"
 	"time"
+	"github.com/shirou/gopsutil/cpu"
 )
 
 type Win32_Processor struct {
@@ -37,7 +38,8 @@ func refresh() {
 			//	continue
 			//}
 			stage := sprite.GetStage()
-			//stage.CPUGauge.Set(float64(*dst[0].LoadPercentage))
+			cpu, _ := cpu.Percent(2, false)
+			stage.CPUGauge.Set(cpu[0])
 			stage.MemoryGauge.Set(float64(v.UsedPercent))
 			//fmt.Println("cpu: ", *dst[0].LoadPercentage, dst)
 			//fmt.Printf("Total: %v, Free:%v, UsedPercent:%f%%\n", v.Total, v.Free, v.UsedPercent)
