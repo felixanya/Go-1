@@ -12,12 +12,14 @@ import (
 	"steve/entity/db"
 	"steve/external/goldclient"
 	"steve/hall/data"
+	"steve/hall/logic"
 	"steve/server_pb/gold"
 	"steve/structs/exchanger"
 	"steve/structs/proto/gate_rpc"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
+	"github.com/spf13/viper"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
@@ -50,6 +52,8 @@ func HandleGetPlayerInfoReq(playerID uint64, header *steve_proto_gaterpc.Header,
 		} else {
 			response.RealnameStatus = proto.Uint32(0)
 		}
+		realNameReward := viper.GetInt("real_name_reward")
+		response.RealnameReward = proto.Uint64(uint64(realNameReward))
 	}
 
 	// 获取玩家货币信息
@@ -183,17 +187,10 @@ func HandleGetGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Header, r
 		},
 	}
 
-	// 逻辑处理
-	gameInfos, gameLevelInfos, err := data.GetGameInfoList()
-
 	// 返回结果
-	if err == nil {
-		response.GameConfig = DBGameConfig2Client(gameInfos)
-		response.GameLevelConfig = DBGamelevelConfig2Client(gameLevelInfos)
-		response.ErrCode = proto.Uint32(0)
-		return
-	}
-	logrus.Debugf("Handle get game info rsp: (%v),err :(%v) ", response, err.Error())
+	response.GameConfig = DBGameConfig2Client(logic.GameConf)
+	response.GameLevelConfig = DBGamelevelConfig2Client(logic.LevelConf)
+	response.ErrCode = proto.Uint32(0)
 
 	return
 }

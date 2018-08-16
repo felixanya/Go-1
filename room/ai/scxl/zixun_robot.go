@@ -2,15 +2,17 @@ package scxlai
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
 	"steve/common/mjoption"
 	"steve/entity/majong"
 	"steve/gutils"
 	"steve/room/ai"
+	"steve/room/majong/global"
 	"steve/room/majong/utils"
 	"strconv"
 )
 
-func (h *zixunStateAI) getMiddleAIEvent(player *majong.Player, mjContext *majong.MajongContext) (aiEvent ai.AIEvent) {
+func (h *zixunStateAI) generateRobot(player *majong.Player, mjContext *majong.MajongContext) (aiEvent ai.AIEvent) {
 	zxRecord := player.GetZixunRecord()
 	handCards := player.GetHandCards()
 	canHu := zxRecord.GetEnableZimo()
@@ -38,17 +40,15 @@ func (h *zixunStateAI) getMiddleAIEvent(player *majong.Player, mjContext *majong
 		logEntry.Infoln("中级AI自摸胡牌")
 		return
 	}
-	moCard := mjContext.LastMopaiCard
-	for _, pengCard := range NonPointer(utils.TransPengCard(player.PengCards)) {
-		if pengCard == *moCard {
-			aiEvent = h.gang(player, &pengCard)
-			logEntry.WithField("摸牌", moCard).Infoln("中级AI补杠")
-			return
-		}
+	if len(zxRecord.EnableBugangCards) > 0 {
+		buGangCard := global.ToMJCard(int(zxRecord.EnableBugangCards[0]))
+		aiEvent = h.gang(player, &buGangCard)
+		logEntry.WithField("补杠牌", buGangCard).Infoln("中级AI补杠")
+		return
 	}
-	if gang {
+	if gang && len(zxRecord.EnableAngangCards) > 0 {
 		aiEvent = h.gang(player, &outCard)
-		logEntry.WithField("outCard", outCard).Infoln("中级AI暗杠")
+		logEntry.WithField("暗杠牌", outCard).Infoln("中级AI暗杠")
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *zixunStateAI) getMiddleAIEvent(player *majong.Player, mjContext *majong
 			}
 		}
 		aiEvent = h.chupai(player, &card)
-		logEntry.WithField("outCard", card).Infoln("中级AI最大胡牌概率出牌")
+		logEntry.WithField("outCard", card).Infoln("中级AI听牌")
 		return
 	}
 
@@ -146,30 +146,34 @@ func getOutCard(handCards []*majong.Card, mjContext *majong.MajongContext) (majo
 }
 
 func getRemainCardCount(handCards []*majong.Card, mjContext *majong.MajongContext) map[majong.Card]int {
-	//var wallCards []majong.Card
-	//for _, wallCard := range mjContext.WallCards {
-	//	wallCards = append(wallCards, *wallCard)
-	//}
-	//
-	//remainCards := CountCard(wallCards)
+	visible := viper.GetBool("ai.visible")
+	if visible {
+		var wallCards []majong.Card
+		for _, wallCard := range mjContext.WallCards {
+			wallCards = append(wallCards, *wallCard)
+		}
 
-	var visibleCards []*majong.Card
-	visibleCards = append(visibleCards, handCards...)
-	for _, player := range mjContext.Players {
-		visibleCards = append(visibleCards, player.OutCards...)
-		visibleCards = append(visibleCards, utils.TransChiCard(player.ChiCards)...)
-		visibleCards = append(visibleCards, utils.TransPengCard(player.PengCards)...)
-		visibleCards = append(visibleCards, utils.TransGangCard(player.GangCards)...)
-		visibleCards = append(visibleCards, utils.TransHuCard(player.HuCards)...)
+		remainCards := CountCard(wallCards)
+		return remainCards
+	} else {
+		var visibleCards []*majong.Card
+		visibleCards = append(visibleCards, handCards...)
+		for _, player := range mjContext.Players {
+			visibleCards = append(visibleCards, player.OutCards...)
+			visibleCards = append(visibleCards, utils.TransChiCard(player.ChiCards)...)
+			visibleCards = append(visibleCards, utils.TransPengCard(player.PengCards)...)
+			visibleCards = append(visibleCards, utils.TransGangCard(player.GangCards)...)
+			visibleCards = append(visibleCards, utils.TransHuCard(player.HuCards)...)
+		}
+
+		countMap := CountCard(NonPointer(visibleCards))
+
+		remainCards := make(map[majong.Card]int)
+		for k, v := range countMap {
+			remainCards[k] = 4 - v
+		}
+		return remainCards
 	}
-
-	countMap := CountCard(NonPointer(visibleCards))
-
-	remainCards := make(map[majong.Card]int)
-	for k, v := range countMap {
-		remainCards[k] = 4 - v
-	}
-	return remainCards
 }
 
 func whichSingle(remainCards map[majong.Card]int, singles []Split, cha bool) majong.Card {

@@ -3,6 +3,7 @@ package scxlai
 import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
 	"math/rand"
 	"sort"
 	"steve/entity/majong"
@@ -54,8 +55,14 @@ func (h *chupaiWenxunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (
 		}
 	case ai.OverTimeAI, ai.SpecialOverTimeAI, ai.TuoGuangAI:
 		{
-			if event := h.chupaiWenxun(player); event != nil {
-				result.Events = append(result.Events, *event)
+			if viper.GetBool("ai.test") {
+				if event := h.askMiddleAI(player, *mjContext.LastOutCard); event != nil {
+					result.Events = append(result.Events, *event)
+				}
+			} else {
+				if event := h.chupaiWenxun(player); event != nil {
+					result.Events = append(result.Events, *event)
+				}
 			}
 		}
 	}
@@ -80,7 +87,7 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 				},
 			}
 			event.ID = int32(majong.EventID_event_hu_request)
-			logEntry.WithField("lastOutCard", lastOutCard).Infoln("中级AI点炮胡牌")
+			logEntry.WithField("点炮牌", lastOutCard).Infoln("中级AI点炮胡牌")
 			return &event
 		case majong.Action_action_gang:
 			_, keZis, _, _, _, _, _ := SplitBestCards(NonPointer(player.HandCards))
@@ -92,7 +99,7 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 					Card: &lastOutCard,
 				}
 				event.ID = int32(majong.EventID_event_gang_request)
-				logEntry.WithField("lastOutCard", lastOutCard).Infoln("中级AI明杠")
+				logEntry.WithField("明杠牌", lastOutCard).Infoln("中级AI明杠")
 				return &event
 			}
 		case majong.Action_action_peng:
@@ -106,7 +113,7 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 						},
 					}
 					event.ID = int32(majong.EventID_event_peng_request)
-					logEntry.WithField("lastOutCard", lastOutCard).Infoln("中级AI碰牌")
+					logEntry.WithField("碰牌", lastOutCard).Infoln("中级AI碰牌")
 					return &event
 				}
 			}
@@ -123,7 +130,7 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 							Cards: []*majong.Card{&cha.cards[0], &cha.cards[1], &lastOutCard},
 						}
 						event.ID = int32(majong.EventID_event_chi_request)
-						logEntry.WithField("lastOutCard", lastOutCard).Infoln("中级AI吃牌")
+						logEntry.WithField("吃牌", lastOutCard).Infoln("中级AI吃牌")
 						return &event
 					}
 				}
