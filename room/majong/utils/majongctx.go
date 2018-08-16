@@ -55,6 +55,25 @@ func GetPlayerCloseFromTarget(index int, allPlayer, targets []uint64) uint64 {
 	return 0
 }
 
+//DeletePlayerIDFromLast 移除指定的playerId
+func DeletePlayerIDFromLast(players []uint64, playerID uint64) []uint64 {
+	index := -1
+	l := len(players)
+	if l == 0 {
+		return players
+	}
+	for i := l - 1; i >= 0; i-- {
+		if playerID == players[i] {
+			index = i
+			break
+		}
+	}
+	if index != -1 {
+		players = append(players[:index], players[index+1:]...)
+	}
+	return players
+}
+
 // GetCardsGroup 获取玩家牌组信息
 func GetCardsGroup(player *majongpb.Player, huCard *majongpb.Card) []*majongpb.CardsGroup {
 	cardsGroupList := make([]*majongpb.CardsGroup, 0)
