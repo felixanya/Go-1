@@ -658,6 +658,87 @@ VALUES
 
 
 
+INSERT INTO `t_common_config` (`key`, `subkey`, `value`)
+VALUES
+  ( 'ad', 'config', '[
+    {
+        "id":1,
+        "prov":0,
+        "city":0,
+        "channel":0,
+        "is_use":1,
+        "ad_list":[
+            {
+                "ad_id":1,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"1"
+            },
+            {
+                "ad_id":2,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"2"
+            },
+            {
+                "ad_id":3,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"3"
+            },
+            {
+                "ad_id":4,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"4"
+            }
+        ]
+    },
+    {
+        "id":2,
+        "prov":0,
+        "city":0,
+        "channel":1,
+        "is_use":1,
+        "ad_list":[
+            {
+                "ad_id":1,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"1"
+            },
+            {
+                "ad_id":2,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"2"
+            },
+            {
+                "ad_id":3,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"3"
+            },
+            {
+                "ad_id":4,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"4"
+            }
+        ]
+    }
+]');
+
+
+
 /*游戏配置*/ 
 INSERT INTO `t_game_config` VALUES (1, 1, '血流麻将', 1, 4, 4, NULL, NULL, NULL, NULL, NULL, '2018-08-07 19:01:33', NULL, NULL, NULL);
 INSERT INTO `t_game_config` VALUES (2, 2, '血战麻将', 1, 4, 4, NULL, NULL, NULL, NULL, NULL, '2018-08-07 19:03:29', NULL, NULL, NULL);
