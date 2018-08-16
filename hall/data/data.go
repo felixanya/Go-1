@@ -393,17 +393,17 @@ func setPlayerStateByWatch(redisName string, key string, oldState uint32, fields
 	}
 
 	err = redisCli.Watch(func(tx *redis.Tx) error {
-		currentState, rerr := tx.HGet(key, cache.GameState).Result()
-		if rerr != nil {
-			err = fmt.Errorf("修改玩家游戏状态出错，key:(%s)不存在,err:(%s)", key, rerr.Error())
-			return err
-		}
-		stateInt, _ := strconv.Atoi(currentState)
+		// currentState, rerr := tx.HGet(key, cache.GameState).Result()
+		// if rerr != nil {
+		// 	err = fmt.Errorf("修改玩家游戏状态出错，key:(%s)不存在,err:(%s)", key, rerr.Error())
+		// 	return err
+		// }
+		// stateInt, _ := strconv.Atoi(currentState)
 
-		if uint32(stateInt) != oldState {
-			err = fmt.Errorf("修改玩家游戏状态出错，玩家当前状态不为：(%d)", oldState)
-			return err
-		}
+		// if uint32(stateInt) != oldState {
+		// 	err = fmt.Errorf("修改玩家游戏状态出错，玩家当前状态不为：(%d)", oldState)
+		// 	return err
+		// }
 
 		_, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
 			pipe.HMSet(key, list)

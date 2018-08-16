@@ -100,6 +100,7 @@ func (s *QiangGangHuSettleState) doQiangGangHuSettle(flow interfaces.MajongFlow)
 		GenCount:       genCount,
 		HuaCount:       huaCount,
 		SettleID:       mjContext.CurrentSettleId,
+		BaseCoin:       mjContext.BaseCoin,
 	}
 	settlerFactory := settle.SettlerFactory{}
 	settleInfos := settlerFactory.CreateHuSettler(mjContext.GameId).Settle(params)
