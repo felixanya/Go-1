@@ -100,7 +100,7 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	// 选场判断游戏场次ID是否开启救济
 	if reqType == client_alms.AlmsReqType_SELECTED {
 		// 获取救济金配置
-		gameLeveConfigMaps, err := configclient.GetGameLevelConfigMap()
+		gameLeveConfigMaps, err := configclient.GetAllGameLevelConfig()
 		if err != nil {
 			response.Result = proto.Bool(false)
 			logrus.WithError(err).Debugln("获取救济金配置失败")

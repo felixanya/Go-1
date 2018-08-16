@@ -59,7 +59,7 @@ func getPlayerAlmsConfigInfo(playerID uint64) error {
 		return err
 	}
 	// 获取救济金配置
-	gameLeveConfigMaps, err := configclient.GetGameLevelConfigMap()
+	gameLeveConfigMaps, err := configclient.GetAllGameLevelConfig()
 	if err != nil {
 		logrus.WithError(err).Debugln("获取救济金配置失败")
 		return err

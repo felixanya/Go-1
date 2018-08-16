@@ -275,7 +275,7 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 
 	// 场次配置
 
-	levelConf, err := configclient.GetGameLevelConfigMap()
+	levelConf, err := configclient.GetAllGameLevelConfig()
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏级别配置失败！！")
 		return false
