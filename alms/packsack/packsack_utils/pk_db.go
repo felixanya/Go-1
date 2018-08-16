@@ -36,7 +36,7 @@ func initTPacksack(uid uint64) error {
 	}
 	tp := &db.TPlayerPacksack{
 		Playerid: int64(uid),
-		Gold:     1000,
+		Gold:     0,
 	}
 	num, err := engine.Table(pktableName).Insert(tp)
 	if err != nil {
@@ -62,7 +62,7 @@ func GetGoldFromDB(uid uint64) (int64, error) {
 		return 0, fmt.Errorf("从DB获取玩家背包金币金币：(%v), sql:(%s)", err, sql)
 	}
 	if !exist {
-		return 1000, initTPacksack(uid)
+		return 0, initTPacksack(uid)
 	}
 	return int64(tppk.Gold), nil
 }

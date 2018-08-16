@@ -2,6 +2,7 @@ package almsserver
 
 import (
 	"steve/alms/data"
+	"steve/alms/packsack/packsack_gold"
 	client_alms "steve/client_pb/alms"
 	"steve/client_pb/msgid"
 	"steve/external/goldclient"
@@ -29,9 +30,18 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 			Body:  response,
 		},
 	}
-
-	// 校验玩家背包是否有金豆 TODO，有返回false
-
+	// 校验玩家背包是否有金豆 有返回false
+	Pkgold, err := packsack_gold.GetGoldMgr().GetGold(playerID)
+	if err != nil {
+		response.Result = proto.Bool(false)
+		entry.WithError(err).Debugln("背包金币获取")
+		return
+	}
+	if Pkgold != 0 {
+		response.Result = proto.Bool(false)
+		entry.Debugln("背包金币不为0")
+		return
+	}
 	version := req.GetVersion() // 版本号
 	// 获取配置用于验证
 	ac, err := data.GetAlmsConfigByPlayerID(playerID)
@@ -43,6 +53,7 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	response.NewVersion = proto.Int32(int32(ac.Version))
 	// 版本不对应,配置发生改变,发送新的配置信息
 	if version != int32(ac.Version) {
+		entry.Debugf("版本号不一致 currVersion:", ac.Version)
 		newAlmsConfig := &client_alms.AlmsConfig{
 			AlmsGetNorm:      proto.Int64(ac.GetNorm),                 // 救济金
 			AlmsGetTimes:     proto.Int32(int32(ac.GetTimes)),         // 配置每个玩家可以领取次数
@@ -87,7 +98,6 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	}
 	response.PlayerAlmsTimes = proto.Int32(int32(ac.PlayerGotTimes + 1)) // 玩家已经领取的次数
 	response.ChangeGold = proto.Int64(changeGold)
-	response.NewVersion = proto.Int32(int32(ac.Version))
 	entry.WithFields(logrus.Fields{"playerID": playerID, "oldGold": playerGold, "newGold": changeGold}).Infoln("申请救济成功")
 	return
 }
