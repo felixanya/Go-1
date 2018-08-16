@@ -1,9 +1,12 @@
 package almsserver
 
 import (
+	"fmt"
 	"steve/alms/data"
+	"steve/alms/packsack/packsack_gold"
 	client_alms "steve/client_pb/alms"
 	"steve/client_pb/msgid"
+	"steve/external/configclient"
 	"steve/external/goldclient"
 	"steve/server_pb/gold"
 	"steve/structs/exchanger"
@@ -29,11 +32,19 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 			Body:  response,
 		},
 	}
-	gameID := int32(*req.GetGameId().Enum()) // 游戏ID
-	levelID := req.GetLevelId()              // 场次ID
-	almsGetType := req.GetAlmsApplyType()    // 救济金领取类型
-	totalGold := req.GetTotalGold()          // 总共需要的金币
-	version := req.GetVersion()              // 版本号
+	// 校验玩家背包是否有金豆 有返回false
+	Pkgold, err := packsack_gold.GetGoldMgr().GetGold(playerID)
+	if err != nil {
+		response.Result = proto.Bool(false)
+		entry.WithError(err).Debugln("背包金币获取")
+		return
+	}
+	if Pkgold != 0 {
+		response.Result = proto.Bool(false)
+		entry.Debugln("背包金币不为0")
+		return
+	}
+	version := req.GetVersion() // 版本号
 	// 获取配置用于验证
 	ac, err := data.GetAlmsConfigByPlayerID(playerID)
 	if err != nil {
@@ -44,22 +55,38 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	response.NewVersion = proto.Int32(int32(ac.Version))
 	// 版本不对应,配置发生改变,发送新的配置信息
 	if version != int32(ac.Version) {
+		entry.Debugln(fmt.Sprintf("版本号不一致 currVersion(%d)", ac.Version))
 		newAlmsConfig := &client_alms.AlmsConfig{
 			AlmsGetNorm:      proto.Int64(ac.GetNorm),                 // 救济金
-			AlmsGetTimes:     proto.Int32(int32(ac.GetTimes)),         //次数
+			AlmsGetTimes:     proto.Int32(int32(ac.GetTimes)),         // 配置每个玩家可以领取次数
 			AlmsGetNumber:    proto.Int64(ac.GetNumber),               // 领取数量
 			AlmsCountDonw:    proto.Int32(int32(ac.AlmsCountDonw)),    //救济倒计时
 			DepositCountDonw: proto.Int32(int32(ac.DepositCountDonw)), //救济倒计时
-			GameLeveIsOpen:   dataToClentPbGameLeveIsOpen(ac.GameLeveConfigs),
 		}
 		response.NewAlmsConfig = newAlmsConfig
 	}
+
 	//是否还有领取次数
 	if ac.PlayerGotTimes >= 3 {
 		entry.Errorf("领取次数已满 times(%v) ", ac.PlayerGotTimes)
 		response.Result = proto.Bool(false)
 		return
 	}
+
+	reqType := req.GetReqType()
+	// 请求类型
+	isExist := map[client_alms.AlmsReqType]bool{
+		client_alms.AlmsReqType_LOGIN:    true, // 登录
+		client_alms.AlmsReqType_SELECTED: true, // 选场
+		client_alms.AlmsReqType_INGAME:   true, // 游戏中
+	}[reqType]
+
+	if !isExist {
+		entry.Debugln(fmt.Sprintf("救济金请求类型不存在 reqType(%d)", reqType))
+		response.Result = proto.Bool(false)
+		return
+	}
+
 	//从金币服获取玩家身上金币，
 	playerGold, err := goldclient.GetGold(playerID, int16(gold.GoldType_GOLD_COIN))
 	if err != nil {
@@ -67,75 +94,76 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 		response.Result = proto.Bool(false)
 		return
 	}
-	if playerGold > ac.GetNorm {
-		entry.Errorf("玩家身上的金币没有达到救济线  playerGold(%v) ", playerGold)
-		response.Result = proto.Bool(false)
-		return
-	}
-	//不是登陆类型，才玩家身上金，加上救济数量，是否符合，总需求
-	isExist := map[client_alms.AlmsApplyType]bool{
-		client_alms.AlmsApplyType_AAT_LOGIN:      true, // 登陆
-		client_alms.AlmsApplyType_AAT_SELECTIONS: true, // 选场
-		client_alms.AlmsApplyType_AAT_GAME_OVER:  true, // 游戏结束，下一局
-		client_alms.AlmsApplyType_AAT_IN_GAME:    true, // 游戏中
-	}[almsGetType]
-	if !isExist {
-		entry.Errorf("救济金获取类型不存在 (%v) ", almsGetType)
-		response.Result = proto.Bool(false)
-		return
-	} // 选场和游戏结束时
-	if almsGetType == client_alms.AlmsApplyType_AAT_SELECTIONS || almsGetType == client_alms.AlmsApplyType_AAT_GAME_OVER {
-		//根据游戏ID和场ID，判断该场是否可以有救济金
+
+	gameID := int(req.GetGameId())
+	levelID := int(req.GetLevelId())
+	// 选场判断游戏场次ID是否开启救济
+	if reqType == client_alms.AlmsReqType_SELECTED {
+		// 获取救济金配置
+		gameLeveConfigMaps, err := configclient.GetAllGameLevelConfig()
+		if err != nil {
+			response.Result = proto.Bool(false)
+			logrus.WithError(err).Debugln("获取救济金配置失败")
+			return
+		}
 		flag := true
-		gameLevels := ac.GameLeveConfigs
-		for _, gameLevel := range gameLevels {
-			currGameID := gameLevel.GameID
-			currLevelID := gameLevel.LevelID
-			if gameID == currGameID && levelID == currLevelID {
-				currLowScores := gameLevel.LowScores
-				if totalGold == gameLevel.LowScores { // 所需金币与所选场的下限金币不同
-					flag = gameLevel.IsOpen == 0 // 是否时关闭的
+		for _, gameLeveConfigMap := range gameLeveConfigMaps {
+			if gameLeveConfigMap.GameID == gameID && gameLeveConfigMap.LevelID == levelID {
+				flag = false
+				if gameLeveConfigMap.IsAlms == 0 {
+					response.Result = proto.Bool(false)
+					logrus.Debugln(fmt.Sprintf("该游戏场次未开启救济金  gameID(%d) - levelID(%d) - IsAlms(%d)", gameID, levelID, gameLeveConfigMap.IsAlms))
+					return
 				}
-				entry.WithFields(logrus.Fields{
-					"currGameID":    currGameID,
-					"currLevelID":   currLevelID,
-					"currLowScores": currLowScores,
-					"flag":          flag,
-				}).Debugln("救济金的场次")
+				// 如果玩家身上的金币已经够了，不应该发救济金
+				if int64(gameLeveConfigMap.LowScores) <= playerGold {
+					logrus.Debugln(fmt.Sprintf("玩家身上的金币，足够改场次的下限 playerGold(%d) -- gameLeveConfigMap(%v)", playerGold, gameLeveConfigMap))
+					response.Result = proto.Bool(false)
+					return
+				}
+				logrus.Debugln(fmt.Sprintf("该游戏场次配置  gameID(%d) - levelID(%d) - lowScores(%d)", gameID, levelID, gameLeveConfigMap.LowScores))
 				break
 			}
 		}
 		if flag {
+			logrus.Debugln(fmt.Sprintf("该游戏场次不存在 gameID(%d) - levelID(%d)", gameID, levelID))
 			response.Result = proto.Bool(false)
-			return
-		}
-		// 判断游戏和选场状态所需的金币是否足够
-		if totalGold > (playerGold + ac.GetNumber) {
-			entry.Errorf("救济金数量不够 totalGold(%v) playerGold(%v) GetNumber(%v) ", totalGold, playerGold, ac.GetNumber)
-			response.Result = proto.Bool(false)
+			flag = false
 			return
 		}
 	}
-	//更改玩家金豆数，和领取数量，返回成功(改变的金豆数，和剩余领取数量)或失败
+
+	// 游戏中,玩家破产才领
+	if reqType == client_alms.AlmsReqType_INGAME && playerGold != 0 {
+		entry.Debugln(fmt.Sprintf("玩家金币不为0,没有破产 gold(%d)", playerGold))
+		response.Result = proto.Bool(false)
+		return
+	}
+
+	// 只有登录中才判断是否救济金达标
+	if reqType == client_alms.AlmsReqType_LOGIN && playerGold > ac.GetNorm {
+		entry.Debugf("玩家身上的金币没有达到救济线  playerGold：", playerGold)
+		response.Result = proto.Bool(false)
+		return
+	}
+
+	//验证通过，玩家领取次数加1
 	if err := data.UpdatePlayerGotTimesByPlayerID(playerID, ac.PlayerGotTimes+1); err != nil {
-		entry.WithError(err).Errorf(" playerID(%v) - 更改玩家金豆数失败", playerID)
+		entry.WithError(err).Errorf(" playerID(%d) times(%d)- 更改玩家救济金领取次数失败", playerID, ac.PlayerGotTimes)
 		response.Result = proto.Bool(false)
 		return
 	}
 	// 更改玩家身上的金币 TODO almsFuncID 渠道ID
 	almsFuncID := int32(10)
-	changeGold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), ac.GetNumber, almsFuncID, 0, gameID, levelID)
+	almschannl := int64(10)
+	changeGold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), ac.GetNumber, almsFuncID, almschannl, 0, 0)
 	if err != nil || changeGold != playerGold+ac.GetNumber {
 		entry.WithError(err).Errorf(" playerID(%v) - 设置玩家身上金币失败 changeGold(%v) , needGold(%v)", playerID, changeGold, playerGold+ac.GetNumber)
 		response.Result = proto.Bool(false)
 		return
 	}
-	response.PlayerAlmsTimes = proto.Int32(int32(ac.PlayerGotTimes + 1))
+	response.PlayerAlmsTimes = proto.Int32(int32(ac.PlayerGotTimes + 1)) // 玩家已经领取的次数
 	response.ChangeGold = proto.Int64(changeGold)
-	entry.WithFields(logrus.Fields{
-		"playerID": playerID,
-		"oldGold":  playerGold,
-		"newGold":  changeGold,
-	}).Infoln("申请救济成功")
+	entry.WithFields(logrus.Fields{"playerID": playerID, "oldGold": playerGold, "newGold": changeGold}).Infoln("申请救济成功")
 	return
 }

@@ -112,6 +112,8 @@ It has these top-level messages:
 	RoomGiveUpReq
 	RoomGiveUpRsp
 	RoomGiveUpNtf
+	RoomBrokerPlayerContinueReq
+	RoomBrokerPlayerContinueRsp
 	Poker
 */
 package room

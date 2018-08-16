@@ -9,17 +9,21 @@ It is generated from these files:
 
 It has these top-level messages:
 	AlmsGetGoldReq
-	AlmsGetGoldRsp
-	GemeLeveIsOpent
+	GameLevelIsOpen
 	AlmsConfig
+	AlmsGetGoldRsp
 	AlmsConfigNtf
+	PlayerPacksackInfoRep
+	PacksackPropInfo
+	PlayerPacksackInfoRsp
+	PacksackGoldReq
+	PacksackGoldRsp
 */
 package alms
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import common "steve/client_pb/common"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -32,56 +36,93 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-// AlmsApplyType 救济金获取类型
-type AlmsApplyType int32
+// AlmsReqType 救济金请求类型
+type AlmsReqType int32
 
 const (
-	AlmsApplyType_AAT_LOGIN      AlmsApplyType = 0
-	AlmsApplyType_AAT_SELECTIONS AlmsApplyType = 1
-	AlmsApplyType_AAT_GAME_OVER  AlmsApplyType = 2
-	AlmsApplyType_AAT_IN_GAME    AlmsApplyType = 3
+	AlmsReqType_ART_INVALID_PROP AlmsReqType = 0
+	AlmsReqType_LOGIN            AlmsReqType = 1
+	AlmsReqType_SELECTED         AlmsReqType = 2
+	AlmsReqType_INGAME           AlmsReqType = 3
 )
 
-var AlmsApplyType_name = map[int32]string{
-	0: "AAT_LOGIN",
-	1: "AAT_SELECTIONS",
-	2: "AAT_GAME_OVER",
-	3: "AAT_IN_GAME",
+var AlmsReqType_name = map[int32]string{
+	0: "ART_INVALID_PROP",
+	1: "LOGIN",
+	2: "SELECTED",
+	3: "INGAME",
 }
-var AlmsApplyType_value = map[string]int32{
-	"AAT_LOGIN":      0,
-	"AAT_SELECTIONS": 1,
-	"AAT_GAME_OVER":  2,
-	"AAT_IN_GAME":    3,
+var AlmsReqType_value = map[string]int32{
+	"ART_INVALID_PROP": 0,
+	"LOGIN":            1,
+	"SELECTED":         2,
+	"INGAME":           3,
 }
 
-func (x AlmsApplyType) Enum() *AlmsApplyType {
-	p := new(AlmsApplyType)
+func (x AlmsReqType) Enum() *AlmsReqType {
+	p := new(AlmsReqType)
 	*p = x
 	return p
 }
-func (x AlmsApplyType) String() string {
-	return proto.EnumName(AlmsApplyType_name, int32(x))
+func (x AlmsReqType) String() string {
+	return proto.EnumName(AlmsReqType_name, int32(x))
 }
-func (x *AlmsApplyType) UnmarshalJSON(data []byte) error {
-	value, err := proto.UnmarshalJSONEnum(AlmsApplyType_value, data, "AlmsApplyType")
+func (x *AlmsReqType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(AlmsReqType_value, data, "AlmsReqType")
 	if err != nil {
 		return err
 	}
-	*x = AlmsApplyType(value)
+	*x = AlmsReqType(value)
 	return nil
 }
-func (AlmsApplyType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (AlmsReqType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+// PropType 具类型
+type PropType int32
+
+const (
+	PropType_INVALID_PROP PropType = 0
+	PropType_INTERACTIVE  PropType = 1
+	PropType_SPEEDY       PropType = 2
+)
+
+var PropType_name = map[int32]string{
+	0: "INVALID_PROP",
+	1: "INTERACTIVE",
+	2: "SPEEDY",
+}
+var PropType_value = map[string]int32{
+	"INVALID_PROP": 0,
+	"INTERACTIVE":  1,
+	"SPEEDY":       2,
+}
+
+func (x PropType) Enum() *PropType {
+	p := new(PropType)
+	*p = x
+	return p
+}
+func (x PropType) String() string {
+	return proto.EnumName(PropType_name, int32(x))
+}
+func (x *PropType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(PropType_value, data, "PropType")
+	if err != nil {
+		return err
+	}
+	*x = PropType(value)
+	return nil
+}
+func (PropType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 // msgid:ALMS_GET_GOLD_REQ = 0x6001;  	             // 获取救济金请求
 // 获取救济金请求(玩家申请救济金请求)
 type AlmsGetGoldReq struct {
-	AlmsApplyType    *AlmsApplyType `protobuf:"varint,1,opt,name=alms_apply_type,json=almsApplyType,enum=alms.AlmsApplyType" json:"alms_apply_type,omitempty"`
-	GameId           *common.GameId `protobuf:"varint,2,opt,name=game_id,json=gameId,enum=common.GameId" json:"game_id,omitempty"`
-	LevelId          *int32         `protobuf:"varint,3,opt,name=level_id,json=levelId" json:"level_id,omitempty"`
-	TotalGold        *int64         `protobuf:"varint,4,opt,name=total_gold,json=totalGold" json:"total_gold,omitempty"`
-	Version          *int32         `protobuf:"varint,5,opt,name=version" json:"version,omitempty"`
-	XXX_unrecognized []byte         `json:"-"`
+	Version          *int32       `protobuf:"varint,1,opt,name=version" json:"version,omitempty"`
+	ReqType          *AlmsReqType `protobuf:"varint,2,opt,name=req_type,json=reqType,enum=alms.AlmsReqType" json:"req_type,omitempty"`
+	GameId           *int32       `protobuf:"varint,3,opt,name=game_id,json=gameId" json:"game_id,omitempty"`
+	LevelId          *int32       `protobuf:"varint,4,opt,name=level_id,json=levelId" json:"level_id,omitempty"`
+	XXX_unrecognized []byte       `json:"-"`
 }
 
 func (m *AlmsGetGoldReq) Reset()                    { *m = AlmsGetGoldReq{} }
@@ -89,18 +130,25 @@ func (m *AlmsGetGoldReq) String() string            { return proto.CompactTextSt
 func (*AlmsGetGoldReq) ProtoMessage()               {}
 func (*AlmsGetGoldReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
-func (m *AlmsGetGoldReq) GetAlmsApplyType() AlmsApplyType {
-	if m != nil && m.AlmsApplyType != nil {
-		return *m.AlmsApplyType
+func (m *AlmsGetGoldReq) GetVersion() int32 {
+	if m != nil && m.Version != nil {
+		return *m.Version
 	}
-	return AlmsApplyType_AAT_LOGIN
+	return 0
 }
 
-func (m *AlmsGetGoldReq) GetGameId() common.GameId {
+func (m *AlmsGetGoldReq) GetReqType() AlmsReqType {
+	if m != nil && m.ReqType != nil {
+		return *m.ReqType
+	}
+	return AlmsReqType_ART_INVALID_PROP
+}
+
+func (m *AlmsGetGoldReq) GetGameId() int32 {
 	if m != nil && m.GameId != nil {
 		return *m.GameId
 	}
-	return common.GameId_GAMEID_XUELIU
+	return 0
 }
 
 func (m *AlmsGetGoldReq) GetLevelId() int32 {
@@ -110,99 +158,34 @@ func (m *AlmsGetGoldReq) GetLevelId() int32 {
 	return 0
 }
 
-func (m *AlmsGetGoldReq) GetTotalGold() int64 {
-	if m != nil && m.TotalGold != nil {
-		return *m.TotalGold
-	}
-	return 0
-}
-
-func (m *AlmsGetGoldReq) GetVersion() int32 {
-	if m != nil && m.Version != nil {
-		return *m.Version
-	}
-	return 0
-}
-
-// msgid:ALMS_GET_GOLD_RSP = 0x6002;
-// 获取救济金应答(玩家申请救济金响应)
-type AlmsGetGoldRsp struct {
-	PlayerAlmsTimes  *int32      `protobuf:"varint,1,opt,name=player_alms_times,json=playerAlmsTimes" json:"player_alms_times,omitempty"`
-	ChangeGold       *int64      `protobuf:"varint,2,opt,name=change_gold,json=changeGold" json:"change_gold,omitempty"`
-	NewVersion       *int32      `protobuf:"varint,3,opt,name=new_version,json=newVersion" json:"new_version,omitempty"`
-	NewAlmsConfig    *AlmsConfig `protobuf:"bytes,4,opt,name=new_alms_config,json=newAlmsConfig" json:"new_alms_config,omitempty"`
-	Result           *bool       `protobuf:"varint,5,opt,name=result" json:"result,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
-}
-
-func (m *AlmsGetGoldRsp) Reset()                    { *m = AlmsGetGoldRsp{} }
-func (m *AlmsGetGoldRsp) String() string            { return proto.CompactTextString(m) }
-func (*AlmsGetGoldRsp) ProtoMessage()               {}
-func (*AlmsGetGoldRsp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *AlmsGetGoldRsp) GetPlayerAlmsTimes() int32 {
-	if m != nil && m.PlayerAlmsTimes != nil {
-		return *m.PlayerAlmsTimes
-	}
-	return 0
-}
-
-func (m *AlmsGetGoldRsp) GetChangeGold() int64 {
-	if m != nil && m.ChangeGold != nil {
-		return *m.ChangeGold
-	}
-	return 0
-}
-
-func (m *AlmsGetGoldRsp) GetNewVersion() int32 {
-	if m != nil && m.NewVersion != nil {
-		return *m.NewVersion
-	}
-	return 0
-}
-
-func (m *AlmsGetGoldRsp) GetNewAlmsConfig() *AlmsConfig {
-	if m != nil {
-		return m.NewAlmsConfig
-	}
-	return nil
-}
-
-func (m *AlmsGetGoldRsp) GetResult() bool {
-	if m != nil && m.Result != nil {
-		return *m.Result
-	}
-	return false
-}
-
-// GemeLeveIsOpent 对应游戏的场次ID，是否开启救济金
-type GemeLeveIsOpent struct {
-	GemeId           *int32 `protobuf:"varint,1,opt,name=geme_id,json=gemeId" json:"geme_id,omitempty"`
+// 场次是否开启救济金
+type GameLevelIsOpen struct {
+	GameId           *int32 `protobuf:"varint,1,opt,name=game_id,json=gameId" json:"game_id,omitempty"`
 	LevelId          *int32 `protobuf:"varint,2,opt,name=level_id,json=levelId" json:"level_id,omitempty"`
 	IsOpen           *int32 `protobuf:"varint,3,opt,name=is_open,json=isOpen" json:"is_open,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
 
-func (m *GemeLeveIsOpent) Reset()                    { *m = GemeLeveIsOpent{} }
-func (m *GemeLeveIsOpent) String() string            { return proto.CompactTextString(m) }
-func (*GemeLeveIsOpent) ProtoMessage()               {}
-func (*GemeLeveIsOpent) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (m *GameLevelIsOpen) Reset()                    { *m = GameLevelIsOpen{} }
+func (m *GameLevelIsOpen) String() string            { return proto.CompactTextString(m) }
+func (*GameLevelIsOpen) ProtoMessage()               {}
+func (*GameLevelIsOpen) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
-func (m *GemeLeveIsOpent) GetGemeId() int32 {
-	if m != nil && m.GemeId != nil {
-		return *m.GemeId
+func (m *GameLevelIsOpen) GetGameId() int32 {
+	if m != nil && m.GameId != nil {
+		return *m.GameId
 	}
 	return 0
 }
 
-func (m *GemeLeveIsOpent) GetLevelId() int32 {
+func (m *GameLevelIsOpen) GetLevelId() int32 {
 	if m != nil && m.LevelId != nil {
 		return *m.LevelId
 	}
 	return 0
 }
 
-func (m *GemeLeveIsOpent) GetIsOpen() int32 {
+func (m *GameLevelIsOpen) GetIsOpen() int32 {
 	if m != nil && m.IsOpen != nil {
 		return *m.IsOpen
 	}
@@ -216,15 +199,15 @@ type AlmsConfig struct {
 	AlmsGetNumber    *int64             `protobuf:"varint,3,opt,name=alms_get_number,json=almsGetNumber" json:"alms_get_number,omitempty"`
 	AlmsCountDonw    *int32             `protobuf:"varint,4,opt,name=alms_count_donw,json=almsCountDonw" json:"alms_count_donw,omitempty"`
 	DepositCountDonw *int32             `protobuf:"varint,5,opt,name=deposit_count_donw,json=depositCountDonw" json:"deposit_count_donw,omitempty"`
-	GameLeveIsOpen   []*GemeLeveIsOpent `protobuf:"bytes,6,rep,name=game_leve_is_open,json=gameLeveIsOpen" json:"game_leve_is_open,omitempty"`
-	Version          *int32             `protobuf:"varint,7,opt,name=version" json:"version,omitempty"`
+	Version          *int32             `protobuf:"varint,6,opt,name=version" json:"version,omitempty"`
+	GameLevelIsOpen  []*GameLevelIsOpen `protobuf:"bytes,7,rep,name=game_level_isOpen,json=gameLevelIsOpen" json:"game_level_isOpen,omitempty"`
 	XXX_unrecognized []byte             `json:"-"`
 }
 
 func (m *AlmsConfig) Reset()                    { *m = AlmsConfig{} }
 func (m *AlmsConfig) String() string            { return proto.CompactTextString(m) }
 func (*AlmsConfig) ProtoMessage()               {}
-func (*AlmsConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*AlmsConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *AlmsConfig) GetAlmsGetNorm() int64 {
 	if m != nil && m.AlmsGetNorm != nil {
@@ -261,18 +244,69 @@ func (m *AlmsConfig) GetDepositCountDonw() int32 {
 	return 0
 }
 
-func (m *AlmsConfig) GetGameLeveIsOpen() []*GemeLeveIsOpent {
-	if m != nil {
-		return m.GameLeveIsOpen
-	}
-	return nil
-}
-
 func (m *AlmsConfig) GetVersion() int32 {
 	if m != nil && m.Version != nil {
 		return *m.Version
 	}
 	return 0
+}
+
+func (m *AlmsConfig) GetGameLevelIsOpen() []*GameLevelIsOpen {
+	if m != nil {
+		return m.GameLevelIsOpen
+	}
+	return nil
+}
+
+// msgid:ALMS_GET_GOLD_RSP = 0x6002;
+// 获取救济金应答(玩家申请救济金响应)
+type AlmsGetGoldRsp struct {
+	PlayerAlmsTimes  *int32      `protobuf:"varint,1,opt,name=player_alms_times,json=playerAlmsTimes" json:"player_alms_times,omitempty"`
+	ChangeGold       *int64      `protobuf:"varint,2,opt,name=change_gold,json=changeGold" json:"change_gold,omitempty"`
+	NewVersion       *int32      `protobuf:"varint,3,opt,name=new_version,json=newVersion" json:"new_version,omitempty"`
+	NewAlmsConfig    *AlmsConfig `protobuf:"bytes,4,opt,name=new_alms_config,json=newAlmsConfig" json:"new_alms_config,omitempty"`
+	Result           *bool       `protobuf:"varint,5,opt,name=result" json:"result,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *AlmsGetGoldRsp) Reset()                    { *m = AlmsGetGoldRsp{} }
+func (m *AlmsGetGoldRsp) String() string            { return proto.CompactTextString(m) }
+func (*AlmsGetGoldRsp) ProtoMessage()               {}
+func (*AlmsGetGoldRsp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *AlmsGetGoldRsp) GetPlayerAlmsTimes() int32 {
+	if m != nil && m.PlayerAlmsTimes != nil {
+		return *m.PlayerAlmsTimes
+	}
+	return 0
+}
+
+func (m *AlmsGetGoldRsp) GetChangeGold() int64 {
+	if m != nil && m.ChangeGold != nil {
+		return *m.ChangeGold
+	}
+	return 0
+}
+
+func (m *AlmsGetGoldRsp) GetNewVersion() int32 {
+	if m != nil && m.NewVersion != nil {
+		return *m.NewVersion
+	}
+	return 0
+}
+
+func (m *AlmsGetGoldRsp) GetNewAlmsConfig() *AlmsConfig {
+	if m != nil {
+		return m.NewAlmsConfig
+	}
+	return nil
+}
+
+func (m *AlmsGetGoldRsp) GetResult() bool {
+	if m != nil && m.Result != nil {
+		return *m.Result
+	}
+	return false
 }
 
 // ALMS_LOGIN_GOLD_CONFIG_NTF = 0x6003;         // 玩家登陆救济金配置通知
@@ -302,55 +336,238 @@ func (m *AlmsConfigNtf) GetPlayerGotTimes() int32 {
 	return 0
 }
 
+// PACKSACK_INFO_REQ = 0x6004;            // 玩家登录背包信息请求
+type PlayerPacksackInfoRep struct {
+	Reserved         *int32 `protobuf:"varint,1,opt,name=reserved" json:"reserved,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *PlayerPacksackInfoRep) Reset()                    { *m = PlayerPacksackInfoRep{} }
+func (m *PlayerPacksackInfoRep) String() string            { return proto.CompactTextString(m) }
+func (*PlayerPacksackInfoRep) ProtoMessage()               {}
+func (*PlayerPacksackInfoRep) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *PlayerPacksackInfoRep) GetReserved() int32 {
+	if m != nil && m.Reserved != nil {
+		return *m.Reserved
+	}
+	return 0
+}
+
+// PacksackPropInfo 背包道具信息
+type PacksackPropInfo struct {
+	PropId           *int32    `protobuf:"varint,1,opt,name=prop_id,json=propId" json:"prop_id,omitempty"`
+	PropName         *string   `protobuf:"bytes,2,opt,name=prop_name,json=propName" json:"prop_name,omitempty"`
+	PropType         *PropType `protobuf:"varint,3,opt,name=prop_type,json=propType,enum=alms.PropType" json:"prop_type,omitempty"`
+	PropCount        *int64    `protobuf:"varint,5,opt,name=prop_count,json=propCount" json:"prop_count,omitempty"`
+	PropDescribe     *string   `protobuf:"bytes,6,opt,name=prop_describe,json=propDescribe" json:"prop_describe,omitempty"`
+	XXX_unrecognized []byte    `json:"-"`
+}
+
+func (m *PacksackPropInfo) Reset()                    { *m = PacksackPropInfo{} }
+func (m *PacksackPropInfo) String() string            { return proto.CompactTextString(m) }
+func (*PacksackPropInfo) ProtoMessage()               {}
+func (*PacksackPropInfo) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+func (m *PacksackPropInfo) GetPropId() int32 {
+	if m != nil && m.PropId != nil {
+		return *m.PropId
+	}
+	return 0
+}
+
+func (m *PacksackPropInfo) GetPropName() string {
+	if m != nil && m.PropName != nil {
+		return *m.PropName
+	}
+	return ""
+}
+
+func (m *PacksackPropInfo) GetPropType() PropType {
+	if m != nil && m.PropType != nil {
+		return *m.PropType
+	}
+	return PropType_INVALID_PROP
+}
+
+func (m *PacksackPropInfo) GetPropCount() int64 {
+	if m != nil && m.PropCount != nil {
+		return *m.PropCount
+	}
+	return 0
+}
+
+func (m *PacksackPropInfo) GetPropDescribe() string {
+	if m != nil && m.PropDescribe != nil {
+		return *m.PropDescribe
+	}
+	return ""
+}
+
+// PACKSACK_INFO_RSP = 0x6005;            // 玩家登录背包信息通知
+// PlayerPacksackInfoRsp   玩家背包信息
+type PlayerPacksackInfoRsp struct {
+	PropInfo         []*PacksackPropInfo `protobuf:"bytes,1,rep,name=prop_info,json=propInfo" json:"prop_info,omitempty"`
+	PacksackGold     *int64              `protobuf:"varint,2,opt,name=packsack_gold,json=packsackGold" json:"packsack_gold,omitempty"`
+	XXX_unrecognized []byte              `json:"-"`
+}
+
+func (m *PlayerPacksackInfoRsp) Reset()                    { *m = PlayerPacksackInfoRsp{} }
+func (m *PlayerPacksackInfoRsp) String() string            { return proto.CompactTextString(m) }
+func (*PlayerPacksackInfoRsp) ProtoMessage()               {}
+func (*PlayerPacksackInfoRsp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *PlayerPacksackInfoRsp) GetPropInfo() []*PacksackPropInfo {
+	if m != nil {
+		return m.PropInfo
+	}
+	return nil
+}
+
+func (m *PlayerPacksackInfoRsp) GetPacksackGold() int64 {
+	if m != nil && m.PacksackGold != nil {
+		return *m.PacksackGold
+	}
+	return 0
+}
+
+// PACKSACK_GOLD_REQ = 0x6006;                  // 背包金币请求
+// PacksackGoldReq 背包金币存入存出请求
+type PacksackGoldReq struct {
+	ChangeGold       *int64 `protobuf:"varint,1,opt,name=change_gold,json=changeGold" json:"change_gold,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *PacksackGoldReq) Reset()                    { *m = PacksackGoldReq{} }
+func (m *PacksackGoldReq) String() string            { return proto.CompactTextString(m) }
+func (*PacksackGoldReq) ProtoMessage()               {}
+func (*PacksackGoldReq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+func (m *PacksackGoldReq) GetChangeGold() int64 {
+	if m != nil && m.ChangeGold != nil {
+		return *m.ChangeGold
+	}
+	return 0
+}
+
+// PACKSACK_GOLD_RSP = 0x6007;                  // 背包金币响应
+// PacksackGoldRsp 背包金币存入存出响应
+type PacksackGoldRsp struct {
+	Result           *bool  `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	ChangeGold       *int64 `protobuf:"varint,2,opt,name=change_gold,json=changeGold" json:"change_gold,omitempty"`
+	PacksackGold     *int64 `protobuf:"varint,3,opt,name=packsack_gold,json=packsackGold" json:"packsack_gold,omitempty"`
+	Gold             *int64 `protobuf:"varint,4,opt,name=gold" json:"gold,omitempty"`
+	ProcedureFee     *int64 `protobuf:"varint,5,opt,name=procedure_fee,json=procedureFee" json:"procedure_fee,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *PacksackGoldRsp) Reset()                    { *m = PacksackGoldRsp{} }
+func (m *PacksackGoldRsp) String() string            { return proto.CompactTextString(m) }
+func (*PacksackGoldRsp) ProtoMessage()               {}
+func (*PacksackGoldRsp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *PacksackGoldRsp) GetResult() bool {
+	if m != nil && m.Result != nil {
+		return *m.Result
+	}
+	return false
+}
+
+func (m *PacksackGoldRsp) GetChangeGold() int64 {
+	if m != nil && m.ChangeGold != nil {
+		return *m.ChangeGold
+	}
+	return 0
+}
+
+func (m *PacksackGoldRsp) GetPacksackGold() int64 {
+	if m != nil && m.PacksackGold != nil {
+		return *m.PacksackGold
+	}
+	return 0
+}
+
+func (m *PacksackGoldRsp) GetGold() int64 {
+	if m != nil && m.Gold != nil {
+		return *m.Gold
+	}
+	return 0
+}
+
+func (m *PacksackGoldRsp) GetProcedureFee() int64 {
+	if m != nil && m.ProcedureFee != nil {
+		return *m.ProcedureFee
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*AlmsGetGoldReq)(nil), "alms.AlmsGetGoldReq")
-	proto.RegisterType((*AlmsGetGoldRsp)(nil), "alms.AlmsGetGoldRsp")
-	proto.RegisterType((*GemeLeveIsOpent)(nil), "alms.GemeLeveIsOpent")
+	proto.RegisterType((*GameLevelIsOpen)(nil), "alms.GameLevelIsOpen")
 	proto.RegisterType((*AlmsConfig)(nil), "alms.AlmsConfig")
+	proto.RegisterType((*AlmsGetGoldRsp)(nil), "alms.AlmsGetGoldRsp")
 	proto.RegisterType((*AlmsConfigNtf)(nil), "alms.AlmsConfigNtf")
-	proto.RegisterEnum("alms.AlmsApplyType", AlmsApplyType_name, AlmsApplyType_value)
+	proto.RegisterType((*PlayerPacksackInfoRep)(nil), "alms.PlayerPacksackInfoRep")
+	proto.RegisterType((*PacksackPropInfo)(nil), "alms.PacksackPropInfo")
+	proto.RegisterType((*PlayerPacksackInfoRsp)(nil), "alms.PlayerPacksackInfoRsp")
+	proto.RegisterType((*PacksackGoldReq)(nil), "alms.PacksackGoldReq")
+	proto.RegisterType((*PacksackGoldRsp)(nil), "alms.PacksackGoldRsp")
+	proto.RegisterEnum("alms.AlmsReqType", AlmsReqType_name, AlmsReqType_value)
+	proto.RegisterEnum("alms.PropType", PropType_name, PropType_value)
 }
 
 func init() { proto.RegisterFile("alms.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 593 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x53, 0x51, 0x6b, 0xdb, 0x3c,
-	0x14, 0xfd, 0x1c, 0x37, 0x71, 0x7b, 0xdd, 0x38, 0xae, 0xbe, 0xad, 0xcd, 0x06, 0xa3, 0x21, 0x8c,
-	0x2d, 0x94, 0xd1, 0xb2, 0x3e, 0x0d, 0xf6, 0xb2, 0xac, 0x0b, 0xc6, 0xd0, 0x25, 0xe0, 0x86, 0x3e,
-	0xec, 0x61, 0xc2, 0x8d, 0x6f, 0x3d, 0x83, 0x2c, 0x79, 0xb6, 0x9a, 0x90, 0x7f, 0xb5, 0xdf, 0xb1,
-	0xa7, 0xfd, 0xa4, 0x21, 0xc9, 0xad, 0x93, 0xc0, 0x9e, 0x92, 0x7b, 0x74, 0xa4, 0x73, 0xef, 0xb9,
-	0xc7, 0x00, 0x31, 0xcb, 0xab, 0xf3, 0xa2, 0x14, 0x52, 0x90, 0x3d, 0xf5, 0xff, 0xe5, 0xe1, 0x42,
-	0xe4, 0xb9, 0xe0, 0x06, 0x1b, 0xfe, 0xb6, 0xc0, 0x1b, 0xb3, 0xbc, 0x0a, 0x50, 0x06, 0x82, 0x25,
-	0x11, 0xfe, 0x24, 0x1f, 0xa1, 0xa7, 0x88, 0x34, 0x2e, 0x0a, 0xb6, 0xa6, 0x72, 0x5d, 0x60, 0xdf,
-	0x1a, 0x58, 0x23, 0xef, 0xf2, 0xff, 0x73, 0xfd, 0x98, 0xa2, 0x8f, 0xd5, 0xd9, 0x7c, 0x5d, 0x60,
-	0xd4, 0x8d, 0x37, 0x4b, 0xf2, 0x16, 0x9c, 0x34, 0xce, 0x91, 0x66, 0x49, 0xbf, 0xa5, 0x2f, 0x79,
-	0xe7, 0xb5, 0x5e, 0x10, 0xe7, 0x18, 0x26, 0x51, 0x27, 0xd5, 0xbf, 0xe4, 0x05, 0xec, 0x33, 0x5c,
-	0x22, 0x53, 0x4c, 0x7b, 0x60, 0x8d, 0xda, 0x91, 0xa3, 0xeb, 0x30, 0x21, 0xaf, 0x00, 0xa4, 0x90,
-	0x31, 0xa3, 0xa9, 0x60, 0x49, 0x7f, 0x6f, 0x60, 0x8d, 0xec, 0xe8, 0x40, 0x23, 0xaa, 0x45, 0xd2,
-	0x07, 0x67, 0x89, 0x65, 0x95, 0x09, 0xde, 0x6f, 0x9b, 0x8b, 0x75, 0x39, 0xfc, 0xb3, 0x33, 0x4c,
-	0x55, 0x90, 0x33, 0x38, 0x2a, 0x58, 0xbc, 0xc6, 0x92, 0xea, 0x99, 0x64, 0x96, 0x63, 0xa5, 0xc7,
-	0x69, 0x47, 0x3d, 0x73, 0xa0, 0x2e, 0xcc, 0x15, 0x4c, 0x4e, 0xc1, 0x5d, 0xfc, 0x88, 0x79, 0x8a,
-	0x46, 0xb8, 0xa5, 0x85, 0xc1, 0x40, 0x5a, 0xf9, 0x14, 0x5c, 0x8e, 0x2b, 0xfa, 0xa8, 0x6e, 0xda,
-	0x06, 0x8e, 0xab, 0x5b, 0x83, 0x90, 0x0f, 0xd0, 0x53, 0x04, 0x2d, 0xb5, 0x10, 0xfc, 0x3e, 0x4b,
-	0x75, 0xfb, 0xee, 0xa5, 0xdf, 0x58, 0x77, 0xa5, 0xf1, 0xa8, 0xcb, 0x71, 0xd5, 0x94, 0xe4, 0x18,
-	0x3a, 0x25, 0x56, 0x0f, 0x4c, 0xea, 0x99, 0xf6, 0xa3, 0xba, 0x1a, 0x7e, 0x87, 0x5e, 0x80, 0x39,
-	0x5e, 0xe3, 0x12, 0xc3, 0x6a, 0x56, 0x20, 0x97, 0xe4, 0x04, 0x9c, 0x14, 0x8d, 0xc5, 0x66, 0x90,
-	0x8e, 0x2a, 0x77, 0x2c, 0x6d, 0x6d, 0x5b, 0x7a, 0x02, 0x4e, 0x56, 0x51, 0x51, 0xe0, 0x63, 0xd7,
-	0x9d, 0x4c, 0xbf, 0x36, 0xfc, 0xd5, 0x02, 0xd8, 0x68, 0x63, 0x08, 0x7a, 0x9f, 0x34, 0x45, 0x49,
-	0xb9, 0x28, 0x73, 0xad, 0x60, 0x47, 0x6e, 0x6c, 0x5c, 0x9d, 0x8a, 0x32, 0x27, 0xaf, 0xc1, 0x7b,
-	0xe2, 0x18, 0x3f, 0x8d, 0xd8, 0x61, 0x4d, 0x32, 0x66, 0xbe, 0xa9, 0x53, 0xa4, 0x5f, 0x7a, 0xc8,
-	0xef, 0xb0, 0xd4, 0xca, 0xb6, 0x09, 0x8c, 0x7a, 0x4b, 0x83, 0x4f, 0xbc, 0x85, 0x78, 0xe0, 0x92,
-	0x26, 0x82, 0xaf, 0xb4, 0x65, 0x6d, 0xc3, 0xbb, 0x52, 0xe8, 0x17, 0xc1, 0x57, 0xe4, 0x1d, 0x90,
-	0x04, 0x0b, 0x51, 0x65, 0x72, 0x93, 0x6a, 0x02, 0xe0, 0xd7, 0x27, 0x0d, 0xfb, 0x13, 0x1c, 0xe9,
-	0x18, 0xaa, 0xf9, 0xe9, 0xe3, 0xe4, 0x9d, 0x81, 0x3d, 0x72, 0x2f, 0x9f, 0x9b, 0x55, 0xec, 0xb8,
-	0x1a, 0x79, 0x8a, 0xdf, 0x00, 0x9b, 0x29, 0x73, 0xb6, 0x53, 0xc6, 0xa0, 0xdb, 0x38, 0x36, 0x95,
-	0xf7, 0xe4, 0x3d, 0xb8, 0x9b, 0x1b, 0xb7, 0xfe, 0xb1, 0x71, 0x88, 0x1b, 0x9f, 0x47, 0xe0, 0xd7,
-	0xb1, 0x4c, 0xc5, 0xb6, 0x8b, 0x9e, 0xc1, 0x03, 0x61, 0x7c, 0x3c, 0xbb, 0x35, 0x6a, 0xcd, 0x17,
-	0xd6, 0x85, 0x83, 0xf1, 0x78, 0x4e, 0xaf, 0x67, 0x41, 0x38, 0xf5, 0xff, 0x23, 0x04, 0x3c, 0x55,
-	0xde, 0x4c, 0xae, 0x27, 0x57, 0xf3, 0x70, 0x36, 0xbd, 0xf1, 0x2d, 0x72, 0x04, 0x5d, 0x85, 0x05,
-	0xe3, 0xaf, 0x13, 0x3a, 0xbb, 0x9d, 0x44, 0x7e, 0x8b, 0xf4, 0xc0, 0x55, 0x50, 0x38, 0xd5, 0xa8,
-	0x6f, 0x7f, 0x3e, 0xfe, 0xf6, 0xac, 0x92, 0xb8, 0xc4, 0x8b, 0x05, 0xcb, 0x90, 0x4b, 0x5a, 0xdc,
-	0x5d, 0xa8, 0xfe, 0xfe, 0x06, 0x00, 0x00, 0xff, 0xff, 0xf3, 0xd5, 0x88, 0xe9, 0x31, 0x04, 0x00,
-	0x00,
+	// 793 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x54, 0xdd, 0x6e, 0xe3, 0x44,
+	0x14, 0xc6, 0x71, 0x7f, 0xd2, 0x93, 0x3f, 0x77, 0xb4, 0x5b, 0x02, 0x08, 0x51, 0x19, 0x84, 0xaa,
+	0xb2, 0xda, 0x15, 0xdd, 0x1b, 0xb8, 0x0c, 0x8d, 0x09, 0x96, 0x4a, 0x1a, 0xcd, 0x46, 0x95, 0xe0,
+	0x02, 0xcb, 0x8d, 0x4f, 0x82, 0xb5, 0xf6, 0x8c, 0x63, 0x3b, 0x89, 0xfa, 0x0e, 0x3c, 0x08, 0xb7,
+	0x5c, 0xf2, 0x16, 0x3c, 0x12, 0x9a, 0x33, 0xe3, 0xc4, 0xc9, 0x52, 0x71, 0xe7, 0x73, 0xce, 0x37,
+	0xdf, 0xcc, 0xf9, 0xce, 0x77, 0x0c, 0x10, 0x26, 0x69, 0xf1, 0x3a, 0xcb, 0x65, 0x29, 0xd9, 0x91,
+	0xfa, 0x76, 0xff, 0xb0, 0xa0, 0x3b, 0x48, 0xd2, 0x62, 0x84, 0xe5, 0x48, 0x26, 0x11, 0xc7, 0x25,
+	0xeb, 0xc3, 0xe9, 0x1a, 0xf3, 0x22, 0x96, 0xa2, 0x6f, 0x5d, 0x5a, 0x57, 0xc7, 0xbc, 0x0a, 0xd9,
+	0x2b, 0x68, 0xe6, 0xb8, 0x0c, 0xca, 0xa7, 0x0c, 0xfb, 0x8d, 0x4b, 0xeb, 0xaa, 0x7b, 0x73, 0xfe,
+	0x9a, 0x18, 0x15, 0x03, 0xc7, 0xe5, 0xf4, 0x29, 0x43, 0x7e, 0x9a, 0xeb, 0x0f, 0xf6, 0x31, 0x9c,
+	0x2e, 0xc2, 0x14, 0x83, 0x38, 0xea, 0xdb, 0xc4, 0x73, 0xa2, 0x42, 0x3f, 0x62, 0x9f, 0x40, 0x33,
+	0xc1, 0x35, 0x26, 0xaa, 0x72, 0xa4, 0x6f, 0xa0, 0xd8, 0x8f, 0xdc, 0xdf, 0xa0, 0x37, 0x0a, 0x53,
+	0xbc, 0xa3, 0xb0, 0xb8, 0xcf, 0x50, 0xd4, 0x69, 0xac, 0x67, 0x69, 0x1a, 0x7b, 0x34, 0xea, 0x4c,
+	0x5c, 0x04, 0x32, 0x43, 0x51, 0x5d, 0x1d, 0x13, 0x99, 0xfb, 0x57, 0x03, 0x40, 0x3d, 0xf6, 0x56,
+	0x8a, 0x79, 0xbc, 0x60, 0x2e, 0x74, 0xd4, 0xfb, 0x83, 0x05, 0x96, 0x81, 0x90, 0x79, 0x4a, 0x37,
+	0xd8, 0xbc, 0x15, 0x6a, 0x45, 0xc6, 0x32, 0x4f, 0xd9, 0x57, 0xd0, 0xdd, 0x62, 0xca, 0x38, 0xc5,
+	0xc2, 0x5c, 0xd6, 0x36, 0xa0, 0xa9, 0xca, 0xb1, 0xaf, 0xa1, 0xb7, 0x63, 0x5a, 0xa5, 0x8f, 0x98,
+	0xd3, 0xcd, 0x36, 0xef, 0x54, 0x5c, 0x94, 0xdc, 0xe2, 0x66, 0x72, 0x25, 0xca, 0x20, 0x92, 0x62,
+	0x63, 0x24, 0x20, 0xdc, 0xad, 0xca, 0x0e, 0xa5, 0xd8, 0xb0, 0x57, 0xc0, 0x22, 0xcc, 0x64, 0x11,
+	0x97, 0x75, 0xe8, 0x31, 0x41, 0x1d, 0x53, 0xd9, 0xa1, 0x6b, 0x23, 0x3b, 0xd9, 0x1f, 0xd9, 0x00,
+	0xce, 0x49, 0x3d, 0xa3, 0x14, 0xa9, 0xd0, 0x3f, 0xbd, 0xb4, 0xaf, 0x5a, 0x37, 0x2f, 0xf5, 0xec,
+	0x0e, 0xf4, 0xe6, 0xbd, 0xc5, 0x7e, 0xc2, 0xfd, 0xe7, 0xc0, 0x22, 0x45, 0xc6, 0xae, 0xe1, 0x3c,
+	0x4b, 0xc2, 0x27, 0xcc, 0x03, 0x6a, 0x46, 0xcb, 0xa2, 0xa7, 0xd3, 0xd3, 0x05, 0x75, 0x40, 0x2b,
+	0xf3, 0x05, 0xb4, 0x66, 0xbf, 0x87, 0x62, 0x81, 0xc1, 0x42, 0x26, 0x7a, 0x52, 0x36, 0x07, 0x9d,
+	0x52, 0x7c, 0x0a, 0x20, 0x70, 0x13, 0x54, 0x0d, 0xe8, 0x81, 0x81, 0xc0, 0xcd, 0x83, 0xe9, 0xe1,
+	0x3b, 0xe8, 0x29, 0x80, 0xd1, 0x4d, 0x0d, 0x8e, 0x34, 0x6b, 0xdd, 0x38, 0x3b, 0xf7, 0xe9, 0x81,
+	0xf2, 0x8e, 0xc0, 0x4d, 0x6d, 0xbe, 0x17, 0x70, 0x92, 0x63, 0xb1, 0x4a, 0x4a, 0x52, 0xae, 0xc9,
+	0x4d, 0xe4, 0x26, 0xd0, 0xd9, 0xa1, 0xc6, 0xe5, 0x9c, 0x7d, 0x0b, 0xad, 0x3a, 0xbd, 0xf5, 0x0c,
+	0x3d, 0x84, 0x3b, 0xee, 0x2b, 0x70, 0x8c, 0x06, 0x0b, 0xb9, 0xef, 0x8c, 0xae, 0xce, 0x8f, 0xa4,
+	0xf6, 0x86, 0xfb, 0x16, 0x5e, 0x4e, 0x28, 0x33, 0x09, 0x67, 0xef, 0x8b, 0x70, 0xf6, 0xde, 0x17,
+	0x73, 0xc9, 0x31, 0x63, 0x9f, 0xaa, 0x7d, 0x2a, 0x30, 0x5f, 0x63, 0xe5, 0xed, 0x6d, 0xec, 0xfe,
+	0x6d, 0x81, 0x53, 0xe1, 0x27, 0xb9, 0xcc, 0xd4, 0x19, 0xe5, 0xeb, 0x2c, 0x97, 0x59, 0x6d, 0x17,
+	0x54, 0xe8, 0x47, 0xec, 0x33, 0x38, 0xa3, 0x82, 0x08, 0x53, 0xbd, 0x9a, 0x67, 0xbc, 0xa9, 0x12,
+	0xe3, 0x30, 0x45, 0xf6, 0x8d, 0x29, 0xd2, 0xde, 0xda, 0xb4, 0xb7, 0x5d, 0xdd, 0x9a, 0x22, 0xa6,
+	0xa5, 0x25, 0x30, 0x6d, 0xed, 0xe7, 0x00, 0x04, 0x26, 0xd7, 0x91, 0x6c, 0x36, 0xa7, 0xe3, 0xe4,
+	0x36, 0xf6, 0x25, 0x74, 0xa8, 0x1c, 0x61, 0x31, 0xcb, 0xe3, 0x47, 0x24, 0xbf, 0x9d, 0xf1, 0xb6,
+	0x4a, 0x0e, 0x4d, 0xce, 0x5d, 0xfe, 0x67, 0xc3, 0x45, 0xc6, 0xde, 0x9a, 0x97, 0xc4, 0x62, 0x2e,
+	0xfb, 0x16, 0xb9, 0xf0, 0xc2, 0xbc, 0xe4, 0xa0, 0x55, 0xfd, 0x22, 0x6a, 0x5a, 0x5d, 0x69, 0xaa,
+	0x75, 0x0b, 0xb5, 0xab, 0xa4, 0x32, 0x91, 0x7b, 0x03, 0xbd, 0x49, 0x2d, 0x56, 0xff, 0xb1, 0x03,
+	0xe3, 0x59, 0x87, 0xc6, 0x73, 0xff, 0xb4, 0x0e, 0x0e, 0x15, 0x59, 0xcd, 0x31, 0x56, 0xdd, 0x31,
+	0xff, 0xef, 0xe2, 0x0f, 0x5e, 0x69, 0x7f, 0xf8, 0x4a, 0xc6, 0xe0, 0x88, 0x6a, 0x47, 0x54, 0xa3,
+	0x6f, 0xa3, 0xe8, 0x0c, 0xa3, 0x55, 0x8e, 0xc1, 0x1c, 0xd1, 0x68, 0xde, 0xde, 0x26, 0x7f, 0x44,
+	0xbc, 0xfe, 0x09, 0x5a, 0xb5, 0x7f, 0x2c, 0x7b, 0x01, 0xce, 0x80, 0x4f, 0x03, 0x7f, 0xfc, 0x30,
+	0xb8, 0xf3, 0x87, 0xc1, 0x84, 0xdf, 0x4f, 0x9c, 0x8f, 0xd8, 0x19, 0x1c, 0xdf, 0xdd, 0x8f, 0xfc,
+	0xb1, 0x63, 0xb1, 0x36, 0x34, 0xdf, 0x79, 0x77, 0xde, 0xed, 0xd4, 0x1b, 0x3a, 0x0d, 0x06, 0x70,
+	0xe2, 0x8f, 0x47, 0x83, 0x9f, 0x3d, 0xc7, 0xbe, 0xfe, 0x1e, 0x9a, 0xd5, 0xd4, 0x99, 0x03, 0xed,
+	0x03, 0x8a, 0x1e, 0xb4, 0xfc, 0xf1, 0xd4, 0xe3, 0x83, 0xdb, 0xa9, 0xff, 0xe0, 0x39, 0x96, 0x3a,
+	0xfa, 0x6e, 0xe2, 0x79, 0xc3, 0x5f, 0x9c, 0xc6, 0x0f, 0x17, 0xbf, 0xbe, 0x28, 0x4a, 0x5c, 0xe3,
+	0x9b, 0x59, 0x12, 0xa3, 0x28, 0x83, 0xec, 0xf1, 0x8d, 0x9a, 0xdd, 0xbf, 0x01, 0x00, 0x00, 0xff,
+	0xff, 0x0d, 0x0d, 0xe4, 0x75, 0x56, 0x06, 0x00, 0x00,
 }
