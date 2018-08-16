@@ -127,7 +127,7 @@ func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard maj
 					Head: &majong.RequestEventHead{
 						PlayerId: player.GetPlayerId(),
 					},
-					Cards: []*majong.Card{&shunZi[0], &shunZi[1], &shunZi[3]},
+					Cards: []*majong.Card{&shunZi[0], &shunZi[1], &shunZi[2]},
 				}
 				event.ID = int32(majong.EventID_event_chi_request)
 				logEntry.WithField("吃牌", lastOutCard).Infoln("中级AI吃牌")
