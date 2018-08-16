@@ -141,7 +141,7 @@ func HandlePackSackGold(playerID uint64, header *steve_proto_gaterpc.Header, req
 	entry.WithFields(logrus.Fields{
 		"Gold":         gold,
 		"pkgold":       pkgold,
-		"ProcedureFee": response.ProcedureFee,
+		"ProcedureFee": *response.ProcedureFee,
 	}).Debugln("处理背包金币请求成功")
 	return rspMsg
 }
