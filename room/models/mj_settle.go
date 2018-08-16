@@ -45,7 +45,10 @@ type MajongSettle struct {
 
 	lastGangSettleID uint64 // 呼叫转移
 
-	BrokerPlayers []uint64 // 破产玩家
+	brokerPlayers []uint64 // 破产玩家
+
+	waitPlayers []uint64 // 等待处理的破产玩家
+
 }
 
 // NewMajongSettle 初始化麻将结算
@@ -56,7 +59,8 @@ func NewMajongSettle() *MajongSettle {
 		handleRevert:  make(map[uint64]bool),
 		roundScore:    make(map[uint64]int64),
 		revertScore:   make(map[uint64]MajongCoin),
-		BrokerPlayers: make([]uint64, 0),
+		brokerPlayers: make([]uint64, 0),
+		waitPlayers:   make([]uint64, 0),
 	}
 }
 
@@ -72,15 +76,22 @@ func (majongSettle *MajongSettle) Settle(desk *desk.Desk, config *desk.DeskConfi
 	majongSettle.revertSettle(desk, mjContext)
 }
 
-// playerContinue 处理认输玩家继续游戏
-func (majongSettle *MajongSettle) playerContinue(desk *desk.Desk, playerID uint64) {
-	logrus.Debugf("破产玩家：(%v)", majongSettle.BrokerPlayers)
-
-	majongSettle.BrokerPlayers, _ = utils.DeletePlayerIDFromLast(majongSettle.BrokerPlayers, playerID)
-
-	if len(majongSettle.BrokerPlayers) == 0 {
+// HandleBrokerPlayer 处理破产玩家
+func (majongSettle *MajongSettle) HandleBrokerPlayer(desk *desk.Desk, giveupPids []uint64, continuePids []uint64) {
+	logrus.Debugf("破产玩家：(%v)", majongSettle.brokerPlayers)
+	// 续费玩家
+	for _, pid := range continuePids {
+		majongSettle.brokerPlayers = utils.DeletePlayerIDFromLast(majongSettle.brokerPlayers, pid)
+		majongSettle.waitPlayers = utils.DeletePlayerIDFromLast(majongSettle.brokerPlayers, pid)
+	}
+	// 认输玩家
+	for _, pid := range giveupPids {
+		majongSettle.waitPlayers = utils.DeletePlayerIDFromLast(majongSettle.waitPlayers, pid)
+	}
+	if len(majongSettle.waitPlayers) == 0 {
 		majongSettle.pushSettleEvent(desk, majongpb.SettleType_settle_angang)
 	}
+	return
 }
 
 func (majongSettle *MajongSettle) normalSettle(desk *desk.Desk, mjContext *majongpb.MajongContext) {
@@ -106,14 +117,15 @@ func (majongSettle *MajongSettle) normalSettle(desk *desk.Desk, mjContext *majon
 
 		groupID := len(sInfo.GroupId) // 关联的一组结算id
 		if groupID <= 1 {
-			score, majongSettle.BrokerPlayers = CalcCoin(deskPlayers, mjContext.GetPlayers(), huQuitPlayers, sInfo.Scores)
+			score, majongSettle.brokerPlayers = CalcCoin(deskPlayers, mjContext.GetPlayers(), huQuitPlayers, sInfo.Scores)
 			majongSettle.settleMap[sInfo.Id] = score
 			majongSettle.handleSettle[sInfo.Id] = true
 		} else {
 			groupSInfos, masterSInfo := MergeSettle(mjContext.SettleInfos, sInfo)
-			score, majongSettle.BrokerPlayers = CalcCoin(deskPlayers, mjContext.GetPlayers(), huQuitPlayers, masterSInfo.Scores)
+			score, majongSettle.brokerPlayers = CalcCoin(deskPlayers, mjContext.GetPlayers(), huQuitPlayers, masterSInfo.Scores)
 			majongSettle.apartScore2Settle(groupSInfos, score)
 		}
+		majongSettle.waitPlayers = append(majongSettle.waitPlayers, majongSettle.brokerPlayers...)
 		if CanInstantSettle(sInfo.SettleType, settleOption) { // 立即结算
 			majongSettle.instantSettle(desk, sInfo, score)
 		}
@@ -123,13 +135,13 @@ func (majongSettle *MajongSettle) normalSettle(desk *desk.Desk, mjContext *majon
 
 // settleAutoEvent 结算自动事件
 func (majongSettle *MajongSettle) settleAutoEvent(desk *desk.Desk, settleType majongpb.SettleType) {
-	if len(majongSettle.BrokerPlayers) == 0 {
+	if len(majongSettle.brokerPlayers) == 0 {
 		majongSettle.pushSettleEvent(desk, settleType)
 		return
 	}
 	for {
 		select {
-		case <-time.NewTicker(time.Second * 5).C:
+		case <-time.NewTicker(time.Second * 15).C:
 			{
 				majongSettle.pushSettleEvent(desk, settleType)
 				return
@@ -150,7 +162,7 @@ func (majongSettle *MajongSettle) pushSettleEvent(desks *desk.Desk, settleType m
 		event := desk.DeskEvent{EventID: int(majongpb.EventID_event_settle_finish), EventType: fixed.NormalEvent, Desk: desks,
 			StateNumber: desks.GetConfig().Context.(*contexts.MajongDeskContext).StateNumber,
 			Context: &majongpb.SettleFinishEvent{
-				PlayerId: majongSettle.BrokerPlayers,
+				PlayerId: majongSettle.brokerPlayers,
 			},
 		}
 		GetMjEventModel(desks.GetUid()).PushEvent(event)
