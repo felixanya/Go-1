@@ -8,7 +8,8 @@
 <hr />
 进行中的压测（点击每行显示详情和Grafana报告链接）
 		<button id="refreshBtn" style="width:80px; height: 80px">刷新</button>
-		<span id="refreshTF"></span>
+		<input id="refreshCB" type="checkbox" checked="true">自动刷新</input>
+		<input id="refreshTF" type="text" style="width:30px" value="5">秒</input>
 <hr />
 <div class="all">
 	<table id="example" class="display" width="100%"></table>
@@ -26,6 +27,20 @@
 
 	$("#refreshBtn").click(function () {
         refresh();
+    })
+    $("#refreshCB").click(function () {
+        if(refreshInterval != -1) {
+            stopRefresh();
+            updateTxt();
+		}else{
+            startRefresh();
+		}
+    })
+    $("#refreshTF").change(function () {
+        if(refreshInterval != -1) {
+            stopRefresh();
+            startRefresh();
+        }
     })
     
     function sortId(a, b) {
@@ -62,9 +77,44 @@
     }
 
     function refresh() {
+        count = getInterval();
+        updateTxt();
         $.get("/api/clients", onClients);
     }
     refresh();
+	var count = 5;
+	var refreshInterval;
+    var txtInterval;
+    function getInterval() {
+        var interval = Number($("#refreshTF")[0].value);
+        if(isNaN(interval)) {
+            return 100;
+        }
+        return interval;
+	}
+    function startRefresh() {
+        var interval = getInterval();
+        refreshInterval = setInterval(refresh, interval * 1000);
+        txtInterval = setInterval(updateCount, 1000);
+        count = interval;
+        updateCount();
+    }
+    function stopRefresh() {
+        clearInterval(refreshInterval);
+        clearInterval(txtInterval);
+        refreshInterval = -1;
+        txtInterval = -1;
+	}
+    startRefresh();
+	function updateCount() {
+        count--;
+        updateTxt();
+	}
+	function updateTxt() {
+	    var cnt = refreshInterval == -1 ? "" : "(" + count + ")";
+        $("#refreshBtn").html("刷新" + cnt);
+	}
+
 	function onClients(data) {
 		var jsondata = JSON.parse(data);
 		clients = jsondata.list;
