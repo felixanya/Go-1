@@ -1,11 +1,10 @@
 package core
 
 import (
-			"time"
-	"github.com/StackExchange/wmi"
-		"github.com/spf13/viper"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/spf13/viper"
 	"steve/stress/stressclient/sprite"
+	"time"
 )
 
 type Win32_Processor struct {
@@ -20,24 +19,25 @@ type Win32_Processor struct {
 }
 
 var t *time.Ticker
+
 func initSys() {
 	t = time.NewTicker(time.Second * time.Duration(viper.GetInt("refresh_rate")))
 	go refresh()
 }
 func refresh() {
-	for{
+	for {
 		select {
-		case <- t.C:
+		case <-t.C:
 			v, _ := mem.VirtualMemory()
-			var dst []Win32_Processor
-			q := wmi.CreateQuery(&dst, "")
-			err := wmi.Query(q, &dst)
-			if err != nil {
-				//return ret, err
-				continue
-			}
+			//var dst []Win32_Processor
+			//q := wmi.CreateQuery(&dst, "")
+			//err := wmi.Query(q, &dst)
+			//if err != nil {
+			//	//return ret, err
+			//	continue
+			//}
 			stage := sprite.GetStage()
-			stage.CPUGauge.Set(float64(*dst[0].LoadPercentage))
+			//stage.CPUGauge.Set(float64(*dst[0].LoadPercentage))
 			stage.MemoryGauge.Set(float64(v.UsedPercent))
 			//fmt.Println("cpu: ", *dst[0].LoadPercentage, dst)
 			//fmt.Printf("Total: %v, Free:%v, UsedPercent:%f%%\n", v.Total, v.Free, v.UsedPercent)

@@ -1,11 +1,11 @@
 package core
 
 import (
-	"github.com/Sirupsen/logrus"
-	"google.golang.org/grpc"
-	"github.com/spf13/viper"
 	"fmt"
-	"github.com/boltdb/bolt"
+	"github.com/Sirupsen/logrus"
+	"github.com/coreos/bbolt"
+	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 )
 
 var Grpc *grpc.Server

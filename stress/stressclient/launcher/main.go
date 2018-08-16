@@ -1,11 +1,12 @@
 package main
 
 import (
+	"errors"
+	"steve/stress/stressclient/core"
 	_ "steve/stress/stressclient/core"
 	"steve/stress/stressclient/sprite"
+
 	"steve/stress/sprites/login"
-		"github.com/pkg/errors"
-	"steve/stress/stressclient/core"
 )
 
 func main() {

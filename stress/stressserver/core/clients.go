@@ -1,21 +1,20 @@
 package core
 
 import (
-	"github.com/spf13/viper"
-	"golang.org/x/sync/syncmap"
-	"sync"
-	"steve/stress/proto"
-	"google.golang.org/grpc/peer"
-	"net"
+	"encoding/json"
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	"strconv"
+	"github.com/spf13/viper"
+	"google.golang.org/grpc/peer"
+	"net"
 	"os"
-	"encoding/json"
+	"steve/stress/proto"
+	"strconv"
+	"sync"
 	"time"
 )
 
-var Clients *syncmap.Map
+var Clients *sync.Map
 var lock sync.Mutex
 var PrometheusJson []*PrometheusClient
 
@@ -49,7 +48,7 @@ type PrometheusClient struct {
 type ClientServer struct {
 }
 
-func (s *ClientServer) PushCommand(c *client.Client, stream client.Push_PushCommandServer) (error) {
+func (s *ClientServer) PushCommand(c *client.Client, stream client.Push_PushCommandServer) error {
 	pp, _ := peer.FromContext(stream.Context())
 	ip := pp.Addr.(*net.TCPAddr).IP.String()
 	swap := viper.GetString("prometheus_swap_localhost")
@@ -90,7 +89,7 @@ func (s *ClientServer) PushCommand(c *client.Client, stream client.Push_PushComm
 	idstr := strconv.Itoa(int(clientID))
 	idmap["params"] = []string{idstr}
 	params, _ := json.Marshal(idmap)
-	serverCmd := &client.ServerCommand{Cmd: 0, Params:string(params)}
+	serverCmd := &client.ServerCommand{Cmd: 0, Params: string(params)}
 	stream.Send(serverCmd)
 
 	select {
@@ -116,7 +115,7 @@ func writeJson() {
 	j, _ := json.MarshalIndent(PrometheusJson, "", "  ")
 	ss := string(j)
 	filePath := viper.GetString("prometheus_config")
-	w, err := os.OpenFile(filePath, os.O_TRUNC|os.O_RDWR, 0755)
+	w, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
 	if err != nil {
 		logrus.Error("error Open", filePath, err)
 	}

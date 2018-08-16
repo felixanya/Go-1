@@ -1,12 +1,12 @@
 package login
 
 import (
-	"steve/stress/stressclient/sprite"
-	"steve/simulate/utils"
-	"steve/client_pb/msgid"
-	"steve/client_pb/gate"
-	"steve/simulate/global"
 	"github.com/Sirupsen/logrus"
+	"steve/client_pb/gate"
+	"steve/client_pb/msgid"
+	"steve/simulate/global"
+	"steve/simulate/utils"
+	"steve/stress/stressclient/sprite"
 	"time"
 )
 
@@ -42,8 +42,8 @@ func (s login) Start() error {
 
 	logrus.Info(err)
 	select {
-		case <-s.ch:
-			return  nil
+	case <-s.ch:
+		return nil
 	}
 }
 func (s login) Stop() error {

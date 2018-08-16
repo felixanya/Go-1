@@ -1,17 +1,17 @@
 package core
 
 import (
-	"google.golang.org/grpc"
+	"fmt"
 	"github.com/Sirupsen/logrus"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"net"
-	"fmt"
 	"steve/stress/proto"
-	"golang.org/x/sync/syncmap"
+	"sync"
 )
 
 func createRPCServer(keyFile string, certFile string) *grpc.Server {
-	Clients = new(syncmap.Map)
+	Clients = new(sync.Map)
 	PrometheusJson = []*PrometheusClient{}
 	writeJson()
 	logEntry := logrus.WithFields(logrus.Fields{
