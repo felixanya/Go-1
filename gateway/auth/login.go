@@ -116,10 +116,15 @@ func callLoginService(clientRequest *login.LoginAuthReq) (clientResponse *login.
 		err = fmt.Errorf("获取登录服连接失败:%v", err)
 		return
 	}
+	requestData, err := proto.Marshal(clientRequest.GetRequestData())
+	if err != nil {
+		err = fmt.Errorf("序列化登录数据失败:%s", err.Error())
+		return
+	}
 	loginClient := server_login_pb.NewLoginServiceClient(cc)
 	request := server_login_pb.LoginRequest{
 		AccountId:   clientRequest.GetAccountId(),
-		RequestData: clientRequest.GetRequestData(),
+		RequestData: requestData,
 		PlayerId:    clientRequest.GetPlayerId(),
 		Token:       clientRequest.GetToken(),
 	}

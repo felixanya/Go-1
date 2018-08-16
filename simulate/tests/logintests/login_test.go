@@ -30,6 +30,16 @@ func Test_LoginByToken(t *testing.T) {
 	assert.Equal(t, player.GetID(), player2.GetID())
 }
 
+// 测试使用游客登录
+func Test_YoukeLogin(t *testing.T) {
+	if true { // 需要正式账号系统，不开启此测试
+		return
+	}
+	player, err := utils.LoginPlayerYouke("abcdeeadfasfe")
+	assert.Nil(t, err)
+	assert.NotNil(t, player)
+}
+
 // Test_AnotherLogin 顶号测试
 // step 1. 登录新玩家
 // step 2. 创建新的连接，向网关服认证同一个用户

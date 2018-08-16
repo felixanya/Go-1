@@ -129,12 +129,8 @@ func LoginPlayerYouke(imei string) (interfaces.ClientPlayer, error) {
 		CityId:   proto.Uint64(1111),
 		BindInfo: &login.BindInfo{},
 	}
-	buf, err := proto.Marshal(&loginData)
-	if err != nil {
-		return nil, fmt.Errorf("序列化登录数据失败")
-	}
 	return loginPlayer(&login.LoginAuthReq{
-		RequestData: buf,
+		RequestData: &loginData,
 	})
 }
 

@@ -32,7 +32,7 @@ type bindPhoneRewardConfig struct {
 // defaultBindPhoneRewardConfig 默认绑定手机奖励，不可以直接访问，要使用 getBindPhoneRewardConfig 函数
 // 使用指针，可以原子性的修改
 var defaultBindPhoneRewardConfig = &bindPhoneRewardConfig{
-	MoneyType: int(common.MoneyType_MT_DIAMOND),
+	MoneyType: int(common.MoneyType_MT_GOLDINGOT),
 	Num:       5,
 }
 
@@ -105,6 +105,7 @@ func requestJSONHTTP(url string, requestData interface{}, responseData interface
 		return fmt.Errorf("读取 HTTP 回复失败: err=%s", err.Error())
 	}
 	if err := json.Unmarshal(httpResponseRaw, responseData); err != nil {
+		fmt.Println(string(httpResponseRaw))
 		return fmt.Errorf("反序列化失败: err=%s", err.Error())
 	}
 	logrus.WithFields(logrus.Fields{
@@ -277,6 +278,8 @@ func HandleBindPhoneReq(playerID uint64, header *steve_proto_gaterpc.Header, req
 		entry.WithError(err).Errorln("奖励发放失败")
 		return
 	}
+	response.Result.ErrCode = common.ErrCode_EC_SUCCESS.Enum()
+	response.Result.ErrDesc = proto.String("")
 	response.Reward.MoneyNum = proto.Uint64(rewardCfg.Num)
 	response.Reward.MoneyType = common.MoneyType(rewardCfg.MoneyType).Enum()
 	response.NewMoney.MoneyNum = proto.Uint64(uint64(newMoney))
@@ -307,7 +310,7 @@ func HandleChangePhoneReq(playerID uint64, header *steve_proto_gaterpc.Header, r
 	}
 	entry = entry.WithField("old_phone", dbPlayer.Phone)
 	if dbPlayer.Phone == "" {
-		entry.Debugln("已经绑定手机")
+		entry.Debugln("未绑定手机")
 		response.Result.ErrDesc = proto.String("还未绑定手机")
 		return
 	}
@@ -319,7 +322,7 @@ func HandleChangePhoneReq(playerID uint64, header *steve_proto_gaterpc.Header, r
 
 	httpResponse := normalHTTPResponse{}
 	err = requestJSONHTTP(viper.GetString("change_phone_url"), map[string]interface{}{
-		"product_id":     viper.GetInt("product_id"),
+		"productid":      viper.GetInt("product_id"),
 		"old_phone_code": req.GetOldPhoneCode(),
 		"new_phone_code": req.GetNewPhoneCode(),
 		"send_case":      int(hall.AuthCodeSendScene_RESET_CELLPHONE),

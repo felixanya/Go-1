@@ -153,6 +153,7 @@ func HandleCheckPasswordReq(playerID uint64, header *steve_proto_gaterpc.Header,
 	}
 	if httpResponseData.Code == 0 {
 		response.Result.ErrCode = common.ErrCode_EC_SUCCESS.Enum()
+		response.Result.ErrDesc = proto.String("")
 	} else {
 		response.Result.ErrDesc = proto.String(httpResponseData.Msg)
 	}
