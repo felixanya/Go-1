@@ -16,7 +16,7 @@ import (
 
 */
 
-var muLock *sync.Mutex // 用户锁，一个用户一个锁
+var muLock *sync.Mutex // 锁
 
 func Init() error {
 	muLock = new(sync.Mutex)
