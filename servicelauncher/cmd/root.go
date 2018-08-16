@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"steve/serviceloader/loader"
+		"steve/servicelauncher/loggerwin"
 )
 
 var cfgFile string
@@ -141,8 +142,8 @@ func initDefaultConfig() {
 
 func initLogger() {
 	logrus.SetLevel(logrus.DebugLevel)
-	//logger.SetupLog(viper.GetString("log_prefix"), viper.GetString("log_dir"),
-	//	viper.GetString("log_level"), viper.GetBool("log_stderr"))
+	loggerwin.SetupLog(viper.GetString("log_prefix"), viper.GetString("log_dir"),
+		viper.GetString("log_level"), viper.GetBool("log_stderr"))
 }
 
 func Init(args []string, flagList map[string]*string) {

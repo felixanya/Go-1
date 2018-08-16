@@ -1,0 +1,253 @@
+{{define "title"}}Stress Report{{end}}
+{{define "body"}}
+<div><a href="/debug/pprof/" target="_blank">PPROF</a></div>
+<a id="finished_url" href="" target="_blank">已结束的压测</a>
+<br />
+<br />
+<br />
+<hr />
+进行中的压测（点击每行显示详情和Grafana报告链接）
+		<button id="refreshBtn" style="width:80px; height: 80px">刷新</button>
+		<span id="refreshTF"></span>
+<hr />
+<div class="all">
+	<table id="example" class="display" width="100%"></table>
+	<hr />
+	<div class="details">
+		<div id="details-left" class="details-left"></div>
+		<div id="details-right" class="details-right"></div>
+	</div>
+    <iframe id="clients_url" src="" width="850" height="200" frameborder="0"></iframe>
+</div>
+<script language="javascript">
+	var table;
+	var clients;
+	var grafana;
+
+	$("#refreshBtn").click(function () {
+        refresh();
+    })
+    
+    function sortId(a, b) {
+		// a must be equal to b
+		var aa = a[8];
+		var bb = b[8];
+        if (aa < bb) {
+            return -1;
+        }
+        if (aa > bb) {
+            return 1;
+        }
+        return 0;
+	}
+	function findClient(clientId) {
+		for (var i = 0; i < clients.length; i++) {
+			var client = clients[i];
+			if(client.ID == clientId) {
+				return client;
+			}
+		}
+		return null;
+	}
+	function getObjFirstValue(obj, key) {
+		return obj[key] ? obj[key][0] : 0;
+	}
+	function loadIframe(iframeName, url) {
+        var $iframe = $('#' + iframeName);
+        if ( $iframe.length ) {
+            $iframe.attr('src',url);
+            return false;
+        }
+        return true;
+    }
+
+    function refresh() {
+        $.get("/api/clients", onClients);
+    }
+    refresh();
+	function onClients(data) {
+		var jsondata = JSON.parse(data);
+		clients = jsondata.list;
+        console.log(clients)
+		grafana = jsondata.grafana;
+        var t2 = new Date().getTime()
+		t1 = t2 - 60 * 60
+        loadIframe("clients_url", grafana.clients_url + "&from=" + t1 + "&to=" + t2)
+		var dataSet = [];
+		for (var i = 0; i < clients.length; i++) {
+			var client = clients[i];
+			var config = client.Config == "" ? {} : JSON.parse(client.Config);
+			config.start = client.Started;
+			var server = "";
+			var clientIP = client.IP;//.substring(0, client.IP.indexOf(":"))
+		 	dataSet.push([client.ID, client.StartTime,
+				"<a href='http://" + client.IP + "/metrics' target='_blank'>" + clientIP + "</a>",
+				server, config]);
+		}
+        dataSet.sort(sortId);
+		if(table == null) {
+			table = $('#example').DataTable({
+				data: dataSet,
+				columns: [
+					{ title: "ID" },
+					{ title: "startTime" },
+					{ title: "client IP" },
+					{ title: "server" },
+                    {
+                        "title": "CONFIG",
+                        "targets": -1,
+                        "data": 12,
+                        "defaultContent": "次数<input id='timesTF' type='text' style='width:40px' value='1'></input>" +
+								"个数<input id='numTF' type='text' style='width:60px' value='1'></input>" +
+								"间隔(s)<input id='intervalTF' type='text' style='width:100px' value='1'></input>" +
+                                "功能<input id='funTF' type='text' style='width:100px' value='login'></input>" +
+								" <button id='btn'>START</button>"
+                    }
+				],
+				"paging": false,
+				"scrollY": "300px",
+                "scrollCollapse": true,
+				"searching": true
+			});
+            initTableFunctions();
+		}else{
+			table.clear();
+			table.rows.add(dataSet);
+			table.draw();
+		}
+
+        var inputs = $('#example tbody').find("input");
+        var btns = $('#example tbody').find("button");
+        var j;
+        for(i = 0, j = 0; i < inputs.length; i++) {
+            console.log(i, j)
+			var config = dataSet[j][4];
+            var params = config["params"];
+            var input = inputs[i];
+			if(config.start == true) {
+				if(input.id == "timesTF") {
+					input.value = params[0];
+					input.disabled = true;
+				}
+				if(input.id == "numTF") {
+					input.value = params[1];
+                    input.disabled = true;
+				}
+				if(input.id == "intervalTF") {
+					input.value = params[2];
+                    input.disabled = true;
+				}
+                if(input.id == "funTF") {
+                    input.value = params[3];
+                    input.disabled = true;
+                }
+                // btns[j].disabled = true;
+                btns[j].innerHTML = "STOP";
+			}
+            if(input.id == "funTF") {
+                j++;
+            }
+        }
+
+	};
+
+	function initTableFunctions() {
+
+        $('#example tbody').on( 'click', 'tr', function () {
+            var clientId = $(this).closest('tr').find("td")[0].innerHTML;
+            setDetails(clientId);
+            if ( $(this).hasClass('selected') ) {
+                $(this).removeClass('selected');
+            }
+            else {
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+            }
+        } );
+
+        $('#button').click( function () {
+            table.row('.selected').remove().draw( false );
+        } );
+
+        $('#example tbody').on( 'click', 'button', function () {
+            var data = table.row( $(this).parents('tr') ).data();
+            var inputs = $(this).closest('tr').find("input");
+            var config = {params: [inputs[0].value, inputs[1].value, inputs[2].value, inputs[3].value]};
+            if(data[4].start != true) {
+                $.post( "/api/startClient", { id: data[0], config: JSON.stringify(config)})
+                        .done(function( data ) {
+                            alert("started! " + data);
+                            refresh();
+                        });
+            }else{
+                $.post( "/api/stopClient", { id: data[0]})
+                        .done(function( data ) {
+                            alert("stopped! " + data);
+                            refresh();
+                        });
+            }
+        } );
+	}
+
+	function setDetails(clientId) {
+		var client = findClient(clientId);
+		if(client != null) {
+			var config = JSON.parse(client.Config);
+			var global = JSON.parse(client.Global);
+			var hosts = config.global.hosts;
+			var config = client.Path + 'config.json';
+			// window.open(url, "_blank");
+
+			var sa = [];
+			sa.push("<b>压测客户端详情：</b>");
+			detailRow(sa, "ID", clientId);
+			detailRow(sa, "VERSION", client.Version);
+			detailRow(sa, "MD5", client.MD5);
+			detailRow(sa, "初始配置", '<a href="' + config + '" target="_blank">' + config + '</a>');
+			detailRow(sa, "开始时间", client.StartTime);
+			detailRow(sa, "最近更新时间", client.LastTime);
+			detailRow(sa, "压测客户端IP", client.IP);
+			detailRow(sa, "压测登录服务器", client.Server);
+			detailRow(sa, "昵称前缀", hosts.currentName);
+			detailRow(sa, "微信id", hosts.currentWechat);
+			var s = sa.join("\n<br />");
+			$('#details-left').html(s);
+
+			var boards = grafana[client.Server];
+			console.log(boards);
+			var la = []; //links
+			la.push("<b>Grafana报告：</b>");
+			var start = parseISOLocal(client.StartTime);
+			var last = parseISOLocal(client.LastTime);
+			var timespan = "?from=" + start.getTime()// + "&to=" + last.getTime()
+			if(boards != null) {
+				for(var i = 0; i < boards.length; i++) {
+					var board = boards[i];
+					var variables = "";
+					if(board.Variables != null) {
+						for(var j = 0; j < board.Variables.length; j++) {
+							variables += "&" + board.Variables[j];
+						}
+					}
+					var boardurl = "http://192.168.8.128:3000/d/" + board.BoardID + "/" + board.BoardName + timespan + variables;
+					detailRow(la, board.Desc, '<a href="' + boardurl + '" target="_blank">' + board.Filename + '</a>');
+				}
+			}
+			la.push("");
+			detailRow(la, "报告文件夹", '<a href="' + client.Path + '" target="_blank">' + client.Path + '</a>');
+			var l = la.join("\n<br />");
+			$('#details-right').html(l);
+		}
+
+	}
+	function detailRow(sa, label, value) {
+		sa.push(label + "：" + value);
+	}
+	function parseISOLocal(s) {
+		var b = s.split(/\D/);
+		var d = new Date(b[0], b[1]-1, b[2], b[3], b[4], b[5]);
+		// d.setTime( d.getTime() - d.getTimezoneOffset()*60*1000 );
+		return d;
+	}
+</script>
+{{end}}

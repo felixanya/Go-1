@@ -3,8 +3,7 @@ package pprof
 import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
-	"log"
+		"log"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
@@ -34,7 +33,7 @@ var libProfile *pprof.Profile
 var context ProfileContext
 
 //Init 初始化pprof配置，启动http服务
-func Init(profName string, exposeType string, httpPort int) {
+func Init(profName string, exposeType string, httpPort int, moremux *http.ServeMux) {
 	context.exposeType = ProfileType(exposeType)
 	context.httpPort = httpPort
 	if context.exposeType == TypeNoExpose {
@@ -65,13 +64,19 @@ func Init(profName string, exposeType string, httpPort int) {
 	}
 
 	if context.exposeType == TypeExposeHttp {
-		serverMux := mux.NewRouter()
+		serverMux := http.NewServeMux()
+		if moremux != nil {
+			serverMux.HandleFunc("/a", moremux.ServeHTTP)
+		}
 		serverMux.HandleFunc("/debug/pprof/", http.HandlerFunc(pprofIndex))
 		startServer(serverMux, profName)
 	}
 
 	if context.exposeType == TypeExposeSvg {
-		serverMux := mux.NewRouter()
+		serverMux := http.NewServeMux()
+		if moremux != nil {
+			serverMux.HandleFunc("/", moremux.ServeHTTP)
+		}
 		serverMux.HandleFunc("/debug/pprof/", http.HandlerFunc(allIndex))
 		serverMux.HandleFunc("/debug/pprofsvg/", http.HandlerFunc(svgPprof))
 		serverMux.HandleFunc("/debug/pprofsvg/block", http.HandlerFunc(svgPprof))
@@ -86,7 +91,7 @@ func Init(profName string, exposeType string, httpPort int) {
 	}
 }
 
-func startServer(serverMux *mux.Router, profName string) {
+func startServer(serverMux *http.ServeMux, profName string) {
 	serverMux.HandleFunc("/debug/pprof/block", http.HandlerFunc(httppprof.Index))
 	serverMux.HandleFunc("/debug/pprof/goroutine", http.HandlerFunc(httppprof.Index))
 	serverMux.HandleFunc("/debug/pprof/heap", http.HandlerFunc(httppprof.Index))

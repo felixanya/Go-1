@@ -1,0 +1,20 @@
+log_level: debug
+log_dir: ./log
+log_prefix: stress
+log_stderr: true
+
+rpc_addr: 127.0.0.1
+rpc_port: 8881
+
+db_path: .
+
+http_port: 8880
+report_path: report
+
+prometheus_config: 
+prometheus_swap_localhost: 
+
+grafana:
+  url: http://localhost:3000
+  clients_url: 
+  finished_url:
