@@ -878,6 +878,7 @@ type MajongContext struct {
 	MajongOption        []byte              `protobuf:"bytes,255,opt,name=majong_option,json=majongOption,proto3" json:"majong_option,omitempty"`
 	TempData            *TempDatas          `protobuf:"bytes,256,opt,name=TempData" json:"TempData,omitempty"`
 	GameStartTime       time.Time
+	BaseCoin            uint32 `protobuf:"bytes,257,opt,name=base_coin,json=baseCoin,proto3" json:"base_coin,omitempty"`
 }
 
 func (m *MajongContext) GetGameId() int32 {
@@ -1234,6 +1235,7 @@ type InitMajongContextParams struct {
 	MajongOption         []byte              `protobuf:"bytes,4,opt,name=majong_option,json=majongOption,proto3" json:"majong_option,omitempty"`
 	ZhuangIndex          uint32              `protobuf:"varint,5,opt,name=zhuang_index,json=zhuangIndex,proto3" json:"zhuang_index,omitempty"`
 	FixZhuangIndex       bool                `protobuf:"varint,6,opt,name=fix_zhuang_index,json=fixZhuangIndex,proto3" json:"fix_zhuang_index,omitempty"`
+	BaseCoin             uint32              `protobuf:"varint,7,opt,name=base_coin,json=baseCoin,proto3" json:"base_coin,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
 	XXX_sizecache        int32               `json:"-"`

@@ -17,6 +17,7 @@ func (roundSettle *RoundSettle) Settle(params interfaces.RoundSettleParams) ([]*
 	logEntry := logrus.WithFields(logrus.Fields{
 		"func_name":       "roundSettle",
 		"settleOptionID":  params.SettleOptionID,
+		"baseCoin":        params.BaseCoin,
 		"flowPigPlayers":  params.FlowerPigPlayers,
 		"huPlayers":       params.HuPlayers,
 		"quitPlayers":     params.QuitPlayers,
@@ -57,7 +58,7 @@ func (roundSettle *RoundSettle) Settle(params interfaces.RoundSettleParams) ([]*
 // 注：查大叫时，若上听者牌型中有根，则根也要未上听者包给上听者。
 func (roundSettle *RoundSettle) yellSettle(params *interfaces.RoundSettleParams) []*majongpb.SettleInfo {
 	//底注
-	ante := GetDi()
+	ante := int64(params.BaseCoin)
 	// 查大叫结算信息
 	yellSettleInfos := make([]*majongpb.SettleInfo, 0)
 
@@ -94,7 +95,7 @@ func (roundSettle *RoundSettle) yellSettle(params *interfaces.RoundSettleParams)
 // 2.—花猪赔给听牌未胡玩家（查大叫倍数+16）*底分
 func (roundSettle *RoundSettle) flowerPigSettle(params *interfaces.RoundSettleParams, settleOption *mjoption.SettleOption) []*majongpb.SettleInfo {
 	//底注
-	ante := GetDi()
+	ante := int64(params.BaseCoin)
 	// 查花猪信息
 	flowwePigSettleInfos := make([]*majongpb.SettleInfo, 0)
 	for _, flowerPig := range params.FlowerPigPlayers {
