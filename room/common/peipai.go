@@ -3,7 +3,7 @@ package common
 import (
 	"fmt"
 	"net/http"
-	"steve/common/constant"
+	"steve/entity/constant"
 	"steve/external/goldclient"
 	"steve/gutils"
 	server_gold "steve/server_pb/gold"

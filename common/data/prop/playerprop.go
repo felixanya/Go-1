@@ -5,6 +5,7 @@ import (
 	"steve/entity/cache"
 	"steve/entity/db"
 	"steve/entity/prop"
+	"steve/external/propsclient"
 	"steve/structs"
 	"strconv"
 	"time"
@@ -57,23 +58,20 @@ func GetPlayerAllProps(playerID uint64) (props []prop.Prop, err error) {
 		return nil, err
 	}
 
-	// 获取玩家的道具
-	props = make([]prop.Prop, len(propConfig))
-	for index, attr := range propConfig {
-		props[index], _ = GetPlayerOneProp(playerID, attr.PropID)
+	// 获取玩家的所有道具
+	items, err := propsclient.GetUserProps(playerID, 0)
+
+	propsCount := make(map[uint64]int64, 0)
+	for _, item := range items {
+		propsCount[item.PropsId] = item.PropsNum
 	}
 
-	return
-}
-
-// GetPlayerOneProp 获取玩家的某些道具
-func GetPlayerOneProp(playerID uint64, propID int32) (prop prop.Prop, err error) {
-
-	// 获取玩家的道具
-	fields := []string{"propID", "count"}
-	prop, err = getPlayerProps(playerID, propID, fields...)
-	if err != nil {
-		return
+	props = make([]prop.Prop, len(propConfig))
+	for index, attr := range propConfig {
+		props[index] = prop.Prop{
+			PropID: int32(attr.PropID),
+			Count:  propsCount[uint64(attr.PropID)],
+		}
 	}
 
 	return
@@ -81,12 +79,12 @@ func GetPlayerOneProp(playerID uint64, propID int32) (prop prop.Prop, err error)
 
 // getPlayerProps 获取玩家的道具,获取单个或多个道具，通过fields参数区分
 func getPlayerProps(playerID uint64, propID int32, fields ...string) (prop prop.Prop, err error) {
-	// 从 redis 获取
+	//从 redis 获取
 	prop, err = getPlayerPropFieldsFromRedis(playerID, propID, fields)
 	if err == nil {
 		return
 	}
-	// 从 DB 获取
+	//从 DB 获取
 	prop, err = getPlayerPropFieldsFromDB(playerID, propID, fields)
 	return
 }
@@ -334,50 +332,6 @@ func getDBPlayerPropField(field string, prop *prop.Prop) (val interface{}, err e
 	default:
 		val = nil
 		err = fmt.Errorf("未处理字段：%s", field)
-	}
-
-	return
-}
-
-// AddPlayerProp 增减一个玩家的一种道具，count是数量；count正值代表增，负值代表减
-func AddPlayerProp(playerID uint64, propID int32, count int32) (err error) {
-
-	// 从redis中获取玩家道具
-	prop, perr := GetPlayerOneProp(playerID, propID)
-	if perr != nil {
-		err = fmt.Errorf("增减玩家道具propId:(%d)失败，err:(%v)", propID, perr.Error())
-		return
-	}
-
-	// 道具余量
-	oldCount := prop.Count
-
-	// 道具结算
-	newCount := int32(oldCount) + count
-
-	if count < 0 && newCount < 0 {
-		err = fmt.Errorf("删减玩家道具propId:(%d),减少:(%d)个出错，道具的剩余个人为:(%d)", propID, count, newCount)
-		return
-	}
-
-	// 设置redis失效
-	result := expirePlayerProp(playerID, propID)
-
-	if !result {
-		err = fmt.Errorf("删减玩家道具propId:(%d),删除redis道具key失败", propID)
-		return
-	}
-
-	// 更新道具个数到mysql
-	merr := updatePropCountToMysql(playerID, propID, uint32(oldCount), uint32(newCount))
-	if merr != nil {
-		err = fmt.Errorf("更新玩家道具propId:(%d)到mysql失败，err:(%v)", propID, merr.Error())
-	}
-
-	// 更新道具个数到redis
-	rerr := updatePropCountToRedis(playerID, propID, uint32(oldCount), uint32(newCount))
-	if rerr != nil {
-		err = fmt.Errorf("更新玩家道具propId:(%d)到redis失败，err:(%v)", propID, rerr.Error())
 	}
 
 	return
