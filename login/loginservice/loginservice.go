@@ -200,7 +200,7 @@ func authByToken(token string, playerID uint64) bool {
 
 func init() {
 	viper.SetDefault("auth_key", "some-secret-key")
-	viper.SetDefault("inner_auth", true) // 内部认证，不通过账号系统
+	viper.SetDefault("inner_auth", false) // 内部认证，不通过账号系统
 	viper.SetDefault("product_id", 9999)
 	viper.SetDefault("login_url", "http://192.168.7.26:18101/account/regiserHall")
 
