@@ -40,6 +40,7 @@ type playerLogin struct {
 type gameLevelConfig struct {
 	levelID     uint32 // 场次ID
 	levelName   string // 场次名字
+	fee         int64  // 费用
 	bottomScore uint32 // 底分
 	minGold     int64  // 金币要求下限
 	maxGold     int64  // 金币要求上限
@@ -61,6 +62,9 @@ type levelGlobalInfo struct {
 
 	// 场次ID
 	levelID uint32
+
+	// 费用
+	fee int64
 
 	// 最低金币
 	minGold int64
@@ -240,7 +244,7 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 	logrus.Debugln("进入函数")
 
 	// 游戏配置
-	gameConf, err := configclient.GetGameConfigMap()
+	gameConf, err := configclient.GetAllGameConfig()
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏配置失败！！")
 		return false
@@ -275,7 +279,7 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 
 	// 场次配置
 
-	levelConf, err := configclient.GetGameLevelConfigMap()
+	levelConf, err := configclient.GetAllGameLevelConfig()
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏级别配置失败！！")
 		return false
@@ -299,10 +303,17 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 			return false
 		}
 
+		// 检测:费用,金币要求最小值,金币要求最大值
+		if pLevelConf.Fee > pLevelConf.LowScores || pLevelConf.LowScores >= pLevelConf.HighScores || pLevelConf.LowScores <= 0 {
+			logrus.Errorln("读取游戏场次配置时游戏ID:%v中场次ID:%v,数据错误,费用:%v, 金币最小值:%v, 金币最大值:%v,", pLevelConf.GameID, pLevelConf.LevelID)
+			return false
+		}
+
 		// 新场次配置信息
 		newLevelConf := gameLevelConfig{
 			levelID:     uint32(pLevelConf.LevelID),
 			levelName:   pLevelConf.Name,
+			fee:         int64(pLevelConf.Fee),
 			bottomScore: uint32(pLevelConf.BaseScores),
 			minGold:     int64(pLevelConf.LowScores),
 			maxGold:     int64(pLevelConf.HighScores),
@@ -1017,6 +1028,7 @@ func (manager *matchManager) startLevelMatch(gameID uint32, levelID uint32) {
 	globalInfo := levelGlobalInfo{
 		gameID:          gameID,
 		levelID:         levelID,
+		fee:             levelConfig.fee,
 		minGold:         levelConfig.minGold,
 		maxGold:         levelConfig.maxGold,
 		bottomScore:     int64(levelConfig.bottomScore),
