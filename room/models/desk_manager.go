@@ -3,9 +3,12 @@ package models
 import (
 	"context"
 	"fmt"
+	"steve/external/configclient"
+	"steve/external/goldclient"
 	"steve/room/contexts"
 	deskpkg "steve/room/desk"
 	"steve/room/player"
+	"steve/server_pb/gold"
 	"steve/server_pb/room_mgr"
 	"sync"
 	"sync/atomic"
@@ -96,18 +99,40 @@ func (mgr *DeskManager) CreateDesk(ctx context.Context, req *roommgr.CreateDeskR
 
 	entry.Infoln("牌桌创建成功")
 
-	reportKey := cache.FmtGameReportKey(int(req.GetGameId()) ,int(desk.GetLevel())) //临时0
+	reportKey := cache.FmtGameReportKey(int(req.GetGameId()), int(desk.GetLevel())) //临时0
 	redisCli := redis.GetRedisClient()
 	redisCli.IncrBy(reportKey, int64(length))
+
+	// 场次配置
+	levelConf, err := configclient.GetGameLevelConfig(int(req.GameId), int(req.LevelId))
+	if err != nil {
+		logrus.WithError(err).Errorln("获取游戏级别配置失败！！")
+		return
+	}
+	fee := levelConf.Fee
+	if fee <= 0 {
+		if fee == 0 {
+			logrus.WithField("levelConf", levelConf).WithField("fee", fee).Info("场次费用为0，无需扣费")
+		} else {
+			logrus.WithField("levelConf", levelConf).WithField("fee", fee).Errorln("场次费用不合法")
+		}
+		return
+	}
+	for _, player := range players {
+		_, err := goldclient.AddGold(player.GetPlayerId(), int16(gold.GoldType_GOLD_COIN), int64(-fee), 0, 0, int32(req.GameId), int32(req.LevelId))
+		if err != nil {
+			logrus.WithField("player", player).WithField("fee", fee).Errorln("玩家扣台费失败")
+		}
+	}
 	return
 }
 
-func createDeskContext(gameID int, players []uint64, zhuang int, fixzhuang bool) (interface{}, error) {
+func createDeskContext(gameID int, players []uint64, zhuang int, baseCoin uint64, fixzhuang bool) (interface{}, error) {
 	switch gameID {
 	case GameId_GAMEID_DOUDIZHU:
-		return contexts.CreateInitDDZContext(players), nil
+		return contexts.CreateInitDDZContext(players, baseCoin), nil
 	default:
-		deskcontext, err := contexts.CreateMajongContext(players, gameID, uint32(zhuang), fixzhuang)
+		deskcontext, err := contexts.CreateMajongContext(players, gameID, uint32(zhuang), uint32(baseCoin), fixzhuang)
 		if err != nil {
 			return nil, fmt.Errorf("创建麻将现场失败:%v", err)
 		}
@@ -127,7 +152,7 @@ func createDeskSettler(gameID int) deskpkg.DeskSettler {
 }
 
 func (mgr *DeskManager) createDeskConfig(gameID int, players []uint64, req *roommgr.CreateDeskRequest) (deskpkg.DeskConfig, error) {
-	context, err := createDeskContext(gameID, players, 0, false)
+	context, err := createDeskContext(gameID, players, 0, req.GetBaseCoin(), false)
 	if err != nil {
 		return deskpkg.DeskConfig{}, fmt.Errorf("创建牌桌现场失败：%v", err)
 	}
@@ -154,7 +179,7 @@ func (mgr *DeskManager) CreateDeskObj(deskID uint64, length int, players []uint6
 	}
 
 	config.PlayerIds = players
-	desk := deskpkg.NewDesk(deskID, gameID,levelID, players, &config)
+	desk := deskpkg.NewDesk(deskID, gameID, levelID, players, &config)
 
 	player.GetPlayerMgr().InitDeskData(players, 2, robotLvs)
 	player.GetPlayerMgr().BindPlayerRoomAddr(players, gameID, int(levelID))

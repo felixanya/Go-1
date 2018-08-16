@@ -2,8 +2,6 @@ package data
 
 import (
 	"fmt"
-	"steve/external/goldclient"
-	"steve/server_pb/gold"
 	"steve/server_pb/user"
 
 	"github.com/Sirupsen/logrus"
@@ -155,13 +153,7 @@ func GetMysqlRobotFieldValuedAll(currRobotMap map[uint64]*RobotInfo) error {
 		} else {
 			nrp := &RobotInfo{}
 			nrp.GameWinRates = map[int]float64{robot.Gameid: robot.Winningrate}
-			// 从金币服获取
-			gold, err := goldclient.GetGold(uint64(playerID), int16(gold.GoldType_GOLD_COIN))
-			if err != nil {
-				logrus.WithError(err).Errorf("获取金币失败 playerID(%v)", playerID)
-				continue
-			}
-			nrp.Gold = gold
+			nrp.Gold = 0
 			currRobotMap[uint64(playerID)] = nrp
 		}
 	}

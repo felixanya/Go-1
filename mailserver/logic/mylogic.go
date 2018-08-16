@@ -2,14 +2,15 @@ package logic
 
 import (
 	"errors"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"steve/client_pb/mailserver"
+	"steve/entity/goods"
 	"steve/external/hallclient"
 	"steve/mailserver/data"
 	"steve/mailserver/define"
-	"time"
-	"steve/entity/goods"
 	"steve/structs"
+	"time"
 )
 
 /*
@@ -26,15 +27,24 @@ import (
 // 是否是主节点
 var isMasterNode = false
 
+// 清理过期邮件开始点数
+var clearBeginHour = 4
+
+// 清理过期邮件结束点数
+var clearEndHour = 6
 
 // 邮件列表
 var mailList map[uint64]*define.MailInfo
+
 // 省包节点列表
 var provSendList map[int64][]*define.MailInfo
 
-
+var cityAdList map[int64]*define.ADJson    // 城市级别的AD列表
+var provAdList map[int64]*define.ADJson    // 省份级别的AD列表
+var channelAdList map[int64]*define.ADJson // 渠道级别的AD列表
 
 func Init() error {
+	testADJson()
 	err := getDataFromDB()
 	if err != nil {
 		logrus.Errorf("getDataFromDB first err:%v", err)
@@ -42,6 +52,7 @@ func Init() error {
 	} else {
 		logrus.Debugf("getDataFromDB first win...")
 	}
+
 	//testJsonObject()
 	// 启动跑马灯是否开始检测协程
 	go runCheckMailChange()
@@ -61,8 +72,49 @@ func testJsonObject() {
 	gs.GoodsId = 1
 	gs.GoodsNum = 100
 
-	jsonGs, _ := data.MarshalAttachGoods([]*goods.Goods{gs,gs})
+	jsonGs, _ := data.MarshalAttachGoods([]*goods.Goods{gs, gs})
 	logrus.Debugln(jsonGs)
+}
+
+// 获取广告位列表
+func GetAD(uid uint64) ([]*mailserver.ADInfo, error) {
+
+	// 获取玩家渠道ID
+	channel, prov, city, ok := getUserInfo(uid)
+	logrus.Debugf("getUserInfo: uid=%d,channel=%d,prov=%d,city=%d", uid, channel, prov, city)
+	if !ok {
+		return nil, errors.New("获取玩家失败")
+	}
+
+	if channel != 0 {
+		ad, ok := channelAdList[channel]
+		if ok && ad != nil {
+			return ad.AdList, nil
+		}
+	}
+
+	if city != 0 {
+		// 先读取城市级别的AD
+		ad, ok := cityAdList[city]
+		if ok && ad != nil {
+			return ad.AdList, nil
+		}
+	}
+
+	if prov >= 0 {
+		// 再读取省份级别的AD
+		ad, ok := provAdList[prov]
+		if ok && ad != nil {
+			return ad.AdList, nil
+		}
+	}
+
+	// 再读取省份通用的AD
+	ad, ok := provAdList[0]
+	if ok && ad != nil {
+		return ad.AdList, nil
+	}
+	return nil, nil
 }
 
 // 获取未读消息总数
@@ -70,7 +122,7 @@ func GetGetUnReadSum(uid uint64) (int32, error) {
 	// 获取玩家渠道ID
 	channel, prov, _, ok := getUserInfo(uid)
 	if !ok {
-		return 0, errors.New("获取玩家渠道ID失败")
+		return 0, errors.New("获取玩家失败")
 	}
 
 	// 从DB获取玩家的已读邮件列表
@@ -104,7 +156,7 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 	// 获取玩家渠道ID
 	channel, prov, _, ok := getUserInfo(uid)
 	if !ok {
-		return nil, errors.New("获取玩家渠道ID失败")
+		return nil, errors.New("获取玩家失败")
 	}
 	if prov < 0 {
 		return nil, errors.New("获取玩家省包ID < 0")
@@ -119,11 +171,12 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 	titleList := make([]*mailserver.MailTitle, 0, 5)
 	// 获取玩家所属省包的邮件
 
+	format := "2006-01-02 15:04:05"
 	list := provSendList[prov]
 	for _, mail := range list {
 
 		// 检测是否符合省包和渠道ID
-		isOk := checkMailProvChannel(uid,mail, channel, prov)
+		isOk := checkMailProvChannel(uid, mail, channel, prov)
 		if !isOk {
 			continue
 		}
@@ -131,6 +184,11 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 		title.MailId = &mail.Id
 		title.MailTitle = &mail.Title
 		title.CreateTime = &mail.StartTime
+		t, err := time.Parse(format, mail.StartTime)
+		if err == nil {
+			strTime := fmt.Sprintf("%02d-%02d", t.Month(), t.Day())
+			title.CreateTime = &strTime
+		}
 
 		isRead := int32(0)
 		one, ok := readList[mail.Id]
@@ -138,6 +196,10 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 
 		} else {
 			isRead = 1
+		}
+		// 已经删除的，不返回
+		if one != nil && one.IsDel {
+			continue
 		}
 		title.IsRead = &isRead
 
@@ -187,21 +249,43 @@ func GetMailDetail(uid uint64, mailId uint64) (*mailserver.MailDetail, error) {
 	detail.MailId = &mail.Id
 	detail.MailTitle = &mail.Title
 	detail.Content = &mail.Detail
+	//detail.DelTime = &mail.DelTime
+
+	strDel := ""
+	format := "2006-01-02 15:04:05"
+	tm, err := time.Parse(format, mail.DelTime)
+
+	OneDay := int64(3600 * 24)
+	if err == nil {
+		sb := tm.Unix() - time.Now().Unix()
+		if sb > 0 {
+			d := sb / OneDay
+			sb = sb % OneDay
+			h := sb / 3600
+			sb = sb % 3600
+			m := sb / 60
+
+			strDel = fmt.Sprintf("%02d天%02d时%02d分", d, h, m)
+		}
+	}
+	detail.DelTime = &strDel
 
 	t := mailserver.GoodsType_GOODSTYPE_PROPS
 
-	for _, ach := range  mail.AttachGoods {
+	for _, ach := range mail.AttachGoods {
 		newGoods := new(mailserver.Goods)
 		newGoods.GoodsType = &t
 		newGoods.GoodsId = &ach.GoodsId
 		newGoods.GoodsNum = &ach.GoodsNum
+		detail.AttachGoods = newGoods
+		break
 	}
 
-	isRead := int32(0)
+	isRead := int32(1)
 	detail.IsRead = &isRead
 
 	isHaveAttach := int32(0)
-	if len(mail.Attach) > 0 {
+	if len(mail.AttachGoods) > 0 {
 		isHaveAttach = 1
 	}
 	if one != nil && one.IsGetAttach {
@@ -258,9 +342,9 @@ func DelMail(uid uint64, mailId uint64) error {
 
 	if one == nil {
 		// 设置邮件为删除状态
-		return data.DelEmailFromDB(uid, mailId, true,mail.DelTime)
+		return data.DelEmailFromDB(uid, mailId, true, mail.DelTime)
 	}
-	return data.DelEmailFromDB(uid, mailId, false,mail.DelTime)
+	return data.DelEmailFromDB(uid, mailId, false, mail.DelTime)
 
 }
 
@@ -282,7 +366,7 @@ func AwardAttach(uid uint64, mailId uint64) ([]*mailserver.Goods, error) {
 	}
 
 	// 如果已领取，直接返回
-	if one.IsGetAttach  {
+	if one.IsGetAttach {
 		return nil, errors.New("邮件已领取")
 	}
 
@@ -294,9 +378,8 @@ func AwardAttach(uid uint64, mailId uint64) ([]*mailserver.Goods, error) {
 	return nil, nil
 }
 
-
 // 启动邮件列表变化检测协程
-func  runCheckMailChange() error{
+func runCheckMailChange() error {
 
 	// 1分钟更新一次邮件列表
 	for {
@@ -309,8 +392,79 @@ func  runCheckMailChange() error{
 	return nil
 }
 
+func testADJson() {
+	adList := make([]*define.ADJson, 0, 2)
+
+	ad := new(define.ADJson)
+	ad.Id = 1
+	ad.IsUse = 1
+	ad.Prov = 0
+	ad.Channel = 0
+	ad.Prov = 0
+
+	for i := uint64(1); i <= 4; i++ {
+		one := new(mailserver.ADInfo)
+		one.AdId = &i
+		param := ""
+		one.AdParam = &param
+
+		tick := int32(5)
+		one.AdTick = &tick
+		pic := "http:/www.qq.com/pic123.jpg"
+		one.PicUrl = &pic
+		gourl := "http:/www.qq.com"
+		one.GoUrl = &gourl
+
+		ad.AdList = append(ad.AdList, one)
+	}
+
+	adList = append(adList, ad)
+
+	ad2 := new(define.ADJson)
+
+	*ad2 = *ad
+	ad2.Id = 2
+	ad2.Channel = 1
+	adList = append(adList, ad2)
+
+	strJson, err := data.MarshalADs(adList)
+	logrus.Debugf("MarshalADs: json=%v,err=%v", strJson, err)
+
+}
+
+// 从DB获取AD
+func getADFromDB() error {
+	list, err := data.GetADFromDB()
+	if err != nil {
+		logrus.Errorf("getADFromDB err:%v", err)
+		return err
+	}
+
+	channelList := make(map[int64]*define.ADJson)
+	cityList := make(map[int64]*define.ADJson)
+	provList := make(map[int64]*define.ADJson)
+
+	for _, ad := range list {
+		if ad.Channel == 0 && ad.City == 0 {
+			provList[ad.Prov] = ad
+		} else if ad.City > 0 && ad.Channel == 0 {
+			cityList[ad.City] = ad
+		} else if ad.Channel > 0 {
+			channelList[ad.Channel] = ad
+		}
+	}
+
+	channelAdList = channelList
+	cityAdList = cityList
+	provAdList = provList
+
+	return nil
+}
+
 // 从DB获取邮件列表
 func getDataFromDB() error {
+
+	getADFromDB()
 
 	list, err := data.LoadMailListFromDB()
 	if err != nil {
@@ -329,10 +483,7 @@ func getDataFromDB() error {
 
 // 主节点每日半夜4-6点，清理过期邮件
 var thisDay = 0
-// 清理过期邮件开始点数
-var clearBeginHour = 2
-// 清理过期邮件结束点数
-var clearEndHour = 3
+
 func clearExpiredEmail() {
 	if !isMasterNode {
 		// 非主节点，直接返回
@@ -344,13 +495,10 @@ func clearExpiredEmail() {
 	if thisDay == now.YearDay() {
 		return
 	}
-
 	if now.Hour() >= clearBeginHour && now.Hour() < clearEndHour {
-		thisDay = now.YearDay()
-		logrus.Infof("begin clearExpiredEmail work ...")
-		//data.ClearExpiredEmailFromDB()
+		data.ClearExpiredEmailFromDB()
 		data.ClearExpiredUserEmailFromDB()
-		logrus.Infof("end clearExpiredEmail work ...")
+		thisDay = now.YearDay()
 	}
 }
 
@@ -436,7 +584,7 @@ func getUserInfo(uid uint64) (int64, int64, int64, bool) {
 }
 
 // 检测是否符合省包和渠道ID
-func checkMailProvChannel(uid uint64,mail *define.MailInfo, channel int64, prov int64) bool {
+func checkMailProvChannel(uid uint64, mail *define.MailInfo, channel int64, prov int64) bool {
 	isOk := false
 	for _, dest := range mail.DestList {
 		if dest.Prov != 0 && prov != dest.Prov {
