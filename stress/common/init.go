@@ -8,11 +8,14 @@ import (
 	"steve/servicelauncher/loggerwin"
 	"flag"
 	"github.com/Sirupsen/logrus"
+	"time"
+	"strconv"
 )
 
 var (
 	config  = flag.String("config", "./config.yml", "config.yml")
 	Waitc chan struct{}
+	LogPath string
 )
 
 func Init() {
@@ -53,7 +56,10 @@ func initConfig() string {
 }
 
 func initLogger() {
-	loggerwin.SetupLog(viper.GetString("log_prefix"), viper.GetString("log_dir"),
+	t := time.Now()
+	subdir := fmt.Sprintf("%s", t.Format("2006_01_02-15_04_05_")) + strconv.Itoa(t.Nanosecond() / 1000000)
+	LogPath = viper.GetString("log_dir") + "/" + subdir
+	loggerwin.SetupLog(viper.GetString("log_prefix"), LogPath,
 		viper.GetString("log_level"), viper.GetBool("log_stderr"))
 	//loggerwin.SetupLog("stress", "./log", "debug", true)
 }

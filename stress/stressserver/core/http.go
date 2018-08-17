@@ -11,15 +11,18 @@ import (
 	"github.com/Sirupsen/logrus"
 	"strconv"
 	"steve/stress/proto"
+	"steve/stress/common"
 )
 
 func startHttp() {
 	httpMux := http.NewServeMux()
+	httpMux.HandleFunc("/log/", http.StripPrefix("/log/", http.FileServer(http.Dir(common.LogPath))).ServeHTTP)
 	httpMux.HandleFunc("/report/", http.StripPrefix("/report/", http.FileServer(http.Dir(viper.GetString("report_path")))).ServeHTTP)
 	httpMux.HandleFunc("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))).ServeHTTP)
 	httpMux.HandleFunc("/api/clients", getClients)
 	httpMux.HandleFunc("/api/startClient", startClient)
 	httpMux.HandleFunc("/api/stopClient", stopClient)
+	httpMux.HandleFunc("/api/finished", finished)
 	httpMux.HandleFunc("/view", httpView)
 	pprof.Init("stressserver", "svg", viper.GetInt("http_port"), httpMux)
 	//if err := http.ListenAndServe(":8885", nil); err != nil {
@@ -28,11 +31,11 @@ func startHttp() {
 }
 
 func startClient(w http.ResponseWriter, r *http.Request) {
-	id, result := startStopClient(true, w, r)
+	id, result := startStopClient(true, r)
 	writeResponse(w, id, result)
 }
 func stopClient(w http.ResponseWriter, r *http.Request) {
-	id, result := startStopClient(false, w, r)
+	id, result := startStopClient(false, r)
 	writeResponse(w, id, result)
 }
 func writeResponse(w http.ResponseWriter, id int, result int) {
@@ -42,7 +45,7 @@ func writeResponse(w http.ResponseWriter, id int, result int) {
 	json, _ := json.Marshal(m)
 	fmt.Fprintf(w, string(json))
 }
-func startStopClient(isStart bool, w http.ResponseWriter, r *http.Request) (id int, result int) {
+func startStopClient(isStart bool, r *http.Request) (id int, result int) {
 	r.ParseForm()
 	ID := r.Form["id"]
 	if len(ID) == 0 {
@@ -96,6 +99,14 @@ func getClients(w http.ResponseWriter, r *http.Request) {
 	j, _ := json.Marshal(jsonmap)
 	s := string(j)
 	fmt.Fprintf(w, s)
+}
+
+func finished(w http.ResponseWriter, r *http.Request) {
+	m := make(map[string]int)
+	m["id"] = 354
+	m["result"] = 75
+	json, _ := json.Marshal(m)
+	fmt.Fprintf(w, string(json))
 }
 
 func httpView(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,6 @@ package core
 import (
 	"github.com/shirou/gopsutil/mem"
 	"github.com/spf13/viper"
-	"steve/stress/stressclient/sprite"
 	"time"
 	"github.com/shirou/gopsutil/cpu"
 )
@@ -37,10 +36,9 @@ func refresh() {
 			//	//return ret, err
 			//	continue
 			//}
-			stage := sprite.GetStage()
 			cpu, _ := cpu.Percent(2, false)
-			stage.CPUGauge.Set(cpu[0])
-			stage.MemoryGauge.Set(float64(v.UsedPercent))
+			metrics.CPUGauge.Set(cpu[0])
+			metrics.MemoryGauge.Set(float64(v.UsedPercent))
 			//fmt.Println("cpu: ", *dst[0].LoadPercentage, dst)
 			//fmt.Printf("Total: %v, Free:%v, UsedPercent:%f%%\n", v.Total, v.Free, v.UsedPercent)
 		}

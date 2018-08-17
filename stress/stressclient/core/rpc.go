@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/viper"
 	"strings"
 	"strconv"
-	"io"
-	"github.com/Sirupsen/logrus"
+		"github.com/Sirupsen/logrus"
 	"context"
 	"steve/stress/common"
+	"os"
 )
 
 var rpcconn *grpc.ClientConn
@@ -35,13 +35,12 @@ func recv() {
 	go func() {
 		for{
 			in, err := stream.Recv()
-			if err == io.EOF {
-				close(common.Waitc)
-			}
+			//if err == io.EOF {
+			//	close(common.Waitc)
+			//}
 			if err != nil {
-				close(waitc)
+				os.Exit(1)
 				//logrus.Fatalf("Failed to receive a note : %v", err)
-				break
 			}
 			logrus.Printf("Got server command: %d, %s", in.Cmd, in.Params)
 			doServerCommand(in)

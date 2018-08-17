@@ -4,7 +4,6 @@ import (
 	"errors"
 	"steve/stress/stressclient/core"
 	_ "steve/stress/stressclient/core"
-	"steve/stress/stressclient/sprite"
 
 	"steve/stress/sprites/login"
 	"steve/stress/common"
@@ -17,7 +16,7 @@ func main() {
 	logrus.Info("EXIT")
 }
 
-func getSpriteByName(name string) (sprite.Sprite, error) {
+func getSpriteByName(name string) (core.Sprite, error) {
 	switch name {
 	case "login":
 		return login.GetSprite(), nil

@@ -1,35 +1,65 @@
 package core
 
 import (
-	"steve/stress/stressclient/sprite"
 	"github.com/prometheus/client_golang/prometheus"
-	"net/http"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/viper"
-	"github.com/Sirupsen/logrus"
 )
 
+var metrics *Metrics
+
+func GetMetrics() *Metrics {
+	return metrics
+}
+
+type Metrics struct {
+	ErrorCounter  prometheus.CounterVec
+	histogram     prometheus.HistogramVec
+	ConnectsCounter prometheus.CounterVec
+
+	CPUGauge    prometheus.Gauge
+	MemoryGauge prometheus.Gauge
+}
+
 func initPrometheus() {
-	stage := sprite.GetStage()
-	stage.LoginHis = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "start_login",
+	initMetrics()
+	startHttp()
+}
+
+func initMetrics() {
+	labels := []string{"type"}
+	metrics = &Metrics{}
+	metrics.histogram = *prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "client_histogram",
 		Help:    "Number of login operations processed.",
 		Buckets: prometheus.LinearBuckets(0, 10, 1),
-	})
-	prometheus.MustRegister(stage.LoginHis)
-	stage.CPUGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+	}, labels)
+	prometheus.MustRegister(metrics.histogram)
+	metrics.ErrorCounter = *prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "error_counter",
+		Help: "ccc",
+	}, labels)
+	prometheus.MustRegister(metrics.ErrorCounter)
+	metrics.ConnectsCounter = *prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "connects_counter",
+		Help: "Started and stopped connects",
+	}, labels)
+	prometheus.MustRegister(metrics.ConnectsCounter)
+
+	metrics.CPUGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "cpu_gauge",
 		Help: "CPU LoadPercentage",
 	})
-	prometheus.MustRegister(stage.CPUGauge)
-	stage.MemoryGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+	prometheus.MustRegister(metrics.CPUGauge)
+	metrics.MemoryGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "memory_gauge",
 		Help: "Memory UsedPercent",
 	})
-	prometheus.MustRegister(stage.MemoryGauge)
+	prometheus.MustRegister(metrics.MemoryGauge)
+}
 
-	// Expose the registered metrics via HTTP.
-	http.Handle("/metrics", promhttp.Handler())
-	addr := viper.GetString("prometheus_addr")
-	logrus.Info(http.ListenAndServe(addr, nil))
+func Observe(observeType string, value float64) {
+	metrics.histogram.WithLabelValues(observeType).Observe(value)
+}
+
+func AddError(errorType string) {
+	metrics.ErrorCounter.WithLabelValues(errorType).Add(1)
 }
