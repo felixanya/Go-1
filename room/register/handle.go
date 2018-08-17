@@ -284,7 +284,7 @@ func HandlePlayerGameGiveUp(playerID uint64, header *steve_proto_gaterpc.Header,
 
 	// 麻将settle, 修改该破产玩家为认输
 	majongSettle := desk.GetConfig().Settle.(*models.MajongSettle)
-	majongSettle.HandleBrokerPlayer(desk, []uint64{playerID}, []uint64{})
+	majongSettle.HandleBrokerPlayer(desk, playerID)
 
 	// 广播该玩家认输
 	ntf := room.RoomGiveUpNtf{
@@ -345,7 +345,7 @@ func HandleRoomBrokerPlayerContinue(playerID uint64, header *steve_proto_gaterpc
 
 	// 麻将settle, 修改该破产玩家为认输
 	majongSettle := desk.GetConfig().Settle.(*models.MajongSettle)
-	majongSettle.HandleBrokerPlayer(desk, []uint64{}, []uint64{playerID})
+	majongSettle.HandleBrokerPlayer(desk, playerID)
 
 	rsp.ErrCode = room.RoomError_SUCCESS.Enum()
 	return
