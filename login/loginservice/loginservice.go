@@ -74,7 +74,7 @@ func (ls *LoginService) Login(ctx context.Context, request *login.LoginRequest) 
 
 	entry := logrus.WithFields(logrus.Fields{
 		"player_id": request.GetPlayerId(),
-		"token":     request.GetToken(),
+		"request":   request.String(),
 	})
 	entry.Debugln("收到登录请求")
 	response = &login.LoginResponse{
