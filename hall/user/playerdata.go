@@ -3,11 +3,15 @@ package user
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"steve/entity/cache"
 	"steve/entity/db"
 	"steve/hall/data"
 	"steve/server_pb/user"
 	"time"
+
+	"steve/datareport/fixed"
+	"steve/external/datareportclient"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -19,7 +23,7 @@ var _ user.PlayerDataServer = new(PlayerDataService)
 
 // GetPlayerByAccount 根据账号获取玩家 ID
 func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.GetPlayerByAccountReq) (rsp *user.GetPlayerByAccountRsp, err error) {
-	logrus.Debugln("GetPlayerByAccount req", *req)
+	logrus.Debugf("GetPlayerByAccount req: (%v)", *req)
 
 	// 默认返回消息
 	rsp, err = &user.GetPlayerByAccountRsp{
@@ -48,12 +52,14 @@ func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.
 	// 返回消息
 	rsp.PlayerId, rsp.ErrCode = playerID, int32(user.ErrCode_EC_SUCCESS)
 
+	datareportclient.DataReport(fixed.LOG_TYPE_REG, 0, 0, 0, playerID, "1")
+
 	return
 }
 
 // GetPlayerInfo 获取玩家基本信息
 func (pds *PlayerDataService) GetPlayerInfo(ctx context.Context, req *user.GetPlayerInfoReq) (rsp *user.GetPlayerInfoRsp, err error) {
-	logrus.Debugln("GetPlayerInfo req", *req)
+	logrus.Debugf("GetPlayerInfo req : (%v)", *req)
 
 	// 默认返回消息
 	rsp, err = &user.GetPlayerInfoRsp{
@@ -74,13 +80,43 @@ func (pds *PlayerDataService) GetPlayerInfo(ctx context.Context, req *user.GetPl
 		rsp.NickName, rsp.Avatar = player.Nickname, player.Avatar
 		rsp.ChannelId, rsp.ProvinceId, rsp.CityId = uint32(player.Channelid), uint32(player.Provinceid), uint32(player.Cityid)
 	}
+	logrus.Debugf("GetPlayerInfo rsp : (%v)", rsp)
+	return
+}
 
+// InitRobotPlayerState 初始化机器人状态
+func (pds *PlayerDataService) InitRobotPlayerState(ctx context.Context, req *user.InitRobotPlayerStateReq) (rsp *user.InitRobotPlayerStateRsp, err error) {
+	logrus.Debugf("GetPlayerGameInfo Batch req : (%v)", *req)
+
+	// 默认返回消息
+	rsp, err = &user.InitRobotPlayerStateRsp{
+		ErrCode:    int32(user.ErrCode_EC_FAIL),
+		RobotState: make([]*user.RobotState, 0),
+	}, nil
+
+	// 请求参数
+	robotIDs := req.GetRobotIds()
+
+	// 逻辑处理
+	robotStates, err := data.InitRobotPlayerState(robotIDs...)
+
+	// 返回消息
+	if err != nil {
+		return
+	}
+	rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
+	for robotID, robotState := range robotStates {
+		rsp.RobotState = append(rsp.RobotState, &user.RobotState{
+			RobotId:    robotID,
+			RobotState: robotState,
+		})
+	}
 	return
 }
 
 // UpdatePlayerInfo 设置玩家信息
 func (pds *PlayerDataService) UpdatePlayerInfo(ctx context.Context, req *user.UpdatePlayerInfoReq) (rsp *user.UpdatePlayerInfoRsp, err error) {
-	logrus.Debugln("SetPlayerInfo req", *req)
+	logrus.Debugf("SetPlayerInfo req: (%v)", *req)
 
 	// 默认返回消息
 	rsp, err = &user.UpdatePlayerInfoRsp{
@@ -122,7 +158,7 @@ func (pds *PlayerDataService) UpdatePlayerInfo(ctx context.Context, req *user.Up
 
 // GetPlayerState 获取玩家状态
 func (pds *PlayerDataService) GetPlayerState(ctx context.Context, req *user.GetPlayerStateReq) (rsp *user.GetPlayerStateRsp, err error) {
-	logrus.Debugln("GetPlayerState req", *req)
+	logrus.Debugf("GetPlayerState req: (%v)", *req)
 
 	// 默认返回
 	rsp, err = &user.GetPlayerStateRsp{
@@ -131,7 +167,7 @@ func (pds *PlayerDataService) GetPlayerState(ctx context.Context, req *user.GetP
 	}, nil
 
 	// 逻辑处理
-	pState, err := data.GetPlayerState(req.GetPlayerId())
+	pState, err := data.GetPlayerState(req.GetPlayerId(), []string{cache.GameID, cache.LevelID, cache.GameState, cache.IPAddr, cache.GateAddr, cache.MatchAddr, cache.RoomAddr}...)
 
 	if err == nil {
 		rsp.GameId, rsp.LevelId = uint32(pState.GameID), uint32(pState.LevelID)
@@ -139,12 +175,13 @@ func (pds *PlayerDataService) GetPlayerState(ctx context.Context, req *user.GetP
 		rsp.GateAddr, rsp.MatchAddr, rsp.RoomAddr = pState.GateAddr, pState.MatchAddr, pState.RoomAddr
 		rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
 	}
+	logrus.Debugln("get player state rsp", rsp)
 	return
 }
 
 // GetPlayerGameInfo 获取玩家游戏信息
 func (pds *PlayerDataService) GetPlayerGameInfo(ctx context.Context, req *user.GetPlayerGameInfoReq) (rsp *user.GetPlayerGameInfoRsp, err error) {
-	logrus.Debugln("GetPlayerState req", *req)
+	logrus.Debugf("GetPlayerState req :(%v)", *req)
 
 	// 请求参数
 	playerID := req.GetPlayerId()
@@ -157,15 +194,18 @@ func (pds *PlayerDataService) GetPlayerGameInfo(ctx context.Context, req *user.G
 	}, nil
 
 	// 逻辑处理
-	fields := []string{cache.GameID, cache.WinningRate, cache.WinningBurea, cache.TotalBurea, cache.MaxWinningStream, cache.MaxMultiple}
-	exists, info, err := data.GetPlayerGameInfo(playerID, gameID, fields...)
+	fields := []string{cache.WinningRate, cache.WinningBurea, cache.TotalBurea, cache.MaxWinningStream, cache.MaxMultiple}
+	exist, info, err := data.GetPlayerGameInfo(playerID, gameID, fields...)
 
 	// 返回消息
-	if !exists {
-		rsp.ErrCode = int32(user.ErrCode_EC_EMPTY)
+	if !exist {
+		rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
+		return
 	}
 	if err == nil {
-		rsp.WinningRate, rsp.ErrCode = uint32(info.Winningrate), int32(user.ErrCode_EC_SUCCESS)
+		rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
+		rsp.WinningRate, rsp.WinningBurea, rsp.TotalBurea = uint32(info.Winningrate), uint32(info.Winningburea), uint32(info.Totalbureau)
+		rsp.MaxWinningStream, rsp.MaxMultiple = uint32(info.Maxwinningstream), uint32(info.Maxmultiple)
 	}
 
 	return
@@ -173,7 +213,7 @@ func (pds *PlayerDataService) GetPlayerGameInfo(ctx context.Context, req *user.G
 
 // UpdatePlayerState 设置玩家状态
 func (pds *PlayerDataService) UpdatePlayerState(ctx context.Context, req *user.UpdatePlayerStateReq) (rsp *user.UpdatePlayerRsp, err error) {
-	logrus.Debugln("SetPlayerState req", *req)
+	logrus.Debugf("UpdatePlayerState req :(%v)", *req)
 
 	// 默认返回消息
 	rsp, err = &user.UpdatePlayerRsp{
@@ -185,6 +225,10 @@ func (pds *PlayerDataService) UpdatePlayerState(ctx context.Context, req *user.U
 	playerID := req.GetPlayerId()
 	oldState := uint32(req.GetOldState())
 	newState := uint32(req.GetNewState())
+	gameID := uint32(req.GetGameId())
+	levelID := uint32(req.GetLevelId())
+	serverType := uint32(req.GetServerType())
+	serverAddr := req.GetServerAddr()
 
 	// 校验入参
 	correct := validateUserSate(oldState, newState)
@@ -193,20 +237,29 @@ func (pds *PlayerDataService) UpdatePlayerState(ctx context.Context, req *user.U
 		return
 	}
 
-	// 逻辑处理
-	result, err := data.UpdatePlayerState(playerID, oldState, newState)
+	// 更新状态
+	result, err := false, nil
+	logrus.Debugf("UpdatePlayerState oldState :(%v),newState:(%v),serverType:(%v)", oldState, newState, serverType)
 
-	// 返回消息
+	if oldState != 0 && newState != 0 {
+		result, err = data.UpdatePlayerState(playerID, oldState, newState, gameID, levelID)
+	}
+	// 更新服务地址
+	if serverType != 0 {
+		result, err = data.UpdatePlayerServerAddr(playerID, uint32(serverType), serverAddr)
+	}
+
 	if result && err == nil {
 		rsp.Result, rsp.ErrCode = true, int32(user.ErrCode_EC_SUCCESS)
 	}
+	logrus.Debugf("UpdatePlayerState rsp :(%v),err:(%v)", rsp, err)
 
 	return
 }
 
 // UpdatePlayerGateInfo 更新玩家网关信息
 func (pds *PlayerDataService) UpdatePlayerGateInfo(ctx context.Context, req *user.UpdatePlayerGateInfoReq) (rsp *user.UpdatePlayerRsp, err error) {
-	logrus.Debugln("UpdatePlayerGateInfo req", *req)
+	logrus.Debugf("UpdatePlayerGateInfo req :(%v)", *req)
 
 	// 默认返回消息
 	rsp, err = &user.UpdatePlayerRsp{
@@ -237,7 +290,7 @@ func (pds *PlayerDataService) UpdatePlayerGateInfo(ctx context.Context, req *use
 
 // UpdatePlayerServerAddr 更新玩家服务端地址
 func (pds *PlayerDataService) UpdatePlayerServerAddr(ctx context.Context, req *user.UpdatePlayerServerAddrReq) (rsp *user.UpdatePlayerRsp, err error) {
-	logrus.Debugln("UpdatePlayerGateInfo req", *req)
+	logrus.Debugf("UpdatePlayerGateInfo req :(%v)", *req)
 
 	// 默认返回消息
 	rsp, err = &user.UpdatePlayerRsp{
@@ -268,49 +321,33 @@ func (pds *PlayerDataService) UpdatePlayerServerAddr(ctx context.Context, req *u
 	return
 }
 
-// GetGameListInfo 获取玩家游戏列表信息
-func (pds *PlayerDataService) GetGameListInfo(ctx context.Context, req *user.GetGameListInfoReq) (rsp *user.GetGameListInfoRsp, err error) {
-	logrus.Debugln("GetGameListInfo req", *req)
-
-	// 默认返回消息
-	rsp, err = &user.GetGameListInfoRsp{
-		ErrCode:         int32(user.ErrCode_EC_FAIL),
-		GameConfig:      []*user.GameConfig{},
-		GameLevelConfig: []*user.GameLevelConfig{},
-	}, nil
-
-	// 逻辑处理
-	gameConfig, gameLevelConfig, err := data.GetGameInfoList()
-	// 返回消息
-	if err == nil {
-		rsp.GameConfig, rsp.GameLevelConfig = DBGameConfig2Server(gameConfig), DBGamelevelConfig2Sercer(gameLevelConfig)
-		rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
-	}
-	return
-}
-
 // createPlayer 创建玩家
 func createPlayer(accID uint64) (uint64, error) {
+	showUID := data.AllocShowUID()
 	playerID := data.AllocPlayerID()
 
 	if playerID == 0 {
 		return 0, fmt.Errorf("分配玩家 ID 失败")
 	}
 
+	if has, err := data.ExistPlayerID(playerID); err != nil || has {
+		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
+	}
+
 	if err := data.InitPlayerData(db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(playerID),
-		Showuid:      int(data.AllocShowUID()),
+		Showuid:      showUID,
 		Type:         1,
-		Channelid:    0,                                 // TODO ，渠道 ID
-		Nickname:     fmt.Sprintf("player%d", playerID), // TODO,昵称
-		Gender:       1,
-		Avatar:       "", // TODO , 头像
-		Provinceid:   0,  // TODO， 省ID
-		Cityid:       0,  // TODO 市ID
-		Name:         "", // TODO: 真实姓名
-		Phone:        "", // TODO: 电话
-		Idcard:       "", // TODO 身份证
+		Channelid:    1,                                // TODO ，渠道 ID
+		Nickname:     fmt.Sprintf("player%d", showUID), // TODO,昵称
+		Gender:       2,
+		Avatar:       getRandomAvator(), // TODO , 头像
+		Provinceid:   1,                 // TODO， 省ID
+		Cityid:       1,                 // TODO 市ID
+		Name:         "",                // TODO: 真实姓名
+		Phone:        "",                // TODO: 电话
+		Idcard:       "",                // TODO 身份证
 		Iswhitelist:  0,
 		Zipcode:      0,
 		Shippingaddr: "",
@@ -325,7 +362,7 @@ func createPlayer(accID uint64) (uint64, error) {
 	}
 	if err := data.InitPlayerCoin(db.TPlayerCurrency{
 		Playerid:       int64(playerID),
-		Coins:          10000,
+		Coins:          100000,
 		Ingots:         0,
 		Keycards:       0,
 		Obtainingots:   0,
@@ -343,7 +380,24 @@ func createPlayer(accID uint64) (uint64, error) {
 	if err := data.InitPlayerState(int64(playerID)); err != nil {
 		return playerID, fmt.Errorf("初始化玩家(%d)状态失败: %v", playerID, err)
 	}
+
+	if err := data.InitPlayerProps(db.TPlayerProps{
+		Playerid:   int64(playerID),
+		Propid:     int64(1),
+		Count:      5,
+		Createtime: time.Now(),
+		Createby:   "programmer",
+		Updatetime: time.Now(),
+		Updateby:   "",
+	}); err != nil {
+		return playerID, fmt.Errorf("初始化玩家(%d)道具失败: %v", playerID, err)
+	}
 	return playerID, nil
+}
+
+func getRandomAvator() string {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return fmt.Sprintf("%d", r.Intn(2)+1)
 }
 
 // validatePlayerInfoArgs 校验更新玩家个人资料入参
@@ -353,6 +407,9 @@ func validatePlayerInfoArgs() bool {
 
 // validateUserSate 校验更新玩家状态入参
 func validateUserSate(oldState, newState uint32) bool {
+	if oldState == 0 && newState == 0 {
+		return true
+	}
 	userState := map[user.PlayerState]bool{
 		user.PlayerState_PS_IDIE:     true,
 		user.PlayerState_PS_MATCHING: true,
@@ -377,9 +434,6 @@ func validateServerType(serverType user.ServerType, serverAddr string) bool {
 
 	if !userServerType[user.ServerType(serverType)] {
 		logrus.Warningln("server_type is incorrect, server_type:%d", serverType)
-		return false
-	}
-	if serverAddr == "" {
 		return false
 	}
 

@@ -1,68 +1,161 @@
 package data
 
 import (
-	"steve/entity/cache"
+	"fmt"
+	"steve/server_pb/user"
 
 	"github.com/Sirupsen/logrus"
 )
 
-const (
-	//RobotPlayerIDField 玩家ID字段名
-	RobotPlayerIDField string = "playerID"
-	//RobotPlayerGameIDWinRate 玩家游戏ID对应的胜率字段名
-	RobotPlayerGameIDWinRate string = "gameidwinrate"
-	//RobotPlayerGameIDField 玩家游戏 ID 字段名
-	RobotPlayerGameIDField string = "gameid"
-	//RobotPlayerNickNameField 玩家昵称字段
-	RobotPlayerNickNameField string = "nickname"
-	// RobotPlayerAvatarField 玩家头像
-	RobotPlayerAvatarField = "avatar"
-	// RobotPlayerStateField ...玩家状态
-	RobotPlayerStateField = "game_state"
-	// RobotPlayerGateAddrField ...网关服地址
-	RobotPlayerGateAddrField = "gate_addr"
-	// RobotPlayerMatchAddrField ...匹配服地址
-	RobotPlayerMatchAddrField = "match_addr"
-	// RobotPlayerRoomAddrField ...房间服地址
-	RobotPlayerRoomAddrField = "room_addr"
-)
-
-//InitRobotRedis 初始化机器人redis
-func InitRobotRedis() {
-	robotMap := make(map[int64]*cache.RobotPlayer)
-	log := logrus.WithFields(logrus.Fields{"func_name": "initRobotRedis"})
-	if err := getMysqlRobotFieldValuedAll(robotMap); err != nil {
-		log.WithError(err).Errorln("初始化从mysql获取机器人失败")
-		return
-	}
-	failedIDErrMpa := make(map[uint64]error) //存入redis 失败 playerID
-	for playerID, robotPlayer := range robotMap {
-		err := SetRobotPlayerWatchs(uint64(playerID), FmtRobotPlayer(robotPlayer), RedisTimeOut)
-		if err != nil {
-			failedIDErrMpa[uint64(playerID)] = err
-			continue
-		}
-	}
-	if len(failedIDErrMpa) > 0 {
-		log.WithFields(logrus.Fields{"failedIDErrMpa": failedIDErrMpa}).Info("失败的playerID")
-	}
+//RobotInfo 机器人信息
+type RobotInfo struct {
+	Gold         int64           // 金币
+	GameWinRates map[int]float64 // key gameid - value winRate
 }
 
-//GetLeisureRobot 获取空闲机器人
-func GetLeisureRobot() ([]*cache.RobotPlayer, error) {
-	log := logrus.WithFields(logrus.Fields{"func_name": "GetLeisureRobot"})
-	robotPlayerIDAll, err := getRobotIDAll() // 获取所有机器人的玩家ID
+// 未初始化
+var robotsMap map[uint64]*RobotInfo
+
+// 已经初始  false 为使用，true,使用
+var initRobotsMap map[bool]map[uint64]*RobotInfo
+
+// 初始化
+func init() {
+	robotsMap = make(map[uint64]*RobotInfo)
+	initRobotsMap = make(map[bool]map[uint64]*RobotInfo)
+	initRobotsMap[false] = make(map[uint64]*RobotInfo)
+	initRobotsMap[true] = make(map[uint64]*RobotInfo)
+}
+
+//GetNoInitRobot 获取未初始化map
+func GetNoInitRobot() map[uint64]*RobotInfo {
+	return robotsMap
+}
+
+//GetRobotMapByState 获取初始机器人map
+func GetRobotMapByState(state user.PlayerState) map[uint64]*RobotInfo {
+	if state == user.PlayerState_PS_IDIE {
+		return GetLeisureRobot()
+	}
+	return getNotLeisureRobot()
+}
+
+//GetLeisureRobot 获取空闲机器人map
+func GetLeisureRobot() map[uint64]*RobotInfo {
+	return initRobotsMap[false]
+}
+
+// 获取非空闲机器人map
+func getNotLeisureRobot() map[uint64]*RobotInfo {
+	return initRobotsMap[true]
+}
+
+//GetRobotData 初始化机器人redis
+func GetRobotData() error {
+	if err := GetMysqlRobotFieldValuedAll(robotsMap); err != nil {
+		logrus.WithError(err).Errorln("初始化从mysql获取机器人失败")
+		return err
+	}
+	logrus.Debugf("初始化从mysql获取机器人完成 robotsMaplen(%d)\n", len(robotsMap))
+	return nil
+}
+
+//GetRobotInfoByPlayerID get robotinfo
+func GetRobotInfoByPlayerID(playerID uint64) (*RobotInfo, error) {
+	if nr, isExist := initRobotsMap[false][playerID]; isExist {
+		return nr, nil
+	} else if nr2, isExist := initRobotsMap[true][playerID]; isExist {
+		return nr2, nil
+	} else if nr3, isExist := robotsMap[playerID]; isExist {
+		return nr3, nil
+	}
+	return nil, fmt.Errorf("get robotinfo failed playerid(%v)", playerID)
+}
+
+//ToInitRobotMapReturnLeisure 初始化RobotMap
+func ToInitRobotMapReturnLeisure(playerStates []*user.RobotState) (rplayerID uint64, robotInfo *RobotInfo) {
+	for _, playerState := range playerStates {
+		playerID := playerState.RobotId
+		state := playerState.RobotState
+		if robot, isExist := robotsMap[playerID]; isExist { //判断未初始化的，是否存在
+			delete(robotsMap, playerID)
+			if state == user.PlayerState_PS_IDIE {
+				initRobotsMap[false][playerID] = robot
+				if rplayerID == 0 { //返回随机空闲机器人
+					rplayerID = playerID
+					robotInfo = robot
+				}
+			} else {
+				initRobotsMap[true][playerID] = robot
+			}
+		} else {
+			logrus.Debugf("init robotMap failed playerID(%d) not Exist", playerID)
+		}
+	}
+	return rplayerID, robotInfo
+}
+
+// UpdataRobotState 更新机器人状态 true 空闲到使用，false 使用到空闲
+func UpdataRobotState(playerID uint64, state bool) (err error) {
+	curr, isExist2 := initRobotsMap[!state]
+	if isExist2 && curr[playerID] != nil {
+		robot := curr[playerID]
+		delete(initRobotsMap[!state], playerID)
+		initRobotsMap[state][playerID] = robot
+	} else {
+		// 可能重启过,重新从未初始化到初始化
+		if robot, isExist := robotsMap[playerID]; isExist && robot != nil {
+			delete(robotsMap, playerID)
+			initRobotsMap[state][playerID] = robot
+		} else {
+			err = fmt.Errorf("state(%v) initRobotsMap playerID(%d) not Exist", !state, playerID)
+		}
+	}
+	return err
+}
+
+// UpdataRobotWinRate 更新机器人胜率
+func UpdataRobotWinRate(playerID uint64, gameID int, winrate float64) error {
+	robotInfo, err := GetRobotInfoByPlayerID(playerID)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if len(robotPlayerIDAll) == 0 {
-		log.Info("数据库中不存在机器人")
-		return []*cache.RobotPlayer{}, nil
+	if robotInfo == nil {
+		return fmt.Errorf("robotInfo eq nil playerID(%d)", playerID)
 	}
-	robots, lackRobotsID := getRedisLeisureRobotPlayer(robotPlayerIDAll) // 从redis 获取 空闲的RobotPlayer
-	if len(lackRobotsID) > 0 {                                           // 存在redis 中 不存在 机器人ID
-		robots = getMysqlLeisureRobotPlayer(robots, lackRobotsID) //从mysql中获取空闲的玩家,并存入redis
+	robotInfo.GameWinRates[gameID] = winrate
+	return nil
+}
+
+//GetMysqlRobotFieldValuedAll 获取机器人需要的值
+func GetMysqlRobotFieldValuedAll(currRobotMap map[uint64]*RobotInfo) error {
+	engine, err := MysqlEnginefunc(MysqldbName)
+	if err != nil {
+		return err
 	}
-	log.WithFields(logrus.Fields{"robots": robots, "lackRobotsID": lackRobotsID}).Infoln("获取空闲机器人")
-	return robots, nil
+	//gameid-winrate 游戏id对应的胜率
+	robotsPGs, err := getMysqlRobotInfo(engine)
+	if err != nil {
+		return err
+	}
+	for _, robot := range robotsPGs {
+		if robot.Gameid == 0 {
+			continue
+		}
+		playerID := robot.Playerid
+		if playerID == 0 {
+			continue
+		}
+		rp := currRobotMap[uint64(playerID)]
+		if rp != nil {
+			rp.GameWinRates[robot.Gameid] = robot.Winningrate
+			currRobotMap[uint64(playerID)] = rp
+		} else {
+			nrp := &RobotInfo{}
+			nrp.GameWinRates = map[int]float64{robot.Gameid: robot.Winningrate}
+			nrp.Gold = 0
+			currRobotMap[uint64(playerID)] = nrp
+		}
+	}
+	return nil
 }

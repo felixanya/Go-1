@@ -3,9 +3,13 @@
 
 package majong
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	math "math"
+	"time"
+
+	proto "github.com/golang/protobuf/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -104,22 +108,28 @@ const (
 	SettleType_settle_calldiver SettleType = 8
 )
 
-// 玩家操作
+// 玩家操作,值按优先级排列，值越大，优先级越高
 type Action int32
 
 const (
-	Action_action_peng Action = 0
-	// action_zimo         = 1;  // 自摸
-	// action_dianpao      = 2;  // 点炮
-	Action_action_hu Action = 2
-	// action_qiangganghu  = 3;  // 抢杠胡
-	Action_action_gang Action = 3
-	// action_bugang       = 4;  // 补杠
-	// action_minggang     = 5;  // 明杠
-	// action_angang       = 6;  // 暗杠
-	Action_action_chi Action = 4
-	Action_action_qi  Action = 7
+	Action_action_qi   Action = 0
+	Action_action_chi  Action = 10
+	Action_action_peng Action = 20
+	Action_action_gang Action = 30
+	// action_bugang       = 31;  // 补杠
+	// action_minggang     = 32;  // 明杠
+	// action_angang       = 33;  // 暗杠
+	Action_action_hu Action = 40
+	// action_zimo         = 41;  // 自摸
+	// action_dianpao      = 42;  // 点炮
+	// action_qiangganghu  = 43;  // 抢杠胡
 )
+
+type ActionSlice []Action
+
+func (as ActionSlice) Len() int           { return len(as) }
+func (as ActionSlice) Swap(i, j int)      { as[i], as[j] = as[j], as[i] }
+func (as ActionSlice) Less(i, j int) bool { return int(as[i]) < int(as[j]) }
 
 // MopaiType 摸牌类型
 type MopaiType int32
@@ -448,7 +458,7 @@ func (m *ZiXunRecord) GetHuFanType() *HuFanType {
 
 // Player 玩家数据
 type Player struct {
-	PalyerId          uint64            `protobuf:"varint,1,opt,name=palyer_id,json=palyerId" json:"palyer_id,omitempty"`
+	PlayerId          uint64            `protobuf:"varint,1,opt,name=player_id,json=playerId" json:"player_id,omitempty"`
 	HandCards         []*Card           `protobuf:"bytes,2,rep,name=hand_cards,json=handCards" json:"hand_cards,omitempty"`
 	OutCards          []*Card           `protobuf:"bytes,3,rep,name=out_cards,json=outCards" json:"out_cards,omitempty"`
 	ChiCards          []*ChiCard        `protobuf:"bytes,4,rep,name=chi_cards,json=chiCards" json:"chi_cards,omitempty"`
@@ -479,9 +489,9 @@ type Player struct {
 	Properties        map[string][]byte `protobuf:"bytes,256,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
-func (m *Player) GetPalyerId() uint64 {
+func (m *Player) GetPlayerId() uint64 {
 	if m != nil {
-		return m.PalyerId
+		return m.PlayerId
 	}
 	return 0
 }
@@ -867,6 +877,8 @@ type MajongContext struct {
 	Option              *MajongCommonOption `protobuf:"bytes,254,opt,name=option" json:"option,omitempty"`
 	MajongOption        []byte              `protobuf:"bytes,255,opt,name=majong_option,json=majongOption,proto3" json:"majong_option,omitempty"`
 	TempData            *TempDatas          `protobuf:"bytes,256,opt,name=TempData" json:"TempData,omitempty"`
+	GameStartTime       time.Time
+	BaseCoin            uint32 `protobuf:"bytes,257,opt,name=base_coin,json=baseCoin,proto3" json:"base_coin,omitempty"`
 }
 
 func (m *MajongContext) GetGameId() int32 {
@@ -1093,6 +1105,13 @@ func (m *MajongContext) GetTempData() *TempDatas {
 	return nil
 }
 
+func (m *MajongContext) GetGameStartTime() time.Time {
+	if m != nil {
+		return m.GameStartTime
+	}
+	return time.Time{}
+}
+
 // MajongCommonOption 麻将通用玩法选项
 type MajongCommonOption struct {
 	MaxCartoonTime             uint32          `protobuf:"varint,1,opt,name=max_cartoon_time,json=maxCartoonTime,proto3" json:"max_cartoon_time,omitempty"`
@@ -1216,6 +1235,7 @@ type InitMajongContextParams struct {
 	MajongOption         []byte              `protobuf:"bytes,4,opt,name=majong_option,json=majongOption,proto3" json:"majong_option,omitempty"`
 	ZhuangIndex          uint32              `protobuf:"varint,5,opt,name=zhuang_index,json=zhuangIndex,proto3" json:"zhuang_index,omitempty"`
 	FixZhuangIndex       bool                `protobuf:"varint,6,opt,name=fix_zhuang_index,json=fixZhuangIndex,proto3" json:"fix_zhuang_index,omitempty"`
+	BaseCoin             uint32              `protobuf:"varint,7,opt,name=base_coin,json=baseCoin,proto3" json:"base_coin,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
 	XXX_unrecognized     []byte              `json:"-"`
 	XXX_sizecache        int32               `json:"-"`

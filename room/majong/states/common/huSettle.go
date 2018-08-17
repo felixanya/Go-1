@@ -67,7 +67,7 @@ func (s *HuSettleState) setMopaiPlayer(flow interfaces.MajongFlow) {
 	if !gutils.IsPlayerContinue(mopaiPlayer.GetXpState(), mjContext) {
 		mopaiPlayer = utils.GetNextXpPlayerByID(mopaiPlayerID, players, mjContext)
 	}
-	mjContext.MopaiPlayer = mopaiPlayer.GetPalyerId()
+	mjContext.MopaiPlayer = mopaiPlayer.GetPlayerId()
 	mjContext.MopaiType = majongpb.MopaiType_MT_NORMAL
 }
 
@@ -112,6 +112,7 @@ func (s *HuSettleState) doHuSettle(flow interfaces.MajongFlow) {
 		GenCount:       genCount,
 		HuaCount:       huaCount,
 		SettleID:       mjContext.CurrentSettleId,
+		BaseCoin:       mjContext.BaseCoin,
 	}
 	if s.isAfterGang(mjContext) {
 		GangCards := utils.GetMajongPlayer(mjContext.GetLastChupaiPlayer(), mjContext).GangCards

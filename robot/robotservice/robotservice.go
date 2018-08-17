@@ -3,10 +3,12 @@ package robotservice
 import (
 	"context"
 	"fmt"
-	"steve/entity/cache"
+	"steve/external/goldclient"
+	"steve/external/hallclient"
 	"steve/robot/data"
+	"steve/server_pb/gold"
 	"steve/server_pb/robot"
-	"strconv"
+	"steve/server_pb/user"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -29,96 +31,180 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 		RobotPlayerId: 0,
 		Coin:          0,
 		WinRate:       0,
-		ErrCode:       int32(robot.ErrCode_EC_FAIL),
+		ErrCode:       robot.ErrCode_EC_FAIL,
 	}
-	gameID := request.GetGame().GetGameId()   // 游戏ID
-	coinsRange := request.GetCoinsRange()     // 金币范围
-	winRateRange := request.GetWinRateRange() // 胜率范围
-	newState := int(request.GetNewState())    // 获取成功时设置的状态
+	gameID := int(request.GetGame().GetGameId()) // 游戏
+	coinsRange := request.GetCoinsRange()        // 金币范围
+	winRateRange := request.GetWinRateRange()    // 胜率范围
 	// 检验请求是否合法
-	if !checkGetLeisureRobotArgs(coinsRange, winRateRange, newState) {
-		rsp.ErrCode = int32(robot.ErrCode_EC_Args)
+	if !checkGetLeisureRobotArgs(coinsRange, winRateRange) {
+		rsp.ErrCode = robot.ErrCode_EC_Args
 		return rsp, fmt.Errorf("参数错误")
 	}
-	robotsPlayers, err := data.GetLeisureRobot() // 获取机空闲的器人
-	if err != nil {
-		rsp.ErrCode = int32(robot.ErrCode_EC_FAIL)
-		return rsp, err
-	}
-	var RobotPlayerID uint64
-	var winRate int32
-	var coin int64
-	// 符合的指定金币数和胜率的机器人
-	for _, robotPlayer := range robotsPlayers {
-		// 游戏ID对应的胜率
-		currWinRate, exist := robotPlayer.GameIDWinRate[uint64(gameID)]
-		if !exist || currWinRate > uint64(winRateRange.High) || currWinRate < uint64(winRateRange.Low) {
-			continue
+	checkFunc := func(playerID uint64, robotPlayer *data.RobotInfo) bool {
+		if robotPlayer == nil {
+			logrus.Errorf("robotPlayer eq nil", playerID)
+			return false
 		}
-		// 金币
-		currCoins := int64(robotPlayer.Coin)
-		if currCoins <= coinsRange.High && currCoins >= coinsRange.Low {
-			RobotPlayerID = robotPlayer.PlayerID
-			coin = currCoins
-			winRate = int32(currWinRate)
-			break
+		winRate, isExist := robotPlayer.GameWinRates[gameID]
+		if isExist {
+			if winRate > float64(winRateRange.High) || winRate < float64(winRateRange.Low) {
+				return false
+			}
+		} else {
+			robotPlayer.GameWinRates[gameID] = 50
+			if 50 > winRateRange.High || 50 < winRateRange.Low {
+				return false
+			}
+			logrus.Debugf("playerID(%d) gameID(%d) 不存在 ，默认胜率50", playerID, gameID)
+		}
+		gold := robotPlayer.Gold
+		// 找到适合的
+		if gold <= coinsRange.High && gold >= coinsRange.Low {
+			return true
+		}
+		return false
+	}
+	initRobotsMapFalse := data.GetLeisureRobot()
+	if len(initRobotsMapFalse) > 0 {
+		for playerID, robotPlayer := range initRobotsMapFalse {
+			if checkFunc(playerID, robotPlayer) {
+				rsp.RobotPlayerId = playerID
+				rsp.Coin = robotPlayer.Gold
+				rsp.WinRate = robotPlayer.GameWinRates[gameID]
+				rsp.ErrCode = robot.ErrCode_EC_SUCCESS
+				logrus.WithFields(logrus.Fields{"RobotPlayerId": rsp.GetRobotPlayerId(), "coin": rsp.GetCoin(), "winRate": rsp.GetWinRate()}).Debugln("获取空闲机器人成功")
+				return rsp, data.UpdataRobotState(playerID, true)
+			}
 		}
 	}
-	if RobotPlayerID == 0 {
-		return rsp, fmt.Errorf("没有适合的机器人")
+	logrus.Debugln("从未初始化中，查找适合的机器人")
+	notInitRobotMap := data.GetNoInitRobot() //未初始化
+	if l := len(notInitRobotMap); l > 0 {
+		i := 0 //防止死循环
+		for {
+			if len(notInitRobotMap) == 0 || i >= l {
+				logrus.Debugf("从未初始化中，找不到适合的机器人 notInitRobotMaplen(%d)", len(notInitRobotMap))
+				break
+			}
+			i++
+			suitRobot := make([]uint64, 0, 10)
+			for playerID, robotPlayer := range notInitRobotMap {
+				// 从金币服获取
+				gold, err := goldclient.GetGold(uint64(playerID), int16(gold.GoldType_GOLD_COIN))
+				if err != nil {
+					logrus.WithError(err).Errorf("获取金币失败 playerID(%v)", playerID)
+					continue
+				}
+				robotPlayer.Gold = gold
+				if checkFunc(playerID, robotPlayer) {
+					suitRobot = append(suitRobot, uint64(playerID))
+				}
+				if len(suitRobot) > 10 {
+					break
+				}
+			}
+			if len(suitRobot) == 0 { // 没有适合的机器人
+				continue
+			}
+			hallrsp, err := hallclient.InitRobotPlayerState(suitRobot)
+			if err != nil || hallrsp.GetErrCode() != int32(user.ErrCode_EC_SUCCESS) {
+				logrus.WithError(err).Errorf("hall-初始化机器人失败 %d", hallrsp.GetErrCode())
+				continue
+			}
+			if len(hallrsp.GetRobotState()) == 0 {
+				logrus.Warningf("hall-初始化机器人失败 hall get robotSate len %d", len(hallrsp.GetRobotState()))
+				continue
+			}
+			playerID, robotInfo := data.ToInitRobotMapReturnLeisure(hallrsp.GetRobotState()) // 初始化
+			if playerID > 0 && robotInfo != nil {
+				rsp.RobotPlayerId = playerID
+				rsp.Coin = robotInfo.Gold
+				rsp.WinRate = robotInfo.GameWinRates[gameID]
+				rsp.ErrCode = robot.ErrCode_EC_SUCCESS
+				logrus.WithFields(logrus.Fields{"RobotPlayerId": rsp.GetRobotPlayerId(), "coin": rsp.GetCoin(), "winRate": rsp.GetWinRate()}).Debugln("初始化获取空闲机器人成功")
+				return rsp, data.UpdataRobotState(playerID, true)
+			}
+			notInitRobotMap = data.GetNoInitRobot()
+		}
+	} else {
+		logrus.Debugln("未初始化 notInitRobotMap 为0")
 	}
-	//获取到机器人ID,并将redis该ID的状态为匹配状态
-	if err := data.SetRobotWatch(RobotPlayerID, cache.GameState, newState, data.RedisTimeOut); err != nil {
-		return rsp, err
-	}
-	rsp.ErrCode = int32(robot.ErrCode_EC_SUCCESS)
-	rsp.Coin = coin                   // 金币
-	rsp.WinRate = winRate             // 胜率
-	rsp.RobotPlayerId = RobotPlayerID // 玩家ID
-	return rsp, err
+	logrus.Debugln("获取空闲机器人失败")
+	return rsp, fmt.Errorf("找不到适合的机器人")
 }
 
-//SetRobotPlayerState 设置机器人玩家状态
+//SetRobotPlayerState 设置机器人玩家状态  先判断是否是机器人，是机器人，在判断是否是空闲状态
 func (r *Robotservice) SetRobotPlayerState(ctx context.Context, request *robot.SetRobotPlayerStateReq) (*robot.SetRobotPlayerStateRsp, error) {
 	logrus.Debugln("SetRobotPlayerState req", *request)
 	rsp := &robot.SetRobotPlayerStateRsp{
 		Result:  true,
-		ErrCode: int32(robot.ErrCode_EC_SUCCESS),
+		ErrCode: robot.ErrCode_EC_SUCCESS,
 	}
 	playerID := request.GetRobotPlayerId()
-	newState := int(request.GetNewState())
-	oldState := int(request.GetOldState())
-	severType := int(request.GetServerType())
-	serverAddr := request.GetServerAddr()
-
-	// 检验请求是否合法
-	if !checkSateArgs(playerID, newState, oldState, severType, serverAddr) {
-		rsp.ErrCode = int32(robot.ErrCode_EC_Args)
-		return rsp, nil
-	}
-
-	//比较请求旧状态是否是当前状态
-	val, _ := data.GetRobotStringFiled(playerID, cache.GameState)
-	state, _ := strconv.Atoi(val)
-	if oldState != state {
-		rsp.ErrCode = int32(robot.ErrCode_EC_Args)
-		return rsp, nil
-	}
-
-	//修改状态和服务地址
-	serverField := map[robot.ServerType]string{
-		robot.ServerType_ST_GATE:  cache.GateAddr,
-		robot.ServerType_ST_MATCH: cache.MatchAddr,
-		robot.ServerType_ST_ROOM:  cache.RoomAddr,
-	}[robot.ServerType(severType)]
-	rfields := map[string]interface{}{
-		cache.GameState: fmt.Sprintf("%d", newState),
-		serverField:     serverAddr,
-	}
-	if err := data.SetRobotPlayerWatchs(playerID, rfields, data.RedisTimeOut); err != nil {
-		rsp.ErrCode = int32(robot.ErrCode_EC_FAIL)
+	if playerID < 0 {
+		logrus.Warningln("Robot Player ID cannot be less than 0:%v", playerID)
 		rsp.Result = false
+		rsp.ErrCode = robot.ErrCode_EC_Args
+		return rsp, nil
+	}
+	newState := request.GetNewState()
+	err := data.UpdataRobotState(playerID, newState)
+	if err != nil {
+		rsp.ErrCode = robot.ErrCode_EC_FAIL
+		logrus.WithError(err).Debugln("更新空闲机器人状态失败")
 		return rsp, err
 	}
+	logrus.WithFields(logrus.Fields{
+		"RobotPlayerId": playerID,
+		"newState":      newState,
+	}).Debugln("更新空闲机器人状态成功")
 	return rsp, nil
+}
+
+// UpdataRobotGameWinRate 更新胜率
+func (r *Robotservice) UpdataRobotGameWinRate(ctx context.Context, request *robot.UpdataRobotGameWinRateReq) (*robot.UpdataRobotGameWinRateRsp, error) {
+	logrus.Debugln("UpdataRobotGameWinRate req", *request)
+	rsp := &robot.UpdataRobotGameWinRateRsp{
+		Result:  true,
+		ErrCode: robot.ErrCode_EC_SUCCESS,
+	}
+	playerID := request.GetRobotPlayerId()
+	gameID := int(request.GetGameId())
+	newWinRate := request.GetNewWinRate()
+
+	if playerID < 0 {
+		logrus.Warningln("Robot Player ID cannot be less than 0:%d", playerID)
+		rsp.ErrCode = robot.ErrCode_EC_Args
+		return rsp, nil
+	}
+	err := data.UpdataRobotWinRate(playerID, gameID, newWinRate)
+	if err != nil {
+		rsp.ErrCode = robot.ErrCode_EC_FAIL
+		logrus.WithError(err).Debugln("更新空闲机器人胜率失败")
+		return rsp, err
+	}
+	logrus.WithFields(logrus.Fields{
+		"RobotPlayerId": playerID,
+		"newWinRate":    newWinRate,
+	}).Debugln("更新空闲机器人胜率成功")
+	return rsp, nil
+}
+
+//IsRobotPlayer 判断是否时机器人
+func (r *Robotservice) IsRobotPlayer(ctx context.Context, request *robot.IsRobotPlayerReq) (*robot.IsRobotPlayerRsp, error) {
+	logrus.Debugln("IsRobotPlayer req", *request)
+	rsp := &robot.IsRobotPlayerRsp{
+		Result: false,
+	}
+	playerID := request.GetRobotPlayerId()
+	if playerID <= 0 {
+		return rsp, fmt.Errorf("参数错误")
+	}
+	robotInfo, err := data.GetRobotInfoByPlayerID(playerID)
+	if robotInfo != nil {
+		rsp.Result = true
+		return rsp, err
+	}
+	return rsp, err
 }

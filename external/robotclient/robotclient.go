@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"steve/server_pb/robot"
-	"steve/server_pb/user"
 	"steve/structs"
 	"steve/structs/common"
 
+	"github.com/Sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
@@ -29,8 +29,12 @@ type LeisureRobotReqInfo struct {
 
 // GetLeisureRobotInfoByInfo 获取空闲机器人
 // param:   LeisureRobotReqInfo
-// return:  机器人玩家ID,游戏ID,金豆数
-func GetLeisureRobotInfoByInfo(leisureRobotReqInfo LeisureRobotReqInfo) (uint64, int64, int32, error) {
+// 返回:
+// uint64:	机器人玩家ID
+// int64:	机器人金豆数
+// int32:	机器人胜率
+// error:	错误信息
+func GetLeisureRobotInfoByInfo(leisureRobotReqInfo LeisureRobotReqInfo) (uint64, int64, float64, error) {
 	// 得到服务连接
 	con, err := getRobotServer()
 	if err != nil || con == nil {
@@ -55,23 +59,21 @@ func GetLeisureRobotInfoByInfo(leisureRobotReqInfo LeisureRobotReqInfo) (uint64,
 		Game:         game,
 		CoinsRange:   coinsR,
 		WinRateRange: winR,
-		NewState:     robot.RobotPlayerState_RPS_MATCHING,
 	})
 	// 检测返回值
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if rsp.ErrCode != int32(user.ErrCode_EC_SUCCESS) {
+	if rsp.ErrCode != robot.ErrCode_EC_SUCCESS {
 		return 0, 0, 0, errors.New(" get leisure robot failed")
 	}
-
 	return rsp.GetRobotPlayerId(), rsp.GetCoin(), rsp.GetWinRate(), nil
 }
 
 // SetRobotPlayerState 更新机器人状态
 // param:  playerID,oldState 玩家当前状态， newState 要更新状态， serverType 服务类型，serverAddr 服务地址
 // return: 更新结果，错误信息
-func SetRobotPlayerState(playerID uint64, oldState, newState, serverType uint32, serverAddr string) (bool, error) {
+func SetRobotPlayerState(playerID uint64, newState bool) (bool, error) {
 	// 得到服务连接
 	con, err := getRobotServer()
 	if err != nil || con == nil {
@@ -83,24 +85,71 @@ func SetRobotPlayerState(playerID uint64, oldState, newState, serverType uint32,
 	// 调用RPC方法
 	rsp, err := client.SetRobotPlayerState(context.Background(), &robot.SetRobotPlayerStateReq{
 		RobotPlayerId: playerID,
-		NewState:      robot.RobotPlayerState(newState),
-		OldState:      robot.RobotPlayerState(oldState),
-		ServerType:    robot.ServerType(serverType),
-		ServerAddr:    serverAddr,
+		NewState:      newState,
 	})
 	// 检测返回值
 	if err != nil {
 		return false, err
 	}
-	if rsp.ErrCode != int32(user.ErrCode_EC_SUCCESS) {
+	if rsp.ErrCode != robot.ErrCode_EC_SUCCESS {
 		return false, errors.New("update player state failed")
 	}
-	return true, nil
+	return rsp.Result, nil
+}
+
+// UpdataRobotPlayerWinRate 更新机器人胜率
+// param:  playerID,oldWinRate 玩家当前胜率， newWinRate 要更新胜率，
+// return: 更新结果，错误信息
+func UpdataRobotPlayerWinRate(playerID uint64, gameID int32, newWinRate float64) (bool, error) {
+	// 得到服务连接
+	con, err := getRobotServer()
+	if err != nil || con == nil {
+		return false, errors.New("no connection")
+	}
+	// 新建Client
+	client := robot.NewRobotServiceClient(con)
+	// 调用RPC方法
+	rsp, err := client.UpdataRobotGameWinRate(context.Background(), &robot.UpdataRobotGameWinRateReq{
+		RobotPlayerId: playerID,
+		GameId:        gameID,
+		NewWinRate:    newWinRate,
+	})
+	// 检测返回值
+	if err != nil {
+		return false, err
+	}
+	if rsp.ErrCode != robot.ErrCode_EC_SUCCESS {
+		return false, errors.New("update player winRate failed")
+	}
+	return rsp.Result, nil
+}
+
+// IsRobotPlayer 判断是否时机器人
+// param:  playerID,
+// return: 判断结果，错误信息
+func IsRobotPlayer(playerID uint64) (bool, error) {
+	// 得到服务连接
+	con, err := getRobotServer()
+	if err != nil || con == nil {
+		return false, errors.New("no connection")
+	}
+
+	// 新建Client
+	client := robot.NewRobotServiceClient(con)
+	// 调用RPC方法
+	rsp, err := client.IsRobotPlayer(context.Background(), &robot.IsRobotPlayerReq{
+		RobotPlayerId: playerID,
+	})
+	// 检测返回值
+	if err != nil {
+		logrus.WithError(err).Infoln("判断是否时机器人")
+		return false, err
+	}
+	return rsp.GetResult(), nil
 }
 
 func getRobotServer() (*grpc.ClientConn, error) {
 	e := structs.GetGlobalExposer()
-	// 对uid进行一致性hash路由策略.
 	con, err := e.RPCClient.GetConnectByServerName(common.RobotServiceName)
 	if err != nil || con == nil {
 		return nil, errors.New("no connection")

@@ -2,6 +2,10 @@ package scxlai
 
 import (
 	"fmt"
+	"github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
+	"math/rand"
+	"sort"
 	"steve/entity/majong"
 	"steve/gutils"
 	"steve/room/ai"
@@ -43,15 +47,120 @@ func (h *chupaiWenxunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (
 		}
 	case ai.TingAI:
 		return
-	case ai.RobotAI, ai.OverTimeAI, ai.TuoGuangAI, ai.SpecialOverTimeAI:
+	case ai.RobotAI:
 		{
-			if event := h.chupaiWenxun(player); event != nil {
+			if event := h.askMiddleAI(player, *mjContext.LastOutCard); event != nil {
 				result.Events = append(result.Events, *event)
+			}
+		}
+	case ai.OverTimeAI, ai.SpecialOverTimeAI, ai.TuoGuangAI:
+		{
+			if viper.GetBool("ai.test") {
+				if event := h.askMiddleAI(player, *mjContext.LastOutCard); event != nil {
+					result.Events = append(result.Events, *event)
+				}
+			} else {
+				if event := h.chupaiWenxun(player); event != nil {
+					result.Events = append(result.Events, *event)
+				}
 			}
 		}
 	}
 
 	return
+}
+
+func (h *chupaiWenxunStateAI) askMiddleAI(player *majong.Player, lastOutCard majong.Card) *ai.AIEvent {
+	logEntry := logrus.WithField("playerId", player.PlayerId)
+	var (
+		event ai.AIEvent
+	)
+	actions := player.GetPossibleActions()
+	sort.Sort(sort.Reverse(majong.ActionSlice(actions))) //按优先级从高到低排列
+
+	for _, action := range actions {
+		switch action {
+		case majong.Action_action_hu:
+			event.Context = &majong.HuRequestEvent{
+				Head: &majong.RequestEventHead{
+					PlayerId: player.GetPlayerId(),
+				},
+			}
+			event.ID = int32(majong.EventID_event_hu_request)
+			logEntry.WithField("点炮牌", lastOutCard).Infoln("中级AI点炮胡牌")
+			return &event
+		case majong.Action_action_gang:
+			s := SplitCards(NonPointer(player.HandCards))
+			if len(s.KeZis) > 0 && Contains(s.KeZis, lastOutCard) {
+				event.Context = &majong.GangRequestEvent{
+					Head: &majong.RequestEventHead{
+						PlayerId: player.GetPlayerId(),
+					},
+					Card: &lastOutCard,
+				}
+				event.ID = int32(majong.EventID_event_gang_request)
+				logEntry.WithField("明杠牌", lastOutCard).Infoln("中级AI明杠")
+				return &event
+			}
+		case majong.Action_action_peng:
+			s := SplitCards(NonPointer(player.HandCards))
+			if len(s.Pairs) > 0 && Contains(s.Pairs, lastOutCard) {
+				r := rand.Intn(100)
+				if len(s.Pairs) >= 2 && r < 90 || len(s.Pairs) == 1 && r < 10 { //多于1对时，碰牌概率90%；等于1对时，碰牌概率10%
+					event.Context = &majong.PengRequestEvent{
+						Head: &majong.RequestEventHead{
+							PlayerId: player.GetPlayerId(),
+						},
+					}
+					event.ID = int32(majong.EventID_event_peng_request)
+					logEntry.WithField("碰牌", lastOutCard).Infoln("中级AI碰牌")
+					return &event
+				}
+			}
+		case majong.Action_action_chi:
+			s := SplitCards(NonPointer(player.HandCards))
+			notOKCards := append(s.GetNotOKCards(), lastOutCard)
+			notOKSplits := SplitCards(notOKCards)
+			if len(notOKSplits.ShunZis) >= 1 && len(notOKSplits.Pairs) >= 1 {
+				shunZi := notOKSplits.ShunZis[0].cards
+				event.Context = &majong.ChiRequestEvent{
+					Head: &majong.RequestEventHead{
+						PlayerId: player.GetPlayerId(),
+					},
+					Cards: []*majong.Card{&shunZi[0], &shunZi[1], &shunZi[2]},
+				}
+				event.ID = int32(majong.EventID_event_chi_request)
+				logEntry.WithField("吃牌", lastOutCard).Infoln("中级AI吃牌")
+				return &event
+			}
+			// 老的吃策略
+			//if len(s.SingleChas)+len(s.DoubleChas) > 0 {
+			//	for _, cha := range append(s.SingleChas, s.DoubleChas...) { //优先处理单茬
+			//		validCards := getValidCard(cha)
+			//		if ContainsCard(validCards, lastOutCard) {
+			//			event.Context = &majong.ChiRequestEvent{
+			//				Head: &majong.RequestEventHead{
+			//					PlayerId: player.GetPlayerId(),
+			//				},
+			//				Cards: []*majong.Card{&cha.cards[0], &cha.cards[1], &lastOutCard},
+			//			}
+			//			event.ID = int32(majong.EventID_event_chi_request)
+			//			logEntry.WithField("吃牌", lastOutCard).Infoln("中级AI吃牌")
+			//			return &event
+			//		}
+			//	}
+			//}
+		default:
+			event.Context = &majong.QiRequestEvent{
+				Head: &majong.RequestEventHead{
+					PlayerId: player.GetPlayerId(),
+				},
+			}
+			event.ID = int32(majong.EventID_event_qi_request)
+		}
+	}
+
+	return &event
 }
 
 func (h *chupaiWenxunStateAI) containAction(player *majong.Player, action majong.Action) bool {
@@ -87,14 +196,14 @@ func (h *chupaiWenxunStateAI) chupaiWenxun(player *majong.Player) *ai.AIEvent {
 	case majong.Action_action_hu:
 		event.Context = &majong.HuRequestEvent{
 			Head: &majong.RequestEventHead{
-				PlayerId: player.GetPalyerId(),
+				PlayerId: player.GetPlayerId(),
 			},
 		}
 		event.ID = int32(majong.EventID_event_hu_request)
 	default:
 		event.Context = &majong.QiRequestEvent{
 			Head: &majong.RequestEventHead{
-				PlayerId: player.GetPalyerId(),
+				PlayerId: player.GetPlayerId(),
 			},
 		}
 		event.ID = int32(majong.EventID_event_qi_request)

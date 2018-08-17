@@ -11,6 +11,7 @@ import (
 	"steve/msgserver/data"
 	"steve/msgserver/define"
 	"time"
+	"steve/structs"
 )
 
 /*
@@ -24,6 +25,9 @@ import (
 */
 
 var myMgr MsgMgr
+
+// 是否是主节点
+var isMasterNode = false
 
 func GetMsgMgr() *MsgMgr {
 	return &myMgr
@@ -45,7 +49,7 @@ func (gm *MsgMgr) Init() error {
 	gm.channelList = make(map[int64]*define.HorseRace)
 	_, err := gm.getHorseRaceFromDB()
 	if err != nil {
-		logrus.Errorf("getHorseRaceFromDB err:%v", err)
+		logrus.Errorf("getHorseRaceFromDB first err:%v", err)
 		//return err
 	} else {
 		logrus.Debugf("getHorseRaceFromDB first win...")
@@ -69,6 +73,14 @@ func (gm *MsgMgr) GetHorseRace(uid uint64) ([]string, int32, int32, error) {
 		return nil, 0, 0, errors.New("获取玩家渠道ID失败")
 	}
 
+	if channel != 0 {
+		// 最后读取渠道级别的跑马灯
+		str, tick, sleep, ok := gm.getLevelHorseRace(channel, gm.channelList)
+		if ok {
+			return str, tick, sleep, nil
+		}
+	}
+
 	if city != 0 {
 		// 先读取城市级别的跑马灯
 		str, tick, sleep, ok := gm.getLevelHorseRace(city, gm.cityList)
@@ -77,7 +89,7 @@ func (gm *MsgMgr) GetHorseRace(uid uint64) ([]string, int32, int32, error) {
 		}
 	}
 
-	if prov != 0 {
+	if prov >= 0 {
 		// 再读取省份级别的跑马灯
 		str, tick, sleep, ok := gm.getLevelHorseRace(prov, gm.provList)
 		if ok {
@@ -85,13 +97,6 @@ func (gm *MsgMgr) GetHorseRace(uid uint64) ([]string, int32, int32, error) {
 		}
 	}
 
-	if channel >= 0 {
-		// 最后读取渠道级别的跑马灯
-		str, tick, sleep, ok := gm.getLevelHorseRace(channel, gm.channelList)
-		if ok {
-			return str, tick, sleep, nil
-		}
-	}
 	return nil, 0, 0, nil
 }
 
@@ -106,36 +111,50 @@ func (gm *MsgMgr) getHorseRaceFromDB() (bool, error) {
 
 	bUpdate := false
 
-	for _, horse := range horseList {
+	for _, hs := range gm.horseList {
+		hs.IsDel = true
+	}
 
-		if horse.Channel < 0 {
-			continue
-		}
+	for _, horse := range horseList {
 
 		if t, ok := gm.horseList[horse.Id]; ok {
 			if t.LastUpdateTime != horse.LastUpdateTime {
 				bUpdate = true
 				gm.horseList[horse.Id] = horse
+			} else {
+				t.IsDel = false
 			}
 		} else {
 			gm.horseList[horse.Id] = horse
 			bUpdate = true
 		}
 
-		if horse.Prov == 0 && horse.City == 0 {
-			if _, ok := gm.channelList[horse.Channel]; !ok {
-				gm.channelList[horse.Channel] = horse
-			}
+	}
 
-		} else if horse.Prov > 0 && horse.City == 0 {
+	for k, hs := range gm.horseList {
+		if hs.IsDel {
+			delete(gm.horseList, k)
+			bUpdate = true
+		}
+	}
+	if bUpdate {
 
-			if _, ok := gm.provList[horse.Prov]; !ok {
+		gm.channelList = make(map[int64]*define.HorseRace)
+		gm.cityList = make(map[int64]*define.HorseRace)
+		gm.provList = make(map[int64]*define.HorseRace)
+
+		for _, horse := range gm.horseList {
+			if horse.Channel == 0 && horse.City == 0 {
 				gm.provList[horse.Prov] = horse
-			}
 
-		} else if horse.City > 0 {
-			if _, ok := gm.cityList[horse.City]; !ok {
+			} else if horse.City > 0 && horse.Channel == 0 {
+
 				gm.cityList[horse.City] = horse
+
+			} else if horse.Channel > 0 {
+
+				gm.channelList[horse.Channel] = horse
+
 			}
 		}
 	}
@@ -177,7 +196,12 @@ func (gm *MsgMgr) runCheckHorseChange() error {
 	bUpdate := false
 	// 1分钟检测一次跑马灯状态
 	for {
-
+		for _, horse := range gm.channelList {
+			if gm.checkHorseChanged(horse) {
+				bUpdate = true
+			}
+		}
+		time.Sleep(time.Millisecond * 20)
 		for _, horse := range gm.cityList {
 			if gm.checkHorseChanged(horse) {
 				bUpdate = true
@@ -185,12 +209,6 @@ func (gm *MsgMgr) runCheckHorseChange() error {
 		}
 		time.Sleep(time.Millisecond * 20)
 		for _, horse := range gm.provList {
-			if gm.checkHorseChanged(horse) {
-				bUpdate = true
-			}
-		}
-		time.Sleep(time.Millisecond * 20)
-		for _, horse := range gm.channelList {
 			if gm.checkHorseChanged(horse) {
 				bUpdate = true
 			}
@@ -243,6 +261,13 @@ func (gm *MsgMgr) checkHorseChanged(horse *define.HorseRace) bool {
 
 // 发送跑马灯变化通知
 func (gm *MsgMgr) sendHorseRaceChangedNtf() error {
+
+	isMasterNode = structs.GetGlobalExposer().ConsulReq.IsMasterNode()
+	// 判断当时是否是主节点
+	if !isMasterNode {
+		return nil
+	}
+	// 只有主节点发送广播通知
 	req := &msgserver.MsgSvrHorseRaceChangeNtf{}
 	channel := int32(0)
 	req.Channel = &channel

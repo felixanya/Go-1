@@ -6,11 +6,14 @@ import (
 	"steve/room/fixed"
 	"sync"
 
+	"steve/common/data/redis"
+	"steve/entity/cache"
+
 	"github.com/Sirupsen/logrus"
 )
 
 type ModelManager struct {
-	modelMap sync.Map //deskid-[model] //models    map[string]*models.DeskModel
+	modelMap sync.Map //deskid-[model] //models    map[string]models.DeskModel
 }
 
 var manager *ModelManager
@@ -37,22 +40,41 @@ func (manager *ModelManager) InitDeskModel(deskId uint64, modelName []string, de
 	for _, model := range modelMap {
 		model.Active()
 	}
-	for _, model := range modelMap {
-		model.Start()
-	}
 }
 
-// StopDeskModel 停止 models
-func (manager *ModelManager) StopDeskModel(deskID uint64) error {
+// StartDeskModel 启动所有 model
+func (manager *ModelManager) StartDeskModel(deskID uint64) error {
 	_models, ok := manager.modelMap.Load(deskID)
-	manager.modelMap.Delete(deskID)
 	if !ok {
-		return fmt.Errorf("无对象")
+		return fmt.Errorf("牌桌(%d)不存在", deskID)
 	}
 	models := _models.(map[string]DeskModel)
 	for _, model := range models {
+		model.Start()
+	}
+	return nil
+}
+
+// StopDeskModel 停止 models
+func (manager *ModelManager) StopDeskModel(desk *desk.Desk) error {
+	entry := logrus.WithField("desk_id", desk.GetUid())
+	entry.Debugln("停止 desk")
+	_models, ok := manager.modelMap.Load(desk.GetUid())
+	manager.modelMap.Delete(desk.GetUid())
+	if !ok {
+		entry.Debugln("加载models 失败")
+		return fmt.Errorf("无对象")
+	}
+	models := _models.(map[string]DeskModel)
+	for name, model := range models {
+		entry.WithField("model_name", name).Debugln("停止 model")
 		model.Stop()
 	}
+
+	reportKey := cache.FmtGameReportKey(desk.GetGameId() , int(desk.GetLevel())) //临时0
+	redisCli := redis.GetRedisClient()
+	redisCli.DecrBy(reportKey, int64(desk.GetConfig().Num))
+
 	return nil
 }
 

@@ -2,10 +2,7 @@ package data
 
 import (
 	"fmt"
-	"steve/entity/cache"
 	"steve/entity/db"
-	"steve/external/goldclient"
-	"steve/server_pb/gold"
 	"steve/structs"
 
 	"github.com/Sirupsen/logrus"
@@ -14,12 +11,12 @@ import (
 
 const (
 	// MysqldbName 数据库名
-	MysqldbName             = "steve"
+	MysqldbName             = "player"
 	playerTableName         = "t_player"          // 玩家表
 	playerCurrencyTableName = "t_player_currency" // 玩家货币表
 	playerGameTableName     = "t_player_game"     // 玩家游戏表
-	// 玩家类型机器人
-	playerType = 2
+	//PlayerType 玩家类型机器人
+	PlayerType = 2
 )
 
 //MysqlEnginefunc 单元测试需要
@@ -31,120 +28,55 @@ func getMysqlEngineByName(mysqlName string) (*xorm.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("获取 mysql 引擎失败：%v", err)
 	}
-	if err := engine.Ping(); err != nil {
-		return nil, fmt.Errorf("engine ping 失败：%v", err)
-	}
 	return engine, nil
 }
 
-//根据玩家ID获取机器人的各个属性
-func getMysqlRobotPropByPlayerID(playerID uint64) *cache.RobotPlayer {
-	robotPlayer := &cache.RobotPlayer{}
-	// 从金币服获取
-	gold, err := goldclient.GetGold(playerID, int16(gold.GoldType_GOLD_COIN))
-	if err != nil {
-		logrus.Errorf("从金币服获取获取金币失败 err(%v)", playerID, err)
-	}
-	player, err := getMysqlPlayerByPlayerID(playerID, "nickname") // 昵称
-	if err != nil {
-		logrus.Errorf("msql获取昵称失败 err(%v)", playerID, err)
-	}
-	playerGame, err := getMysqlPlayerGameByPlayerID(playerID, "gameID,winningRate") //游戏ID和胜率
-	if err != nil {
-		logrus.Errorf("msql获取游戏ID和胜率失败 err(%v)", playerID, err)
-	}
-	if robotPlayer.GameIDWinRate == nil || len(robotPlayer.GameIDWinRate) == 0 {
-		robotPlayer.GameIDWinRate = map[uint64]uint64{uint64(playerGame.Gameid): uint64(playerGame.Winningrate)}
-	} else {
-		robotPlayer.GameIDWinRate[uint64(playerGame.Gameid)] = uint64(playerGame.Winningrate)
-	}
-	robotPlayer.Coin = uint64(gold)
-	robotPlayer.NickName = player.Nickname
-	return robotPlayer
-}
-
-// 获取所有机器人PlayerID
-func getRobotIDAll() ([]uint64, error) {
+//IsMysqlRobot 判断是否时机器人
+func IsMysqlRobot(playerID uint64) (bool, error) {
 	engine, err := MysqlEnginefunc(MysqldbName)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	robots := make([]*db.TPlayer, 0)
-	err = engine.Table(playerTableName).Where(fmt.Sprintf("type=%v", playerType)).Find(&robots)
+	p := &db.TPlayer{}
+	session := engine.Table(playerTableName).Select("type").Where(fmt.Sprintf("playerID=%d", playerID))
+	exist, err := session.Get(p)
 	if err != nil {
-		return nil, err
-	}
-	robotsIDAll := make([]uint64, 0, len(robots))
-	for _, robot := range robots {
-		robotsIDAll = append(robotsIDAll, uint64(robot.Playerid))
-	}
-	return robotsIDAll, nil
-}
-
-// 根据玩家ID获取玩家表上的数据
-func getMysqlPlayerByPlayerID(playerID uint64, result string) (*db.TPlayer, error) {
-	pt := &db.TPlayer{}
-	engine, err := MysqlEnginefunc(MysqldbName)
-	if err != nil {
-		return pt, err
-	}
-	where := fmt.Sprintf("playerID=%v", playerID)
-	exist, err := engine.Table(playerTableName).Where(where).Select(result).Get(pt)
-	if err != nil {
-		return pt, err
+		sql, _ := session.LastSQL()
+		return false, fmt.Errorf("err(%v),sql(%v)", err, sql)
 	}
 	if !exist {
-		return pt, fmt.Errorf("TPlayer获取失败 : %v", playerID)
+		logrus.Debugf("该玩家ID不存在 playerID (%d) ", playerID)
+		return false, fmt.Errorf("该玩家ID不存在 playerID (%d)", playerID)
 	}
-	return pt, nil
+	return p.Type == PlayerType, nil
 }
 
-//根据玩家ID获取玩家游戏表上的数据
-func getMysqlPlayerGameByPlayerID(playerID uint64, result string) (*db.TPlayerGame, error) {
-	pt := &db.TPlayerGame{}
-	engine, err := MysqlEnginefunc(MysqldbName)
-	if err != nil {
-		return pt, err
-	}
-	where := fmt.Sprintf("playerID=%v", playerID)
-	exist, err := engine.Table(playerGameTableName).Where(where).Select(result).Get(pt)
-	if err != nil {
-		return pt, err
-	}
-	if !exist {
-		return pt, fmt.Errorf("TPlayerGame获取失败 : %v", playerID)
-	}
-	return pt, nil
-}
-
-//获取所有机器人的游戏ID和对应的胜率
-func getMysqlRobotGameWinRateAll() ([]*db.TPlayerGame, error) {
+//GetMysqlRobotInfoByPlayerID 根据玩家ID获取游戏信息
+func GetMysqlRobotInfoByPlayerID(playerID uint64) ([]*db.TPlayerGame, error) {
 	engine, err := MysqlEnginefunc(MysqldbName)
 	if err != nil {
 		return nil, err
 	}
-	// 胜率
 	robotsPGs := make([]*db.TPlayerGame, 0)
-	idEqu := fmt.Sprintf("%v.playerID = %v.playerID", playerTableName, playerGameTableName)
-	where := fmt.Sprintf("type=%v", playerType)
-	Select := fmt.Sprintf("%v.playerID,%v.winningRate,%v.gameID", playerGameTableName, playerGameTableName, playerGameTableName)
-	if err := engine.Table(playerGameTableName).Join("INNER", playerTableName, idEqu).Where(where).Select(Select).Find(&robotsPGs); err != nil {
-		return nil, err
+	session := engine.Table(playerGameTableName).Select("playerID,winningRate,gameID").Where(fmt.Sprintf("playerID=%d", playerID))
+	if err := session.Find(robotsPGs); err != nil {
+		sql, _ := session.LastSQL()
+		return nil, fmt.Errorf("err(%v),sql(%v)", err, sql)
 	}
 	return robotsPGs, nil
 }
 
-// 获取所有机器人的昵称
-func getMysqlRobotNicknameAll() ([]*db.TPlayer, error) {
-	engine, err := MysqlEnginefunc(MysqldbName)
-	if err != nil {
-		return nil, err
+//获取机器人的的游戏ID和对应的胜率
+func getMysqlRobotInfo(engine *xorm.Engine) ([]*db.TPlayerGame, error) {
+	// 游戏胜率
+	robotsPGs := make([]*db.TPlayerGame, 0)
+	idEqu := fmt.Sprintf("%v.playerID = %v.playerID", playerTableName, playerGameTableName)
+	where := fmt.Sprintf("type=%d", PlayerType)
+	Select := fmt.Sprintf("%v.playerID,%v.winningRate,%v.gameID", playerTableName, playerGameTableName, playerGameTableName)
+	session := engine.Table(playerTableName).Join("LEFT", playerGameTableName, idEqu).Where(where).Select(Select)
+	if err := session.Find(&robotsPGs); err != nil {
+		sql, _ := session.LastSQL()
+		return []*db.TPlayerGame{}, fmt.Errorf("err(%v),sql(%v)", err, sql)
 	}
-	// 昵称
-	where := fmt.Sprintf("type=%v", playerType)
-	robotsTPs := make([]*db.TPlayer, 0)
-	if err := engine.Table(playerTableName).Select("playerID,nickname").Where(where).Find(&robotsTPs); err != nil {
-		return nil, err
-	}
-	return robotsTPs, nil
+	return robotsPGs, nil
 }

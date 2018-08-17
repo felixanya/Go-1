@@ -2,6 +2,7 @@ package user
 
 import (
 	"steve/client_pb/common"
+	entityConf "steve/entity/config"
 	"steve/entity/db"
 	"steve/server_pb/user"
 
@@ -9,13 +10,15 @@ import (
 )
 
 // DBGameConfig2Client db转client端使用
-func DBGameConfig2Client(dbGameConfigs []*db.TGameConfig) []*common.GameConfig {
+func DBGameConfig2Client(gameConfigs []entityConf.GameConfig) []*common.GameConfig {
 	cGameConfigs := make([]*common.GameConfig, 0)
-	for _, dbGameConfig := range dbGameConfigs {
+	for _, gameConfig := range gameConfigs {
 		cGameConfig := &common.GameConfig{
-			GameId:   proto.Uint32(uint32(dbGameConfig.Gameid)),
-			GameName: proto.String(dbGameConfig.Name),
-			GameType: proto.Uint32(uint32(dbGameConfig.Type)),
+			GameId:    proto.Uint32(uint32(gameConfig.GameID)),
+			GameName:  proto.String(gameConfig.Name),
+			GameType:  proto.Uint32(uint32(gameConfig.Type)),
+			MinPeople: proto.Uint32(uint32(gameConfig.MinPeople)),
+			MaxPeople: proto.Uint32(uint32(gameConfig.MaxPeople)),
 		}
 
 		cGameConfigs = append(cGameConfigs, cGameConfig)
@@ -29,9 +32,11 @@ func DBGameConfig2Server(dbGameConfigs []*db.TGameConfig) (gameInfos []*user.Gam
 	gameInfos = make([]*user.GameConfig, 0)
 	for _, dbGameConfig := range dbGameConfigs {
 		gameInfo := &user.GameConfig{
-			GameId:   uint32(dbGameConfig.Gameid),
-			GameName: dbGameConfig.Name,
-			GameType: uint32(dbGameConfig.Type),
+			GameId:    uint32(dbGameConfig.Gameid),
+			GameName:  dbGameConfig.Name,
+			GameType:  uint32(dbGameConfig.Type),
+			MinPeople: uint32(dbGameConfig.Minpeople),
+			MaxPeople: uint32(dbGameConfig.Maxpeople),
 		}
 
 		gameInfos = append(gameInfos, gameInfo)
@@ -50,8 +55,6 @@ func DBGamelevelConfig2Sercer(dbGameConfigs []*db.TGameLevelConfig) (gamelevelCo
 			BaseScores: uint32(dbGameConfig.Basescores),
 			LowScores:  uint32(dbGameConfig.Lowscores),
 			HighScores: uint32(dbGameConfig.Highscores),
-			MinPeople:  uint32(dbGameConfig.Minpeople),
-			MaxPeople:  uint32(dbGameConfig.Maxpeople),
 		}
 
 		gamelevelConfigs = append(gamelevelConfigs, gamelevelConfig)
@@ -60,18 +63,19 @@ func DBGamelevelConfig2Sercer(dbGameConfigs []*db.TGameLevelConfig) (gamelevelCo
 }
 
 // DBGamelevelConfig2Client db转client端使用
-func DBGamelevelConfig2Client(dbGameConfigs []*db.TGameLevelConfig) []*common.GameLevelConfig {
+func DBGamelevelConfig2Client(gameLevelConfigs []entityConf.GameLevelConfig) []*common.GameLevelConfig {
 	cGameLevelConfigs := make([]*common.GameLevelConfig, 0)
-	for _, dbGameConfig := range dbGameConfigs {
+	for _, gameLevelConfig := range gameLevelConfigs {
 		cGameLevelConfig := &common.GameLevelConfig{
-			GameId:     proto.Uint32(uint32(dbGameConfig.Gameid)),
-			LevelId:    proto.Uint32(uint32(dbGameConfig.Levelid)),
-			LevelName:  proto.String(dbGameConfig.Name),
-			BaseScores: proto.Uint32(uint32(dbGameConfig.Basescores)),
-			LowScores:  proto.Uint32(uint32(dbGameConfig.Lowscores)),
-			HighScors:  proto.Uint32(uint32(dbGameConfig.Highscores)),
-			MinPeople:  proto.Uint32(uint32(dbGameConfig.Minpeople)),
-			MaxPeople:  proto.Uint32(uint32(dbGameConfig.Maxpeople)),
+			GameId:     proto.Uint32(uint32(gameLevelConfig.GameID)),
+			LevelId:    proto.Uint32(uint32(gameLevelConfig.LevelID)),
+			LevelName:  proto.String(gameLevelConfig.Name),
+			BaseScores: proto.Uint32(uint32(gameLevelConfig.BaseScores)),
+			LowScores:  proto.Uint32(uint32(gameLevelConfig.LowScores)),
+			HighScors:  proto.Uint32(uint32(gameLevelConfig.HighScores)),
+			ShowPeople: proto.Uint32(uint32(gameLevelConfig.ShowOnlinePeople)),
+			RealPeople: proto.Uint32(uint32(gameLevelConfig.RealOnlinePeople)),
+			LevelTag:   common.LevelTag(gameLevelConfig.Tag).Enum(),
 		}
 		cGameLevelConfigs = append(cGameLevelConfigs, cGameLevelConfig)
 	}

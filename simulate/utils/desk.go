@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"steve/client_pb/common"
+	"steve/client_pb/hall"
+	"steve/client_pb/match"
 	msgid "steve/client_pb/msgid"
 	"steve/client_pb/room"
 	"steve/simulate/global"
@@ -61,7 +63,8 @@ func StartGame(params structs.StartGameParams) (*DeskData, error) {
 	fapaiNtfExpectors := createExpectors(players, msgid.MsgID_ROOM_FAPAI_NTF)
 	// hszNotifyExpectors := createHSZNotifyExpector(players)
 	gameID := params.GameID // 设置游戏ID
-	seatMap, err := joinDesk(players, gameID)
+	seatMap, difen, err := joinDesk(players, gameID)
+	params.DiFen = uint64(difen)
 	if err != nil {
 		return nil, err
 	}
@@ -225,11 +228,11 @@ func createPlayerExpectors(client interfaces.Client) map[msgid.MsgID]interfaces.
 		msgid.MsgID_ROOM_MOPAI_NTF, msgid.MsgID_ROOM_WAIT_QIANGGANGHU_NTF,
 		msgid.MsgID_ROOM_TINGINFO_NTF, msgid.MsgID_ROOM_INSTANT_SETTLE, msgid.MsgID_ROOM_ROUND_SETTLE, msgid.MsgID_ROOM_DESK_DISMISS_NTF,
 		msgid.MsgID_ROOM_CHAT_NTF, msgid.MsgID_ROOM_RESUME_GAME_RSP, msgid.MsgID_ROOM_DESK_QUIT_RSP,
-		msgid.MsgID_ROOM_GAMEOVER_NTF, msgid.MsgID_ROOM_CHANGE_PLAYERS_RSP, msgid.MsgID_ROOM_DESK_CREATED_NTF, msgid.MsgID_ROOM_DESK_QUIT_ENTER_NTF,
+		msgid.MsgID_ROOM_GAMEOVER_NTF, msgid.MsgID_ROOM_CHANGE_PLAYERS_RSP, msgid.MsgID_MATCH_SUC_CREATE_DESK_NTF, msgid.MsgID_ROOM_DESK_QUIT_ENTER_NTF,
 		msgid.MsgID_ROOM_DESK_NEED_RESUME_RSP,
-		msgid.MsgID_ROOM_GAMEOVER_NTF, msgid.MsgID_ROOM_CHANGE_PLAYERS_RSP, msgid.MsgID_ROOM_DESK_CREATED_NTF, msgid.MsgID_ROOM_DESK_QUIT_ENTER_NTF,
+		msgid.MsgID_ROOM_GAMEOVER_NTF, msgid.MsgID_ROOM_CHANGE_PLAYERS_RSP, msgid.MsgID_MATCH_SUC_CREATE_DESK_NTF, msgid.MsgID_ROOM_DESK_QUIT_ENTER_NTF,
 		msgid.MsgID_ROOM_HUANSANZHANG_NTF,
-		msgid.MsgID_ROOM_DINGQUE_NTF,
+		msgid.MsgID_ROOM_DINGQUE_NTF, msgid.MsgID_HALL_GET_PLAYER_GAME_INFO_RSP, msgid.MsgID_ROOM_USE_PROP_NTF,
 	}
 	result := map[msgid.MsgID]interfaces.MessageExpector{}
 	for _, msg := range msgs {
@@ -259,6 +262,9 @@ func createDDZPlayerExpectors(client interfaces.Client) map[msgid.MsgID]interfac
 		msgid.MsgID_ROOM_DDZ_GAME_OVER_NTF, // 斗地主 结束通知
 		msgid.MsgID_ROOM_DDZ_RESUME_RSP,    // 斗地主 回复对局响应
 		//msgid.MsgID_ROOM_DDZ_RESUME_RSP,    // 斗地主 回复对局响应
+		msgid.MsgID_HALL_GET_PLAYER_GAME_INFO_RSP,
+		msgid.MsgID_ROOM_USE_PROP_NTF,
+		msgid.MsgID_ROOM_USE_PROP_RSP,
 	}
 
 	result := map[msgid.MsgID]interfaces.MessageExpector{}
@@ -321,7 +327,7 @@ func CreateAndLoginUsersNum(num int) ([]interfaces.ClientPlayer, error) {
 
 // 加入牌桌
 // 返回：座位ID 与 playerID的map
-func joinDesk(players []interfaces.ClientPlayer, gameID common.GameId) (map[int]uint64, error) {
+func joinDesk(players []interfaces.ClientPlayer, gameID common.GameId) (map[int]uint64, uint32, error) {
 
 	logEntry := logrus.WithFields(logrus.Fields{
 		"func_name": "joinDesk",
@@ -332,24 +338,28 @@ func joinDesk(players []interfaces.ClientPlayer, gameID common.GameId) (map[int]
 
 	// 所有期待的消息
 	expectors := []interfaces.MessageExpector{}
-
+	baseCoin := uint32(1)
 	for _, player := range players {
 
 		// 期望收到桌子创建的通知
-		e, _ := player.GetClient().ExpectMessage(msgid.MsgID_ROOM_DESK_CREATED_NTF)
+		e, _ := player.GetClient().ExpectMessage(msgid.MsgID_MATCH_SUC_CREATE_DESK_NTF)
 
 		// 申请加入牌桌
-		if _, err := ApplyJoinDesk(player, gameID); err != nil {
-			return nil, fmt.Errorf("请求加入房间失败: %v", err)
+		matchRsp := &match.MatchRsp{}
+		var err error
+		if matchRsp, err = ApplyJoinDesk(player, gameID); err != nil {
+			return nil, 1, fmt.Errorf("请求加入房间失败: %v", err)
 		}
 
+		// 获取底分
+		baseCoin = GetGameLevelBaseCoin(player, matchRsp.GetGameId(), matchRsp.GetLevelId())
 		expectors = append(expectors, e)
 	}
 
 	// 等待接收桌子创建消息
-	ntf := room.RoomDeskCreatedNtf{}
+	ntf := match.MatchSucCreateDeskNtf{}
 	if err := expectors[0].Recv(global.DefaultWaitMessageTime, &ntf); err != nil {
-		return nil, err
+		return nil, baseCoin, err
 	}
 
 	logEntry.Info("收到了桌子创建的通知")
@@ -358,7 +368,30 @@ func joinDesk(players []interfaces.ClientPlayer, gameID common.GameId) (map[int]
 	for _, rplayer := range ntf.GetPlayers() {
 		seatMap[int(rplayer.GetSeat())] = rplayer.GetPlayerId()
 	}
-	return seatMap, nil
+	return seatMap, baseCoin, nil
+}
+
+// GetGameLevelBaseCoin 获取游戏场次底分
+func GetGameLevelBaseCoin(player interfaces.ClientPlayer, gameID uint32, levelID uint32) uint32 {
+	req := hall.HallGetGameListInfoReq{
+		Reserve: proto.Int32(1),
+	}
+
+	rsp := hall.HallGetGameListInfoRsp{}
+
+	client := player.GetClient()
+	err := client.Request(createMsgHead(msgid.MsgID_HALL_GET_GAME_INFO_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_HALL_GET_GAME_INFO_RSP), &rsp)
+	if err != nil {
+		logrus.WithError(err).Errorln(errRequestFailed)
+		return 1
+	}
+	gameLevelConfigs := rsp.GetGameLevelConfig()
+	for _, gameLevelConfig := range gameLevelConfigs {
+		if gameLevelConfig.GetGameId() == gameID && gameLevelConfig.GetLevelId() == levelID {
+			return gameLevelConfig.GetBaseScores()
+		}
+	}
+	return 1
 }
 
 // DDZjoinDesk 斗地主加入牌桌
@@ -378,7 +411,7 @@ func DDZjoinDesk(players []interfaces.ClientPlayer, gameID common.GameId) (map[i
 	for _, player := range players {
 
 		// 期望收到桌子创建的通知
-		e, _ := player.GetClient().ExpectMessage(msgid.MsgID_ROOM_DESK_CREATED_NTF)
+		e, _ := player.GetClient().ExpectMessage(msgid.MsgID_MATCH_SUC_CREATE_DESK_NTF)
 		expectors = append(expectors, e)
 
 		// 申请加入牌桌
@@ -388,7 +421,7 @@ func DDZjoinDesk(players []interfaces.ClientPlayer, gameID common.GameId) (map[i
 	}
 
 	// 等待接收桌子创建消息
-	ntf := room.RoomDeskCreatedNtf{}
+	ntf := match.MatchSucCreateDeskNtf{}
 	if err := expectors[0].Recv(global.DefaultWaitMessageTime, &ntf); err != nil {
 		return nil, fmt.Errorf("没有收到创建房间通知: %v", err)
 	}
@@ -466,7 +499,7 @@ func checkPlayerCardCount(playerCardCounts []*room.PlayerCardCount, deskData *De
 
 		// 两者不等，则报错
 		if cardCount != expectedCount {
-			return fmt.Errorf("playerCardCount 卡牌数量不对")
+			return fmt.Errorf("playerCardCount 卡牌数量不对，玩家手牌数量:%v，期待数量:%v", cardCount, expectedCount)
 		}
 	}
 	return nil

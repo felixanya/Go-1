@@ -67,55 +67,6 @@ func (m *GameWinRate) GetWinRate() int32 {
 	return 0
 }
 
-// RobotPlayerInfo 机器人玩家信息
-type RobotPlayerInfo struct {
-	NickName    string           `protobuf:"bytes,1,opt,name=nick_name,json=nickName" json:"nick_name,omitempty"`
-	Avatar      string           `protobuf:"bytes,2,opt,name=avatar" json:"avatar,omitempty"`
-	Coin        uint64           `protobuf:"varint,3,opt,name=coin" json:"coin,omitempty"`
-	State       RobotPlayerState `protobuf:"varint,4,opt,name=state,enum=robot.RobotPlayerState" json:"state,omitempty"`
-	GameWinRate *GameWinRate     `protobuf:"bytes,5,opt,name=game_win_rate,json=gameWinRate" json:"game_win_rate,omitempty"`
-}
-
-func (m *RobotPlayerInfo) Reset()                    { *m = RobotPlayerInfo{} }
-func (m *RobotPlayerInfo) String() string            { return proto.CompactTextString(m) }
-func (*RobotPlayerInfo) ProtoMessage()               {}
-func (*RobotPlayerInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
-
-func (m *RobotPlayerInfo) GetNickName() string {
-	if m != nil {
-		return m.NickName
-	}
-	return ""
-}
-
-func (m *RobotPlayerInfo) GetAvatar() string {
-	if m != nil {
-		return m.Avatar
-	}
-	return ""
-}
-
-func (m *RobotPlayerInfo) GetCoin() uint64 {
-	if m != nil {
-		return m.Coin
-	}
-	return 0
-}
-
-func (m *RobotPlayerInfo) GetState() RobotPlayerState {
-	if m != nil {
-		return m.State
-	}
-	return RobotPlayerState_RPS_IDIE
-}
-
-func (m *RobotPlayerInfo) GetGameWinRate() *GameWinRate {
-	if m != nil {
-		return m.GameWinRate
-	}
-	return nil
-}
-
 // WinRateRange 胜率范围
 type WinRateRange struct {
 	High int32 `protobuf:"varint,1,opt,name=high" json:"high,omitempty"`
@@ -125,7 +76,7 @@ type WinRateRange struct {
 func (m *WinRateRange) Reset()                    { *m = WinRateRange{} }
 func (m *WinRateRange) String() string            { return proto.CompactTextString(m) }
 func (*WinRateRange) ProtoMessage()               {}
-func (*WinRateRange) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
+func (*WinRateRange) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
 
 func (m *WinRateRange) GetHigh() int32 {
 	if m != nil {
@@ -150,7 +101,7 @@ type CoinsRange struct {
 func (m *CoinsRange) Reset()                    { *m = CoinsRange{} }
 func (m *CoinsRange) String() string            { return proto.CompactTextString(m) }
 func (*CoinsRange) ProtoMessage()               {}
-func (*CoinsRange) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
+func (*CoinsRange) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
 
 func (m *CoinsRange) GetHigh() int64 {
 	if m != nil {
@@ -168,16 +119,15 @@ func (m *CoinsRange) GetLow() int64 {
 
 // GetLeisureRobotInfoReq 获取空闲机器人信息请求
 type GetLeisureRobotInfoReq struct {
-	Game         *GameConfig      `protobuf:"bytes,1,opt,name=game" json:"game,omitempty"`
-	WinRateRange *WinRateRange    `protobuf:"bytes,2,opt,name=win_rate_range,json=winRateRange" json:"win_rate_range,omitempty"`
-	CoinsRange   *CoinsRange      `protobuf:"bytes,3,opt,name=coins_range,json=coinsRange" json:"coins_range,omitempty"`
-	NewState     RobotPlayerState `protobuf:"varint,4,opt,name=new_state,json=newState,enum=robot.RobotPlayerState" json:"new_state,omitempty"`
+	Game         *GameConfig   `protobuf:"bytes,1,opt,name=game" json:"game,omitempty"`
+	WinRateRange *WinRateRange `protobuf:"bytes,2,opt,name=win_rate_range,json=winRateRange" json:"win_rate_range,omitempty"`
+	CoinsRange   *CoinsRange   `protobuf:"bytes,3,opt,name=coins_range,json=coinsRange" json:"coins_range,omitempty"`
 }
 
 func (m *GetLeisureRobotInfoReq) Reset()                    { *m = GetLeisureRobotInfoReq{} }
 func (m *GetLeisureRobotInfoReq) String() string            { return proto.CompactTextString(m) }
 func (*GetLeisureRobotInfoReq) ProtoMessage()               {}
-func (*GetLeisureRobotInfoReq) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
+func (*GetLeisureRobotInfoReq) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
 
 func (m *GetLeisureRobotInfoReq) GetGame() *GameConfig {
 	if m != nil {
@@ -200,25 +150,18 @@ func (m *GetLeisureRobotInfoReq) GetCoinsRange() *CoinsRange {
 	return nil
 }
 
-func (m *GetLeisureRobotInfoReq) GetNewState() RobotPlayerState {
-	if m != nil {
-		return m.NewState
-	}
-	return RobotPlayerState_RPS_IDIE
-}
-
 // GetLeisureRobotInfoRsp 获取空闲机器人信息响应
 type GetLeisureRobotInfoRsp struct {
-	RobotPlayerId uint64 `protobuf:"varint,1,opt,name=robot_player_id,json=robotPlayerId" json:"robot_player_id,omitempty"`
-	Coin          int64  `protobuf:"varint,2,opt,name=coin" json:"coin,omitempty"`
-	WinRate       int32  `protobuf:"varint,3,opt,name=win_rate,json=winRate" json:"win_rate,omitempty"`
-	ErrCode       int32  `protobuf:"varint,4,opt,name=err_code,json=errCode" json:"err_code,omitempty"`
+	RobotPlayerId uint64  `protobuf:"varint,1,opt,name=robot_player_id,json=robotPlayerId" json:"robot_player_id,omitempty"`
+	Coin          int64   `protobuf:"varint,2,opt,name=coin" json:"coin,omitempty"`
+	WinRate       float64 `protobuf:"fixed64,3,opt,name=win_rate,json=winRate" json:"win_rate,omitempty"`
+	ErrCode       ErrCode `protobuf:"varint,4,opt,name=err_code,json=errCode,enum=robot.ErrCode" json:"err_code,omitempty"`
 }
 
 func (m *GetLeisureRobotInfoRsp) Reset()                    { *m = GetLeisureRobotInfoRsp{} }
 func (m *GetLeisureRobotInfoRsp) String() string            { return proto.CompactTextString(m) }
 func (*GetLeisureRobotInfoRsp) ProtoMessage()               {}
-func (*GetLeisureRobotInfoRsp) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{6} }
+func (*GetLeisureRobotInfoRsp) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
 
 func (m *GetLeisureRobotInfoRsp) GetRobotPlayerId() uint64 {
 	if m != nil {
@@ -234,33 +177,30 @@ func (m *GetLeisureRobotInfoRsp) GetCoin() int64 {
 	return 0
 }
 
-func (m *GetLeisureRobotInfoRsp) GetWinRate() int32 {
+func (m *GetLeisureRobotInfoRsp) GetWinRate() float64 {
 	if m != nil {
 		return m.WinRate
 	}
 	return 0
 }
 
-func (m *GetLeisureRobotInfoRsp) GetErrCode() int32 {
+func (m *GetLeisureRobotInfoRsp) GetErrCode() ErrCode {
 	if m != nil {
 		return m.ErrCode
 	}
-	return 0
+	return ErrCode_EC_SUCCESS
 }
 
 // SetRobotPlayerStateReq 設置机器人玩家状态請求
 type SetRobotPlayerStateReq struct {
-	RobotPlayerId uint64           `protobuf:"varint,1,opt,name=robot_player_id,json=robotPlayerId" json:"robot_player_id,omitempty"`
-	NewState      RobotPlayerState `protobuf:"varint,2,opt,name=new_state,json=newState,enum=robot.RobotPlayerState" json:"new_state,omitempty"`
-	OldState      RobotPlayerState `protobuf:"varint,3,opt,name=old_state,json=oldState,enum=robot.RobotPlayerState" json:"old_state,omitempty"`
-	ServerType    ServerType       `protobuf:"varint,4,opt,name=server_type,json=serverType,enum=robot.ServerType" json:"server_type,omitempty"`
-	ServerAddr    string           `protobuf:"bytes,5,opt,name=server_addr,json=serverAddr" json:"server_addr,omitempty"`
+	RobotPlayerId uint64 `protobuf:"varint,1,opt,name=robot_player_id,json=robotPlayerId" json:"robot_player_id,omitempty"`
+	NewState      bool   `protobuf:"varint,2,opt,name=new_state,json=newState" json:"new_state,omitempty"`
 }
 
 func (m *SetRobotPlayerStateReq) Reset()                    { *m = SetRobotPlayerStateReq{} }
 func (m *SetRobotPlayerStateReq) String() string            { return proto.CompactTextString(m) }
 func (*SetRobotPlayerStateReq) ProtoMessage()               {}
-func (*SetRobotPlayerStateReq) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
+func (*SetRobotPlayerStateReq) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{6} }
 
 func (m *SetRobotPlayerStateReq) GetRobotPlayerId() uint64 {
 	if m != nil {
@@ -269,44 +209,23 @@ func (m *SetRobotPlayerStateReq) GetRobotPlayerId() uint64 {
 	return 0
 }
 
-func (m *SetRobotPlayerStateReq) GetNewState() RobotPlayerState {
+func (m *SetRobotPlayerStateReq) GetNewState() bool {
 	if m != nil {
 		return m.NewState
 	}
-	return RobotPlayerState_RPS_IDIE
-}
-
-func (m *SetRobotPlayerStateReq) GetOldState() RobotPlayerState {
-	if m != nil {
-		return m.OldState
-	}
-	return RobotPlayerState_RPS_IDIE
-}
-
-func (m *SetRobotPlayerStateReq) GetServerType() ServerType {
-	if m != nil {
-		return m.ServerType
-	}
-	return ServerType_ST_GATE
-}
-
-func (m *SetRobotPlayerStateReq) GetServerAddr() string {
-	if m != nil {
-		return m.ServerAddr
-	}
-	return ""
+	return false
 }
 
 // SetRobotPlayerStateRsp 設置机器人玩家状态响应
 type SetRobotPlayerStateRsp struct {
-	Result  bool  `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
-	ErrCode int32 `protobuf:"varint,2,opt,name=err_code,json=errCode" json:"err_code,omitempty"`
+	Result  bool    `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	ErrCode ErrCode `protobuf:"varint,2,opt,name=err_code,json=errCode,enum=robot.ErrCode" json:"err_code,omitempty"`
 }
 
 func (m *SetRobotPlayerStateRsp) Reset()                    { *m = SetRobotPlayerStateRsp{} }
 func (m *SetRobotPlayerStateRsp) String() string            { return proto.CompactTextString(m) }
 func (*SetRobotPlayerStateRsp) ProtoMessage()               {}
-func (*SetRobotPlayerStateRsp) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
+func (*SetRobotPlayerStateRsp) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
 
 func (m *SetRobotPlayerStateRsp) GetResult() bool {
 	if m != nil {
@@ -315,23 +234,118 @@ func (m *SetRobotPlayerStateRsp) GetResult() bool {
 	return false
 }
 
-func (m *SetRobotPlayerStateRsp) GetErrCode() int32 {
+func (m *SetRobotPlayerStateRsp) GetErrCode() ErrCode {
 	if m != nil {
 		return m.ErrCode
 	}
+	return ErrCode_EC_SUCCESS
+}
+
+// UpdataRobotGameWinRateReq 更新机器人胜率請求
+type UpdataRobotGameWinRateReq struct {
+	RobotPlayerId uint64  `protobuf:"varint,1,opt,name=robot_player_id,json=robotPlayerId" json:"robot_player_id,omitempty"`
+	GameId        int32   `protobuf:"varint,2,opt,name=game_id,json=gameId" json:"game_id,omitempty"`
+	NewWinRate    float64 `protobuf:"fixed64,3,opt,name=newWinRate" json:"newWinRate,omitempty"`
+}
+
+func (m *UpdataRobotGameWinRateReq) Reset()                    { *m = UpdataRobotGameWinRateReq{} }
+func (m *UpdataRobotGameWinRateReq) String() string            { return proto.CompactTextString(m) }
+func (*UpdataRobotGameWinRateReq) ProtoMessage()               {}
+func (*UpdataRobotGameWinRateReq) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
+
+func (m *UpdataRobotGameWinRateReq) GetRobotPlayerId() uint64 {
+	if m != nil {
+		return m.RobotPlayerId
+	}
 	return 0
+}
+
+func (m *UpdataRobotGameWinRateReq) GetGameId() int32 {
+	if m != nil {
+		return m.GameId
+	}
+	return 0
+}
+
+func (m *UpdataRobotGameWinRateReq) GetNewWinRate() float64 {
+	if m != nil {
+		return m.NewWinRate
+	}
+	return 0
+}
+
+// UpdataRobotGameWinRateRsp 更新机器人胜率响应
+type UpdataRobotGameWinRateRsp struct {
+	Result  bool    `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+	ErrCode ErrCode `protobuf:"varint,2,opt,name=err_code,json=errCode,enum=robot.ErrCode" json:"err_code,omitempty"`
+}
+
+func (m *UpdataRobotGameWinRateRsp) Reset()                    { *m = UpdataRobotGameWinRateRsp{} }
+func (m *UpdataRobotGameWinRateRsp) String() string            { return proto.CompactTextString(m) }
+func (*UpdataRobotGameWinRateRsp) ProtoMessage()               {}
+func (*UpdataRobotGameWinRateRsp) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{9} }
+
+func (m *UpdataRobotGameWinRateRsp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
+}
+
+func (m *UpdataRobotGameWinRateRsp) GetErrCode() ErrCode {
+	if m != nil {
+		return m.ErrCode
+	}
+	return ErrCode_EC_SUCCESS
+}
+
+// IsRobotPlayerReq 判断是否时机器人請求
+type IsRobotPlayerReq struct {
+	RobotPlayerId uint64 `protobuf:"varint,1,opt,name=robot_player_id,json=robotPlayerId" json:"robot_player_id,omitempty"`
+}
+
+func (m *IsRobotPlayerReq) Reset()                    { *m = IsRobotPlayerReq{} }
+func (m *IsRobotPlayerReq) String() string            { return proto.CompactTextString(m) }
+func (*IsRobotPlayerReq) ProtoMessage()               {}
+func (*IsRobotPlayerReq) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{10} }
+
+func (m *IsRobotPlayerReq) GetRobotPlayerId() uint64 {
+	if m != nil {
+		return m.RobotPlayerId
+	}
+	return 0
+}
+
+// IsRobotPlayerRsp 判断是否时机器人响应
+type IsRobotPlayerRsp struct {
+	Result bool `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+}
+
+func (m *IsRobotPlayerRsp) Reset()                    { *m = IsRobotPlayerRsp{} }
+func (m *IsRobotPlayerRsp) String() string            { return proto.CompactTextString(m) }
+func (*IsRobotPlayerRsp) ProtoMessage()               {}
+func (*IsRobotPlayerRsp) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{11} }
+
+func (m *IsRobotPlayerRsp) GetResult() bool {
+	if m != nil {
+		return m.Result
+	}
+	return false
 }
 
 func init() {
 	proto.RegisterType((*GameConfig)(nil), "robot.GameConfig")
 	proto.RegisterType((*GameWinRate)(nil), "robot.GameWinRate")
-	proto.RegisterType((*RobotPlayerInfo)(nil), "robot.RobotPlayerInfo")
 	proto.RegisterType((*WinRateRange)(nil), "robot.WinRateRange")
 	proto.RegisterType((*CoinsRange)(nil), "robot.CoinsRange")
 	proto.RegisterType((*GetLeisureRobotInfoReq)(nil), "robot.GetLeisureRobotInfoReq")
 	proto.RegisterType((*GetLeisureRobotInfoRsp)(nil), "robot.GetLeisureRobotInfoRsp")
 	proto.RegisterType((*SetRobotPlayerStateReq)(nil), "robot.SetRobotPlayerStateReq")
 	proto.RegisterType((*SetRobotPlayerStateRsp)(nil), "robot.SetRobotPlayerStateRsp")
+	proto.RegisterType((*UpdataRobotGameWinRateReq)(nil), "robot.UpdataRobotGameWinRateReq")
+	proto.RegisterType((*UpdataRobotGameWinRateRsp)(nil), "robot.UpdataRobotGameWinRateRsp")
+	proto.RegisterType((*IsRobotPlayerReq)(nil), "robot.IsRobotPlayerReq")
+	proto.RegisterType((*IsRobotPlayerRsp)(nil), "robot.IsRobotPlayerRsp")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -347,6 +361,8 @@ const _ = grpc.SupportPackageIsVersion4
 type RobotServiceClient interface {
 	GetLeisureRobotInfoByInfo(ctx context.Context, in *GetLeisureRobotInfoReq, opts ...grpc.CallOption) (*GetLeisureRobotInfoRsp, error)
 	SetRobotPlayerState(ctx context.Context, in *SetRobotPlayerStateReq, opts ...grpc.CallOption) (*SetRobotPlayerStateRsp, error)
+	UpdataRobotGameWinRate(ctx context.Context, in *UpdataRobotGameWinRateReq, opts ...grpc.CallOption) (*UpdataRobotGameWinRateRsp, error)
+	IsRobotPlayer(ctx context.Context, in *IsRobotPlayerReq, opts ...grpc.CallOption) (*IsRobotPlayerRsp, error)
 }
 
 type robotServiceClient struct {
@@ -375,11 +391,31 @@ func (c *robotServiceClient) SetRobotPlayerState(ctx context.Context, in *SetRob
 	return out, nil
 }
 
+func (c *robotServiceClient) UpdataRobotGameWinRate(ctx context.Context, in *UpdataRobotGameWinRateReq, opts ...grpc.CallOption) (*UpdataRobotGameWinRateRsp, error) {
+	out := new(UpdataRobotGameWinRateRsp)
+	err := grpc.Invoke(ctx, "/robot.RobotService/UpdataRobotGameWinRate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *robotServiceClient) IsRobotPlayer(ctx context.Context, in *IsRobotPlayerReq, opts ...grpc.CallOption) (*IsRobotPlayerRsp, error) {
+	out := new(IsRobotPlayerRsp)
+	err := grpc.Invoke(ctx, "/robot.RobotService/IsRobotPlayer", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for RobotService service
 
 type RobotServiceServer interface {
 	GetLeisureRobotInfoByInfo(context.Context, *GetLeisureRobotInfoReq) (*GetLeisureRobotInfoRsp, error)
 	SetRobotPlayerState(context.Context, *SetRobotPlayerStateReq) (*SetRobotPlayerStateRsp, error)
+	UpdataRobotGameWinRate(context.Context, *UpdataRobotGameWinRateReq) (*UpdataRobotGameWinRateRsp, error)
+	IsRobotPlayer(context.Context, *IsRobotPlayerReq) (*IsRobotPlayerRsp, error)
 }
 
 func RegisterRobotServiceServer(s *grpc.Server, srv RobotServiceServer) {
@@ -422,6 +458,42 @@ func _RobotService_SetRobotPlayerState_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RobotService_UpdataRobotGameWinRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdataRobotGameWinRateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RobotServiceServer).UpdataRobotGameWinRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/robot.RobotService/UpdataRobotGameWinRate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RobotServiceServer).UpdataRobotGameWinRate(ctx, req.(*UpdataRobotGameWinRateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RobotService_IsRobotPlayer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsRobotPlayerReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RobotServiceServer).IsRobotPlayer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/robot.RobotService/IsRobotPlayer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RobotServiceServer).IsRobotPlayer(ctx, req.(*IsRobotPlayerReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RobotService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "robot.RobotService",
 	HandlerType: (*RobotServiceServer)(nil),
@@ -434,6 +506,14 @@ var _RobotService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "SetRobotPlayerState",
 			Handler:    _RobotService_SetRobotPlayerState_Handler,
 		},
+		{
+			MethodName: "UpdataRobotGameWinRate",
+			Handler:    _RobotService_UpdataRobotGameWinRate_Handler,
+		},
+		{
+			MethodName: "IsRobotPlayer",
+			Handler:    _RobotService_IsRobotPlayer_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "robot.proto",
@@ -442,42 +522,40 @@ var _RobotService_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("robot.proto", fileDescriptor1) }
 
 var fileDescriptor1 = []byte{
-	// 583 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x4f, 0x6f, 0xd3, 0x4e,
-	0x10, 0xfd, 0x39, 0x8e, 0x9b, 0x64, 0xdc, 0x3f, 0x3f, 0xb6, 0x52, 0xff, 0x04, 0x21, 0x22, 0x4b,
-	0xa0, 0x5c, 0xe8, 0xc1, 0x54, 0x48, 0xdc, 0x80, 0x1c, 0xaa, 0x08, 0x04, 0x68, 0x03, 0xe2, 0xc0,
-	0xc1, 0x72, 0xb3, 0xd3, 0xd4, 0xc2, 0xd9, 0x75, 0xd7, 0x4e, 0xac, 0x1c, 0xb9, 0xf2, 0xad, 0xe0,
-	0xb3, 0xf0, 0x41, 0xd0, 0x8e, 0xed, 0xc4, 0x51, 0x42, 0xc9, 0x6d, 0x66, 0x27, 0xef, 0xcd, 0xbc,
-	0x37, 0x13, 0x83, 0xab, 0xd5, 0xb5, 0xca, 0x2e, 0x12, 0xad, 0x32, 0xc5, 0x1c, 0x4a, 0xba, 0x80,
-	0x72, 0x36, 0x2d, 0x9e, 0xbc, 0x57, 0x00, 0x57, 0xe1, 0x14, 0x07, 0x4a, 0xde, 0x44, 0x13, 0x76,
-	0x0a, 0xad, 0x49, 0x38, 0xc5, 0x20, 0x12, 0x67, 0x56, 0xcf, 0xea, 0x1f, 0xf0, 0x3d, 0x93, 0x0e,
-	0x05, 0x3b, 0x87, 0x76, 0x8c, 0x73, 0x8c, 0x4d, 0xa5, 0x41, 0x95, 0x16, 0xe5, 0x43, 0xe1, 0x7d,
-	0x00, 0xd7, 0x30, 0x7c, 0x89, 0x24, 0x0f, 0x33, 0x64, 0x4f, 0xa0, 0x69, 0x30, 0x84, 0x77, 0xfd,
-	0x07, 0x17, 0x45, 0xff, 0x55, 0x0f, 0x4e, 0x65, 0x43, 0x98, 0x47, 0x32, 0xd0, 0x61, 0x86, 0x44,
-	0xe8, 0xf0, 0x56, 0x5e, 0x30, 0x78, 0x3f, 0x2d, 0x38, 0xe2, 0x06, 0xf5, 0x31, 0x0e, 0x17, 0xa8,
-	0x87, 0xf2, 0x46, 0xb1, 0x87, 0xd0, 0x91, 0xd1, 0xf8, 0x5b, 0x20, 0x2b, 0xea, 0x0e, 0x6f, 0x9b,
-	0x87, 0xf7, 0x86, 0xeb, 0x04, 0xf6, 0xc2, 0x79, 0x98, 0x85, 0x9a, 0x98, 0x3a, 0xbc, 0xcc, 0x18,
-	0x83, 0xe6, 0x58, 0x45, 0xf2, 0xcc, 0xee, 0x59, 0xfd, 0x26, 0xa7, 0x98, 0x3d, 0x03, 0x27, 0xcd,
-	0x4c, 0xd3, 0x66, 0xcf, 0xea, 0x1f, 0xfa, 0xa7, 0xe5, 0x7c, 0xb5, 0x7e, 0x23, 0x53, 0xe6, 0xc5,
-	0xaf, 0xd8, 0x0b, 0x38, 0x20, 0x43, 0x96, 0xb3, 0x3a, 0x24, 0x8b, 0xd5, 0x64, 0x95, 0xc2, 0xb9,
-	0x3b, 0x59, 0x25, 0xde, 0x25, 0xec, 0x57, 0xef, 0xa1, 0x9c, 0xa0, 0x19, 0xe5, 0x36, 0x9a, 0xdc,
-	0xd2, 0xe8, 0x0e, 0xa7, 0x98, 0xfd, 0x0f, 0x76, 0xac, 0xf2, 0x52, 0xbd, 0x09, 0x3d, 0x1f, 0x60,
-	0xa0, 0x22, 0x99, 0x6e, 0x62, 0xec, 0x4d, 0x8c, 0x5d, 0x60, 0x7e, 0x5b, 0x70, 0x72, 0x85, 0xd9,
-	0x3b, 0x8c, 0xd2, 0x99, 0x46, 0xd2, 0x61, 0x1c, 0xe3, 0x78, 0xb7, 0xeb, 0x2a, 0x5e, 0xc2, 0x61,
-	0x25, 0x2f, 0xd0, 0xa6, 0x33, 0xd1, 0xbb, 0xfe, 0x71, 0x09, 0xa8, 0x0b, 0xe1, 0xfb, 0x79, 0x5d,
-	0x96, 0x0f, 0xae, 0x71, 0x35, 0x2d, 0x71, 0xf6, 0x5a, 0xa3, 0x95, 0x14, 0x0e, 0xe3, 0x95, 0xac,
-	0x4b, 0xe8, 0x48, 0xcc, 0x83, 0x9d, 0xb6, 0xd0, 0x96, 0x98, 0x53, 0xe4, 0xfd, 0xf8, 0x8b, 0xcc,
-	0x34, 0x61, 0x4f, 0xe1, 0x88, 0xe0, 0x41, 0x42, 0xc8, 0xea, 0x78, 0x9b, 0xfc, 0x40, 0xd7, 0xae,
-	0x48, 0x2c, 0xcf, 0xa1, 0x30, 0xaf, 0x38, 0x87, 0xfa, 0x19, 0xda, 0x6b, 0x67, 0x68, 0x4a, 0xa8,
-	0x75, 0x30, 0x56, 0xa2, 0x18, 0xd3, 0xe1, 0x2d, 0xd4, 0x7a, 0xa0, 0x04, 0x7a, 0xdf, 0x1b, 0x70,
-	0x32, 0xc2, 0x6c, 0x63, 0x5c, 0xbc, 0xdb, 0x79, 0x98, 0x35, 0x17, 0x1a, 0x3b, 0xba, 0x60, 0x50,
-	0x2a, 0x16, 0x25, 0xca, 0xfe, 0x07, 0x4a, 0xc5, 0xa2, 0x40, 0xf9, 0xe0, 0xa6, 0xa8, 0xe7, 0xa8,
-	0x83, 0x6c, 0x91, 0x54, 0x9e, 0x57, 0x5b, 0x1a, 0x51, 0xe5, 0xd3, 0x22, 0x41, 0x0e, 0xe9, 0x32,
-	0x66, 0x8f, 0x97, 0x98, 0x50, 0x08, 0x4d, 0x67, 0xdf, 0xa9, 0x7e, 0xf0, 0x5a, 0x08, 0xed, 0xbd,
-	0xdd, 0x6e, 0x41, 0x9a, 0x98, 0xbf, 0xa3, 0xc6, 0x74, 0x16, 0x67, 0xa4, 0xbc, 0xcd, 0xcb, 0x6c,
-	0xcd, 0xd0, 0xc6, 0x9a, 0xa1, 0xfe, 0x2f, 0x0b, 0xf6, 0x89, 0xca, 0x4c, 0x13, 0x8d, 0x91, 0x7d,
-	0x85, 0xf3, 0x2d, 0xdb, 0x7e, 0xb3, 0xa0, 0x8f, 0xc1, 0xa3, 0xea, 0x92, 0xb7, 0x9e, 0x7d, 0xf7,
-	0xbe, 0x72, 0x9a, 0x78, 0xff, 0xb1, 0xcf, 0x70, 0xbc, 0x65, 0xf4, 0x25, 0xed, 0xf6, 0xcd, 0x76,
-	0xef, 0x2b, 0x1b, 0xda, 0xeb, 0x3d, 0xfa, 0xa2, 0x3e, 0xff, 0x13, 0x00, 0x00, 0xff, 0xff, 0x2e,
-	0xef, 0x59, 0xda, 0x73, 0x05, 0x00, 0x00,
+	// 547 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xdd, 0x6a, 0x13, 0x41,
+	0x14, 0x36, 0xcd, 0xaf, 0x27, 0x3f, 0xd6, 0x29, 0xa4, 0x4d, 0x44, 0x09, 0x0b, 0x4a, 0xf5, 0xa2,
+	0x17, 0xab, 0x37, 0x7a, 0x25, 0x06, 0x29, 0x01, 0x41, 0x99, 0x50, 0xbc, 0x28, 0x76, 0xd9, 0x66,
+	0x4f, 0xd3, 0x85, 0x64, 0x66, 0x3b, 0x3b, 0xe9, 0x52, 0xf0, 0x49, 0x7c, 0x08, 0x5f, 0xcb, 0xd7,
+	0x90, 0x39, 0x3b, 0x9b, 0x6c, 0xda, 0x4d, 0x6c, 0xc1, 0x9b, 0x70, 0x66, 0xce, 0x7e, 0xdf, 0xf9,
+	0xbe, 0x73, 0xce, 0x04, 0x9a, 0x4a, 0x9e, 0x4b, 0x7d, 0x14, 0x29, 0xa9, 0x25, 0xab, 0xd2, 0xa1,
+	0x0f, 0x28, 0x16, 0xf3, 0xf4, 0xca, 0xf9, 0x08, 0x70, 0xec, 0xcf, 0x71, 0x28, 0xc5, 0x45, 0x38,
+	0x65, 0xfb, 0x50, 0x9f, 0xfa, 0x73, 0xf4, 0xc2, 0xe0, 0xa0, 0x34, 0x28, 0x1d, 0xb6, 0x79, 0xcd,
+	0x1c, 0x47, 0x01, 0xeb, 0x41, 0x63, 0x86, 0xd7, 0x38, 0x33, 0x99, 0x1d, 0xca, 0xd4, 0xe9, 0x3c,
+	0x0a, 0x9c, 0xaf, 0xd0, 0x34, 0x0c, 0xdf, 0x43, 0xc1, 0x7d, 0x8d, 0xec, 0x25, 0x54, 0x0c, 0x86,
+	0xf0, 0x4d, 0xf7, 0xe9, 0x51, 0x5a, 0x7f, 0x55, 0x83, 0x53, 0xda, 0x10, 0x26, 0xa1, 0xf0, 0x94,
+	0xaf, 0x91, 0x08, 0xab, 0xbc, 0x9e, 0xa4, 0x0c, 0xce, 0x3b, 0x68, 0x59, 0x32, 0xee, 0x8b, 0x29,
+	0x32, 0x06, 0x95, 0xcb, 0x70, 0x7a, 0x49, 0x8c, 0x55, 0x4e, 0x31, 0xdb, 0x85, 0xf2, 0x4c, 0x26,
+	0x16, 0x69, 0x42, 0xc7, 0x05, 0x18, 0xca, 0x50, 0xc4, 0x77, 0x31, 0xe5, 0xbb, 0x98, 0x72, 0x8a,
+	0xf9, 0x5d, 0x82, 0xee, 0x31, 0xea, 0x2f, 0x18, 0xc6, 0x0b, 0x85, 0xdc, 0x28, 0x1d, 0x89, 0x0b,
+	0xc9, 0xf1, 0xea, 0xbe, 0x36, 0xde, 0x43, 0x27, 0xb3, 0xe1, 0x29, 0x53, 0x99, 0xe8, 0x9b, 0xee,
+	0x9e, 0x05, 0xe4, 0x8d, 0xf0, 0x56, 0x92, 0xb7, 0xe5, 0x42, 0x73, 0x62, 0x04, 0x5b, 0x5c, 0x79,
+	0xad, 0xd0, 0xca, 0x0a, 0x87, 0xc9, 0x32, 0x76, 0x7e, 0x6d, 0x10, 0x1c, 0x47, 0xec, 0x15, 0x3c,
+	0x21, 0xa8, 0x17, 0xcd, 0xfc, 0x1b, 0x54, 0xd9, 0x08, 0x2b, 0xbc, 0x4d, 0xd7, 0xdf, 0xe8, 0x76,
+	0x14, 0x98, 0xce, 0x18, 0x42, 0xdb, 0x06, 0x8a, 0xd7, 0x86, 0x61, 0x74, 0x94, 0x96, 0xc3, 0x60,
+	0xaf, 0xa1, 0x81, 0x4a, 0x79, 0x13, 0x19, 0xe0, 0x41, 0x65, 0x50, 0x3a, 0xec, 0xb8, 0x1d, 0x2b,
+	0xf1, 0xb3, 0x52, 0x43, 0x19, 0x20, 0xaf, 0x63, 0x1a, 0x38, 0x3f, 0xa0, 0x3b, 0x46, 0xcd, 0x57,
+	0xd5, 0xc6, 0xda, 0x98, 0xc5, 0xab, 0x7b, 0x6b, 0x7b, 0x06, 0x8f, 0x05, 0x26, 0x5e, 0xac, 0xb3,
+	0xad, 0x68, 0xf0, 0x86, 0xc0, 0x84, 0x78, 0x9c, 0xd3, 0x62, 0xfa, 0x38, 0x62, 0x5d, 0xa8, 0x29,
+	0x8c, 0x17, 0x33, 0x4d, 0xac, 0x0d, 0x6e, 0x4f, 0x6b, 0xda, 0x77, 0xb6, 0x6b, 0xff, 0x09, 0xbd,
+	0x93, 0x28, 0xf0, 0xb5, 0x4f, 0xfc, 0xb9, 0x7d, 0x7e, 0x88, 0xfc, 0xdc, 0xeb, 0x49, 0x17, 0x33,
+	0x7b, 0x3d, 0x2f, 0x00, 0x04, 0x26, 0x96, 0xd1, 0x76, 0x38, 0x77, 0xe3, 0x9c, 0x6d, 0xac, 0xfe,
+	0x7f, 0xdc, 0x7d, 0x80, 0xdd, 0x51, 0x9c, 0xeb, 0xdc, 0x03, 0x4c, 0x39, 0x6f, 0x6e, 0x63, 0x37,
+	0x4b, 0x72, 0xff, 0xec, 0x40, 0x8b, 0x3e, 0x1d, 0xa3, 0xba, 0x0e, 0x27, 0xc8, 0x4e, 0xa1, 0x57,
+	0xb0, 0xae, 0x9f, 0x6e, 0xcc, 0x2f, 0x7b, 0x9e, 0x3d, 0xaa, 0xc2, 0x17, 0xd8, 0xdf, 0x96, 0x8e,
+	0x23, 0xe7, 0x11, 0x3b, 0x81, 0xbd, 0x82, 0x85, 0x58, 0xd2, 0x16, 0xef, 0x62, 0x7f, 0x5b, 0x9a,
+	0x68, 0xcf, 0xa0, 0x5b, 0x3c, 0x0c, 0x36, 0xb0, 0xd0, 0x8d, 0x9b, 0xd2, 0xff, 0xc7, 0x17, 0xc4,
+	0x3f, 0x84, 0xf6, 0x5a, 0x43, 0xd9, 0xbe, 0x05, 0xdd, 0x1e, 0x51, 0xbf, 0x38, 0x61, 0x48, 0xce,
+	0x6b, 0xf4, 0xef, 0xfd, 0xf6, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6c, 0xac, 0x71, 0x2f, 0xdf,
+	0x05, 0x00, 0x00,
 }

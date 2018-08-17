@@ -56,7 +56,7 @@ func (s *QiangGangHuSettleState) setMopaiPlayer(flow interfaces.MajongFlow) {
 	if !gutils.IsPlayerContinue(mopaiPlayer.GetXpState(), mjContext) {
 		mopaiPlayer = utils.GetNextXpPlayerByID(mopaiPlayerID, players, mjContext)
 	}
-	mjContext.MopaiPlayer = mopaiPlayer.GetPalyerId()
+	mjContext.MopaiPlayer = mopaiPlayer.GetPlayerId()
 	mjContext.MopaiType = majongpb.MopaiType_MT_NORMAL
 }
 
@@ -100,6 +100,7 @@ func (s *QiangGangHuSettleState) doQiangGangHuSettle(flow interfaces.MajongFlow)
 		GenCount:       genCount,
 		HuaCount:       huaCount,
 		SettleID:       mjContext.CurrentSettleId,
+		BaseCoin:       mjContext.BaseCoin,
 	}
 	settlerFactory := settle.SettlerFactory{}
 	settleInfos := settlerFactory.CreateHuSettler(mjContext.GameId).Settle(params)

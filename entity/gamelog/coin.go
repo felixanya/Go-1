@@ -12,6 +12,7 @@ type TGameSummary struct {
 	Scoreinfo     []int64         `json:" 	Scoreinfo     "`
 	Winnerids     []uint64        `json:"	Winnerids     "`
 	Roundcurrency []RoundCurrency `json:"	Roundcurrency "`
+	Gamestarttime time.Time       `json:"   Gamestarttime  "`
 	Gameovertime  time.Time       `json:"   GameoverTime  "`
 	Createtime    time.Time       `json:"	Createtime    "`
 	Createby      string          `json:"	Createby      "`
@@ -21,18 +22,20 @@ type TGameSummary struct {
 
 // TGameDetail 游戏明细
 type TGameDetail struct {
-	Detailid   int64     `json:" Detailid   "`
-	Sumaryid   int64     `json:" Sumaryid   "`
-	Playerid   uint64    `json:" Playerid   "`
-	Deskid     int64     `json:" Deskid     "`
-	Gameid     int       `json:" Gameid     "`
-	Amount     int64     `json:" Amount     "`
-	Iswinner   int       `json:" Iswinner   "`
-	MaxTimes   uint32    `json:" MaxTimes   "`
-	Createtime time.Time `json:" Createtime "`
-	Createby   string    `json:" Createby   "`
-	Updatetime time.Time `json:" Updatetime "`
-	Updateby   string    `json:" Updateby   "`
+	Detailid    int64     `json:" Detailid   "`
+	Sumaryid    int64     `json:" Sumaryid   "`
+	Playerid    uint64    `json:" Playerid   "`
+	Deskid      int64     `json:" Deskid     "`
+	Gameid      int       `json:" Gameid     "`
+	Levelid     int       `json:" Levelid    "`
+	Amount      int64     `json:" Amount     "`
+	Iswinner    int       `json:" Iswinner   "`
+	MaxTimes    uint32    `json:" MaxTimes   "`
+	BrokerCount int       `json:" BrokerCount"`
+	Createtime  time.Time `json:" Createtime "`
+	Createby    string    `json:" Createby   "`
+	Updatetime  time.Time `json:" Updatetime "`
+	Updateby    string    `json:" Updateby   "`
 }
 
 // RoundCurrency 对局金币流水

@@ -15,6 +15,8 @@ import (
 
 	"steve/servicelauncher/cmd"
 	"steve/structs"
+	"steve/datareport"
+	"steve/configuration/core"
 )
 
 // LoadService load service appointed by name
@@ -37,6 +39,10 @@ func LoadService() {
 		svr = gatewaycore.NewService()
 	case "gold":
 		svr = goldcore.NewService()
+	case "datareport":
+		svr = datareport.NewService()
+	case "config":
+		svr = core.NewService()
 	}
 	if svr != nil {
 		exposer := structs.GetGlobalExposer()
