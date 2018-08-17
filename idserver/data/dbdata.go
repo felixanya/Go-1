@@ -12,12 +12,75 @@ import (
 	作者： SkyWang
 	日期： 2018-8-15
 
+CREATE TABLE `t_show_id` (
+  `n_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '递增ID',
+  `n_showid` bigint(20) NOT NULL COMMENT 'show id 值',
+  `n_isUse` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否被使用',
+  PRIMARY KEY (`n_id`),
+  UNIQUE KEY `t_show_id_UN_showid` (`n_showid`),
+  KEY `t_show_id_n_isUse_IDX` (`n_isUse`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='showid记录表'
+
 */
 
 const dbName = "player"
 
 const TagPlayerId = 1
-const TagShowId = 2
+const TagMakeSum = 2
+
+
+// 获取每次生成号码数量，也是号码池维持号码总数
+func GetMakeSumFromDB() (uint64, error) {
+	exposer := structs.GetGlobalExposer()
+	engine, err := exposer.MysqlEngineMgr.GetEngine(dbName)
+	if err != nil {
+		return 0, fmt.Errorf("connect db error")
+	}
+
+	sql := fmt.Sprintf("select n_value from t_param  where n_id='%d';", TagMakeSum)
+	res, err := engine.QueryString(sql)
+	if err != nil {
+		return 0, err
+	}
+	if len(res) == 0 {
+		return 0, fmt.Errorf("make sum param no exist")
+	}
+	row := res[0]
+
+	sum, err := strconv.ParseUint(row["n_value"], 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("make sum parse error")
+	}
+	logrus.Debugf("GetMakeSumFromDB: sum=%d", sum)
+	return sum, nil
+}
+
+// 获取目前可用号码总数
+func GetCanUseSumFromDB() (uint64, error) {
+	exposer := structs.GetGlobalExposer()
+	engine, err := exposer.MysqlEngineMgr.GetEngine(dbName)
+	if err != nil {
+		return 0, fmt.Errorf("connect db error")
+	}
+
+	sql := fmt.Sprintf("select count(n_id) as 'can_sum' from t_show_id  where n_isUse='%d';", 0)
+	res, err := engine.QueryString(sql)
+	if err != nil {
+		return 0, err
+	}
+	if len(res) == 0 {
+		return 0, fmt.Errorf("can sum param no exist")
+	}
+	row := res[0]
+
+	sum, err := strconv.ParseUint(row["can_sum"], 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("can sum parse error")
+	}
+	logrus.Debugf("GetCanUseSumFromDB: sum=%d", sum)
+	return sum, nil
+}
+
 
 // 从DB生成一个playerId
 func NewPlayerIdFromDB() (uint64, error) {

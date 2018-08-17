@@ -18,6 +18,8 @@ import (
 
 var muLock *sync.Mutex // 锁
 
+var keepSum = uint64(100000)
+
 func Init() error {
 	muLock = new(sync.Mutex)
 	go runLogicTask()
@@ -26,6 +28,16 @@ func Init() error {
 
 // 运行逻辑任务
 func runLogicTask() {
+	sum, _ := data.GetMakeSumFromDB()
+	if sum >= 10000 {
+		keepSum = sum
+	}
+
+	can, _ := data.GetCanUseSumFromDB()
+	if can < keepSum/2 {
+
+	}
+
 	rand.Seed(int64(time.Now().UnixNano()))
 	for t := 0; t < 100; t++ {
 		makeNewShowId()
@@ -37,7 +49,6 @@ func runLogicTask() {
 			makeNewShowId()
 			time.Sleep(time.Millisecond * 50)
 		}
-
 	}
 }
 
