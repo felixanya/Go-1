@@ -55,6 +55,9 @@ func sendCreateDesk(desk matchDesk, globalInfo *levelGlobalInfo) {
 	// matchPlayer转换为deskPlayerInfo
 	deskPlayers := []*match.DeskPlayerInfo{}
 	for i := 0; i < len(desk.players); i++ {
+		// 给客户端扣除费用后的金币,实际扣除由room服开始游戏时扣除,李全林要求
+		desk.players[i].gold = desk.players[i].gold - globalInfo.fee
+
 		pDeskPlayer := translateToDeskPlayer(&desk.players[i])
 		if pDeskPlayer == nil {
 			logEntry.Errorln("把matchPlayer转换为deskPlayerInfo失败，跳过")

@@ -2,8 +2,6 @@
 配置数据库初始化脚本
 */
 
-
-
 /*商品表*/
 DELETE FROM `t_common_config` WHERE `key`="charge" AND `subkey`="item_list";
 INSERT `t_common_config`(`key`, `subkey`, `value`) values(
@@ -13,43 +11,67 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 40000",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 40000,
+                "name": "3万金豆",
+                "tag": "",
+                "price": 500,
+                "coin": 30000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 80000",
-                "tag": "特惠",
-                "price": 1200,
-                "coin": 80000,
+                "name": "3.6万金豆",
+                "tag": "",
+                "price": 600,
+                "coin": 36000,
                 "present_coin": 0
             },
             {
                 "item_id": 3,
-                "name": "金豆 200000",
-                "tag": "特惠",
-                "price": 3000,
-                "coin": 200000,
-                "present_coin": 0
+                "name": "6.2万金豆",
+                "tag": "",
+                "price": 1000,
+                "coin": 60000,
+                "present_coin": 2000
             },
             {
                 "item_id": 4,
-                "name": "金豆 680000",
-                "tag": "特惠",
-                "price": 9800,
-                "coin": 680000,
-                "present_coin": 0
+                "name": "7.4万金豆",
+                "tag": "",
+                "price": 1200,
+                "coin": 72000,
+                "present_coin": 2000
             },
             {
                 "item_id": 5,
-                "name": "金豆 1280000",
-                "tag": "特惠",
+                "name": "18.8万金豆",
+                "tag": "",
+                "price": 3000,
+                "coin": 180000,
+                "present_coin": 8000
+            },
+            {
+                "item_id": 6,
+                "name": "64万金豆",
+                "tag": "",
+                "price": 9800,
+                "coin": 588000,
+                "present_coin": 52000
+            },
+            {
+                "item_id": 7,
+                "name": "125万金豆",
+                "tag": "",
                 "price": 18800,
-                "coin": 1280000,
-                "present_coin": 0
+                "coin": 1128000,
+                "present_coin": 122000
+            },
+            {
+                "item_id": 8,
+                "name": "320万金豆",
+                "tag": "",
+                "price": 44800,
+                "coin": 2688000,
+                "present_coin": 512000
             }
         ]
     },
@@ -57,43 +79,67 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 40000",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 40000,
+                "name": "3万金豆",
+                "tag": "",
+                "price": 500,
+                "coin": 30000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 80000",
-                "tag": "特惠",
-                "price": 1200,
-                "coin": 80000,
+                "name": "3.6万金豆",
+                "tag": "",
+                "price": 600,
+                "coin": 36000,
                 "present_coin": 0
             },
             {
                 "item_id": 3,
-                "name": "金豆 200000",
-                "tag": "特惠",
-                "price": 3000,
-                "coin": 200000,
-                "present_coin": 0
+                "name": "6.2万金豆",
+                "tag": "",
+                "price": 1000,
+                "coin": 60000,
+                "present_coin": 2000
             },
             {
                 "item_id": 4,
-                "name": "金豆 680000",
-                "tag": "特惠",
-                "price": 9800,
-                "coin": 680000,
-                "present_coin": 0
+                "name": "7.4万金豆",
+                "tag": "",
+                "price": 1200,
+                "coin": 72000,
+                "present_coin": 2000
             },
             {
                 "item_id": 5,
-                "name": "金豆 1280000", 
-                "tag": "特惠",
+                "name": "18.8万金豆",
+                "tag": "",
+                "price": 3000,
+                "coin": 180000,
+                "present_coin": 8000
+            },
+            {
+                "item_id": 6,
+                "name": "64万金豆",
+                "tag": "",
+                "price": 9800,
+                "coin": 588000,
+                "present_coin": 52000
+            },
+            {
+                "item_id": 7,
+                "name": "125万金豆",
+                "tag": "",
                 "price": 18800,
-                "coin": 1280000,
-                "present_coin": 0
+                "coin": 1128000,
+                "present_coin": 122000
+            },
+            {
+                "item_id": 8,
+                "name": "320万金豆",
+                "tag": "",
+                "price": 44800,
+                "coin": 2688000,
+                "present_coin": 512000
             }
         ]
     }

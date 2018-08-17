@@ -4,6 +4,7 @@ import (
 	client_match_pb "steve/client_pb/match"
 	"steve/client_pb/msgid"
 	"steve/external/goldclient"
+	"steve/external/hallclient"
 	"steve/room/desk"
 	"steve/room/fixed"
 	playerpkg "steve/room/player"
@@ -234,17 +235,34 @@ func (model *ContinueModel) ContinueDesk(fixBanker bool, bankerSeat int, settleM
 
 	for _, playerID := range playerIDs {
 		player := playerMgr.GetPlayer(playerID)
-		if player == nil || player.GetDesk() != desk || player.IsQuit() { // 玩家已经退出牌桌，不续局
+		gateAddr, err := hallclient.GetGateAddr(playerID)
+		if err != nil {
+			entry.WithFields(logrus.Fields{"player_id": playerID}).WithError(err).Errorln("获取玩家网关地址失败")
+			gateAddr = ""
+		}
+		if player == nil || player.GetDesk() != desk || player.IsQuit() || gateAddr == "" { // 玩家已经退出牌桌，不续局
 			entry.WithFields(logrus.Fields{
 				"player_id": playerID,
 				"quited":    player.IsQuit(),
+				"gate_addr": gateAddr,
 			}).Debugln("玩家不满足续局条件")
-			messageModel := GetModelManager().GetMessageModel(desk.GetUid())
+
+			modelMgr := GetModelManager()
+			messageModel := modelMgr.GetMessageModel(desk.GetUid())
 			messageModel.BroadCastDeskMessage(nil, msgid.MsgID_MATCH_CONTINUE_DESK_DIMISS_NTF,
 				&client_match_pb.MatchContinueDeskDimissNtf{}, true)
+			modelMgr.StopDeskModel(model.GetDesk())
 			return
 		}
 	}
 
 	model.startContinue()
 }
+
+// 重新登录后取消续局
+// func
+
+// func init() {
+// 	exposer := structs.GetGlobalExposer()
+// 	exposer.Subscriber.Subscribe(constant.PlayerLogin, fmt.Sprintf("room_%d_continue", viper.GetInt("node")), )
+// }

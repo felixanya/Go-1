@@ -3,9 +3,12 @@ package models
 import (
 	"context"
 	"fmt"
+	"steve/external/configclient"
+	"steve/external/goldclient"
 	"steve/room/contexts"
 	deskpkg "steve/room/desk"
 	"steve/room/player"
+	"steve/server_pb/gold"
 	"steve/server_pb/room_mgr"
 	"sync"
 	"sync/atomic"
@@ -99,6 +102,28 @@ func (mgr *DeskManager) CreateDesk(ctx context.Context, req *roommgr.CreateDeskR
 	reportKey := cache.FmtGameReportKey(int(req.GetGameId()), int(desk.GetLevel())) //临时0
 	redisCli := redis.GetRedisClient()
 	redisCli.IncrBy(reportKey, int64(length))
+
+	// 场次配置
+	levelConf, err := configclient.GetGameLevelConfig(int(req.GameId), int(req.LevelId))
+	if err != nil {
+		logrus.WithError(err).Errorln("获取游戏级别配置失败！！")
+		return
+	}
+	fee := levelConf.Fee
+	if fee <= 0 {
+		if fee == 0 {
+			logrus.WithField("levelConf", levelConf).WithField("fee", fee).Info("场次费用为0，无需扣费")
+		} else {
+			logrus.WithField("levelConf", levelConf).WithField("fee", fee).Errorln("场次费用不合法")
+		}
+		return
+	}
+	for _, player := range players {
+		_, err := goldclient.AddGold(player.GetPlayerId(), int16(gold.GoldType_GOLD_COIN), int64(-fee), 0, 0, int32(req.GameId), int32(req.LevelId))
+		if err != nil {
+			logrus.WithField("player", player).WithField("fee", fee).Errorln("玩家扣台费失败")
+		}
+	}
 	return
 }
 
