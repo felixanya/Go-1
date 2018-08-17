@@ -18,7 +18,7 @@ func updatePlayerInfo(detailInfo gamelog.TGameDetail) error {
 	}
 	//总局数+1
 	playerGame.Totalbureau++
-	key := fmt.Sprintf("win_stream:%v@%v", playerGame.Playerid, playerGame.Gameid)
+	key := fmt.Sprintf("win_stream:%v@%v", detailInfo.Playerid, detailInfo.Gameid)
 	winStream, _ := data.GetPlayerMaxwinningstream(key)
 	if detailInfo.Amount > 0 {
 		//胜局+1
