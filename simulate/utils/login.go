@@ -122,7 +122,7 @@ func LoginPlayerByToken(playerID uint64, token string) (interfaces.ClientPlayer,
 // LoginPlayerYouke 登录游客
 func LoginPlayerYouke(imei string) (interfaces.ClientPlayer, error) {
 	loginData := login.LoginData{
-		Type:     login.LoginType(1).Enum(),
+		Type:     login.LoginType_VISITOR_LOGIN.Enum(),
 		Channel:  login.ChannelType_VISITOR.Enum(),
 		Username: proto.String(imei),
 		ProId:    proto.Uint64(55555),
