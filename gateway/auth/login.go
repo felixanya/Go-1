@@ -53,10 +53,9 @@ func HandleLoginRequest(clientID uint64, reqHeader *base.Header, body []byte) (r
 // execLogin 执行登录
 func execLogin(clientID uint64, clientRequest *login.LoginAuthReq) (clientResponse login.LoginAuthRsp) {
 	entry := logrus.WithFields(logrus.Fields{
-		"func_name":  "execLogin",
-		"client_id":  clientID,
-		"account_id": clientRequest.GetAccountId(),
-		"token":      clientRequest.GetToken(),
+		"func_name": "execLogin",
+		"client_id": clientID,
+		"request":   clientRequest.String(),
 	})
 	clientResponse = login.LoginAuthRsp{
 		ErrCode:  login.ErrorCode_ABNORMAL.Enum(),
