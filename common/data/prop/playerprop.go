@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Sirupsen/logrus"
-
 	"github.com/go-redis/redis"
 	"github.com/go-xorm/xorm"
 )
@@ -75,7 +73,7 @@ func GetPlayerAllProps(playerID uint64) (props []prop.Prop, err error) {
 			Count:  propsCount[uint64(attr.PropID)],
 		}
 	}
-	logrus.Debugf("获取玩家playerID:(%d)的所有道具,道具:(%v)", playerID, props)
+
 	return
 }
 

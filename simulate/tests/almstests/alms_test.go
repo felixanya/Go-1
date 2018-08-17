@@ -25,15 +25,19 @@ func Test_Alms_Login(t *testing.T) {
 // Test_Apply_Alms_Login 测试申请救济金登录
 
 func Test_Apply_Alms_Login(t *testing.T) {
-	player, _ := utils.LoginNewPlayer()
+	player, _ := utils.LoginNewPlayer(msgid.MsgID_ALMS_LOGIN_GOLD_CONFIG_NTF)
 	assert.NotNil(t, player)
+
+	expector2 := player.GetExpector(msgid.MsgID_ALMS_LOGIN_GOLD_CONFIG_NTF)
+	ntf2 := &alms.AlmsConfigNtf{}
+	assert.Nil(t, expector2.Recv(global.DefaultWaitMessageTime, ntf2))
 
 	player.AddExpectors(msgid.MsgID_ALMS_GET_GOLD_RSP)
 	client := player.GetClient()
 	reqType := alms.AlmsReqType_LOGIN
 	req := &alms.AlmsGetGoldReq{
 		ReqType: &reqType,
-		Version: proto.Int32(55),
+		Version: proto.Int32(ntf2.GetAlmsConfig().GetVersion()),
 	}
 	client.SendPackage(utils.CreateMsgHead(msgid.MsgID_ALMS_GET_GOLD_REQ), req)
 
@@ -48,12 +52,16 @@ func Test_Apply_Alms_XuanChang(t *testing.T) {
 	player, _ := utils.LoginNewPlayer()
 	assert.NotNil(t, player)
 
+	expector2 := player.GetExpector(msgid.MsgID_ALMS_LOGIN_GOLD_CONFIG_NTF)
+	ntf2 := &alms.AlmsConfigNtf{}
+	assert.Nil(t, expector2.Recv(global.DefaultWaitMessageTime, ntf2))
+
 	player.AddExpectors(msgid.MsgID_ALMS_GET_GOLD_RSP)
 	client := player.GetClient()
 	reqType := alms.AlmsReqType_SELECTED
 	req := &alms.AlmsGetGoldReq{
 		ReqType: &reqType,
-		Version: proto.Int32(55),
+		Version: proto.Int32(ntf2.GetAlmsConfig().GetVersion()),
 		GameId:  proto.Int32(4),
 		LevelId: proto.Int32(4),
 	}

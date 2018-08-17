@@ -49,6 +49,7 @@ type MajongSettle struct {
 
 	waitPlayers []uint64 // 等待处理的破产玩家
 
+	finish chan int
 }
 
 // NewMajongSettle 初始化麻将结算
@@ -141,6 +142,9 @@ func (majongSettle *MajongSettle) settleAutoEvent(desk *desk.Desk, settleType ma
 	}
 	for {
 		select {
+		case <-majongSettle.finish:
+			majongSettle.pushSettleEvent(desk, settleType)
+			return
 		case <-time.NewTicker(time.Second * 15).C:
 			{
 				majongSettle.pushSettleEvent(desk, settleType)

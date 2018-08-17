@@ -113,47 +113,70 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     'prop', 
     'interactive',
     '[
-            {
-                "propID": 1,
-                "name": "rose",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 2,
-                "name": "beer",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 3,
-                "name": "bomb",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 4,
-                "name": "grabChicken",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 5,
-                "name": "eggGun",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-10000,
-                "attrLimit":500000
-            }
-    ]
+		{
+			"propID": 1,
+			"name": "rose",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"rose_sm"
+		},
+		{
+			"propID": 2,
+			"name": "beer",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"beer_sm"
+		},
+		{
+			"propID": 3,
+			"name": "bomb",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"bomb_sm"
+		},
+		{
+			"propID": 4,
+			"name": "grabChicken",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"grabChicken_sm"
+		},
+		{
+			"propID": 5,
+			"name": "eggGun",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-10000,
+			"attrLimit":500000,
+			"describe":"eggGun_sm"
+		},
+		{
+			"propID": 6,
+			"name": "voucher",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-10000,
+			"attrLimit":500000,
+			"describe":"voucher_sm"
+		},
+		{
+			"propID": 7,
+			"name": "game",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-10000,
+			"attrLimit":500000,
+			"describe":"game_sm"
+		}
+     ]
     '
 ); 
 

@@ -20,7 +20,7 @@ func updatePlayerInfo(detailInfo gamelog.TGameDetail) error {
 	playerGame.Totalbureau++
 	key := fmt.Sprintf("win_stream:%v@%v", playerGame.Playerid, playerGame.Gameid)
 	winStream, _ := data.GetPlayerMaxwinningstream(key)
-	logrus.Debugf("GetPlayerMaxwinningstream:(%v)", winStream)
+	
 	if detailInfo.Amount > 0 {
 		//胜局+1
 		playerGame.Winningburea++
@@ -30,14 +30,14 @@ func updatePlayerInfo(detailInfo gamelog.TGameDetail) error {
 		//输了，连胜终结
 		winStream = 0
 	}
-	logrus.Debugf("GetPlayerMaxwinningstream2:(%v)", winStream)
+	
 
 	//储存最新连胜
 	// MaxBurea.Store(key, winStream)
 	if err := data.SetPlayerMaxwinningstream(key, winStream); err != nil {
 		logrus.Errorf("failed set maxSream to redis,err:%v", err)
 	}
-	logrus.Debugf("GetPlayerMaxwinningstream3:(%v):(%v)", winStream, playerGame.Maxwinningstream)
+	
 
 	if winStream > playerGame.Maxwinningstream {
 		// 更新连胜
