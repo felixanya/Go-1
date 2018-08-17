@@ -59,6 +59,7 @@ func NewMajongSettle() *MajongSettle {
 		roundScore:    make(map[uint64]int64),
 		revertScore:   make(map[uint64]MajongCoin),
 		brokerPlayers: make([]uint64, 0),
+		finish:        make(chan int),
 	}
 }
 
@@ -79,7 +80,8 @@ func (majongSettle *MajongSettle) HandleBrokerPlayer(desk *desk.Desk, pid uint64
 	logrus.Debugf("破产玩家：(%v)", majongSettle.brokerPlayers)
 	majongSettle.brokerPlayers = utils.DeletePlayerIDFromLast(majongSettle.brokerPlayers, pid)
 	if len(majongSettle.brokerPlayers) == 0 {
-		majongSettle.pushSettleEvent(desk, majongpb.SettleType_settle_angang)
+		majongSettle.finish <- 1
+		close(majongSettle.finish)
 	}
 	return
 }
@@ -90,6 +92,7 @@ func (majongSettle *MajongSettle) normalSettle(desk *desk.Desk, mjContext *majon
 	modelMgr := GetModelManager()
 	deskID := desk.GetUid()
 	deskPlayers := modelMgr.GetPlayerModel(deskID).GetDeskPlayers()
+	giveUpPlayers := getGiveupPlayers(deskPlayers, mjContext) // 认输玩家
 
 	for _, sInfo := range allSettleInfos { // 遍历
 		if majongSettle.handleSettle[sInfo.Id] {
@@ -118,31 +121,55 @@ func (majongSettle *MajongSettle) normalSettle(desk *desk.Desk, mjContext *majon
 		if CanInstantSettle(sInfo.SettleType, settleOption) { // 立即结算
 			majongSettle.instantSettle(desk, sInfo, score)
 		}
-		go majongSettle.settleAutoEvent(desk, sInfo.SettleType)
+		go majongSettle.settleAutoEvent(desk, sInfo.SettleType, giveUpPlayers)
 	}
 }
 
 // settleAutoEvent 结算自动事件
-func (majongSettle *MajongSettle) settleAutoEvent(desk *desk.Desk, settleType majongpb.SettleType) {
+func (majongSettle *MajongSettle) settleAutoEvent(desk *desk.Desk, settleType majongpb.SettleType, giveUpPlayers map[uint64]bool) {
 	if len(majongSettle.brokerPlayers) == 0 {
-		majongSettle.pushSettleEvent(desk, settleType)
+		majongSettle.pushSettleEvent(desk, settleType, giveUpPlayers)
 		return
 	}
 	for {
 		select {
 		case <-majongSettle.finish:
-			majongSettle.pushSettleEvent(desk, settleType)
+			majongSettle.pushSettleEvent(desk, settleType, giveUpPlayers)
 			return
 		case <-time.NewTicker(time.Second * 15).C:
 			{
-				majongSettle.pushSettleEvent(desk, settleType)
+				majongSettle.pushSettleEvent(desk, settleType, giveUpPlayers)
 				return
 			}
 		}
 	}
 }
 
-func (majongSettle *MajongSettle) pushSettleEvent(desks *desk.Desk, settleType majongpb.SettleType) {
+func (majongSettle *MajongSettle) pushSettleEvent(desks *desk.Desk, settleType majongpb.SettleType, giveUpPlayers map[uint64]bool) {
+	if len(majongSettle.brokerPlayers) != 0 {
+		modelMgr := GetModelManager()
+		deskID := desks.GetUid()
+		messageModel := modelMgr.GetMessageModel(deskID)
+
+		needSend := make([]uint64, 0)
+		for _, brokerPlayer := range majongSettle.brokerPlayers {
+			if !giveUpPlayers[brokerPlayer] {
+				needSend = append(needSend, brokerPlayer)
+			}
+		}
+		// 查花猪、查大叫、退税阶段不需要发送认输
+		notNeedSend := map[majongpb.SettleType]bool{
+			majongpb.SettleType_settle_yell:      true,
+			majongpb.SettleType_settle_flowerpig: true,
+			majongpb.SettleType_settle_taxrebeat: true,
+		}
+		if !notNeedSend[settleType] {
+			// 广播认输
+			messageModel.BroadCastDeskMessageExcept([]uint64{}, true, msgid.MsgID_ROOM_PLAYER_GIVEUP_NTF, &room.RoomGiveUpNtf{
+				PlayerId: needSend,
+			})
+		}
+	}
 	needEvent := map[majongpb.SettleType]bool{
 		majongpb.SettleType_settle_angang:   true,
 		majongpb.SettleType_settle_bugang:   true,
