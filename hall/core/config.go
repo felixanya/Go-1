@@ -29,7 +29,7 @@ func InitServer() error {
 	logic.InitGameConfig()
 
 	//  初始化角色配置
-	logic.InitRoleConfig()
+	// logic.InitRoleConfig()
 	return nil
 }
 
