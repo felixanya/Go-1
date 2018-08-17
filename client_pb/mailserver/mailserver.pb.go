@@ -49,7 +49,7 @@ func (x *GoodsType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 func (GoodsType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{0}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{0}
 }
 
 // 物品定义
@@ -66,7 +66,7 @@ func (m *Goods) Reset()         { *m = Goods{} }
 func (m *Goods) String() string { return proto.CompactTextString(m) }
 func (*Goods) ProtoMessage()    {}
 func (*Goods) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{0}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{0}
 }
 func (m *Goods) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Goods.Unmarshal(m, b)
@@ -120,7 +120,7 @@ func (m *MailSvrGetUnReadSumReq) Reset()         { *m = MailSvrGetUnReadSumReq{}
 func (m *MailSvrGetUnReadSumReq) String() string { return proto.CompactTextString(m) }
 func (*MailSvrGetUnReadSumReq) ProtoMessage()    {}
 func (*MailSvrGetUnReadSumReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{1}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{1}
 }
 func (m *MailSvrGetUnReadSumReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrGetUnReadSumReq.Unmarshal(m, b)
@@ -162,7 +162,7 @@ func (m *MailSvrGetUnReadSumRsp) Reset()         { *m = MailSvrGetUnReadSumRsp{}
 func (m *MailSvrGetUnReadSumRsp) String() string { return proto.CompactTextString(m) }
 func (*MailSvrGetUnReadSumRsp) ProtoMessage()    {}
 func (*MailSvrGetUnReadSumRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{2}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{2}
 }
 func (m *MailSvrGetUnReadSumRsp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrGetUnReadSumRsp.Unmarshal(m, b)
@@ -219,7 +219,7 @@ func (m *MailTitle) Reset()         { *m = MailTitle{} }
 func (m *MailTitle) String() string { return proto.CompactTextString(m) }
 func (*MailTitle) ProtoMessage()    {}
 func (*MailTitle) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{3}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{3}
 }
 func (m *MailTitle) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailTitle.Unmarshal(m, b)
@@ -287,7 +287,7 @@ func (m *MailSvrGetMailListReq) Reset()         { *m = MailSvrGetMailListReq{} }
 func (m *MailSvrGetMailListReq) String() string { return proto.CompactTextString(m) }
 func (*MailSvrGetMailListReq) ProtoMessage()    {}
 func (*MailSvrGetMailListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{4}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{4}
 }
 func (m *MailSvrGetMailListReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrGetMailListReq.Unmarshal(m, b)
@@ -329,7 +329,7 @@ func (m *MailSvrGetMailListRsp) Reset()         { *m = MailSvrGetMailListRsp{} }
 func (m *MailSvrGetMailListRsp) String() string { return proto.CompactTextString(m) }
 func (*MailSvrGetMailListRsp) ProtoMessage()    {}
 func (*MailSvrGetMailListRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{5}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{5}
 }
 func (m *MailSvrGetMailListRsp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrGetMailListRsp.Unmarshal(m, b)
@@ -378,7 +378,8 @@ type MailDetail struct {
 	IsRead               *int32   `protobuf:"varint,4,opt,name=is_read,json=isRead" json:"is_read,omitempty"`
 	CreateTime           *string  `protobuf:"bytes,5,opt,name=create_time,json=createTime" json:"create_time,omitempty"`
 	Content              *string  `protobuf:"bytes,6,opt,name=content" json:"content,omitempty"`
-	AttachGoods          []*Goods `protobuf:"bytes,7,rep,name=attach_goods,json=attachGoods" json:"attach_goods,omitempty"`
+	AttachGoods          *Goods   `protobuf:"bytes,7,opt,name=attach_goods,json=attachGoods" json:"attach_goods,omitempty"`
+	DelTime              *string  `protobuf:"bytes,8,opt,name=del_time,json=delTime" json:"del_time,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -388,7 +389,7 @@ func (m *MailDetail) Reset()         { *m = MailDetail{} }
 func (m *MailDetail) String() string { return proto.CompactTextString(m) }
 func (*MailDetail) ProtoMessage()    {}
 func (*MailDetail) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{6}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{6}
 }
 func (m *MailDetail) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailDetail.Unmarshal(m, b)
@@ -450,11 +451,18 @@ func (m *MailDetail) GetContent() string {
 	return ""
 }
 
-func (m *MailDetail) GetAttachGoods() []*Goods {
+func (m *MailDetail) GetAttachGoods() *Goods {
 	if m != nil {
 		return m.AttachGoods
 	}
 	return nil
+}
+
+func (m *MailDetail) GetDelTime() string {
+	if m != nil && m.DelTime != nil {
+		return *m.DelTime
+	}
+	return ""
 }
 
 // msgid:MAILSVR_GET_MAIL_DETAIL_REQ = 0x5005; 	// 获取指定邮件详情请求
@@ -470,7 +478,7 @@ func (m *MailSvrGetMailDetailReq) Reset()         { *m = MailSvrGetMailDetailReq
 func (m *MailSvrGetMailDetailReq) String() string { return proto.CompactTextString(m) }
 func (*MailSvrGetMailDetailReq) ProtoMessage()    {}
 func (*MailSvrGetMailDetailReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{7}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{7}
 }
 func (m *MailSvrGetMailDetailReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrGetMailDetailReq.Unmarshal(m, b)
@@ -512,7 +520,7 @@ func (m *MailSvrGetMailDetailRsp) Reset()         { *m = MailSvrGetMailDetailRsp
 func (m *MailSvrGetMailDetailRsp) String() string { return proto.CompactTextString(m) }
 func (*MailSvrGetMailDetailRsp) ProtoMessage()    {}
 func (*MailSvrGetMailDetailRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{8}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{8}
 }
 func (m *MailSvrGetMailDetailRsp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrGetMailDetailRsp.Unmarshal(m, b)
@@ -566,7 +574,7 @@ func (m *MailSvrSetReadTagReq) Reset()         { *m = MailSvrSetReadTagReq{} }
 func (m *MailSvrSetReadTagReq) String() string { return proto.CompactTextString(m) }
 func (*MailSvrSetReadTagReq) ProtoMessage()    {}
 func (*MailSvrSetReadTagReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{9}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{9}
 }
 func (m *MailSvrSetReadTagReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrSetReadTagReq.Unmarshal(m, b)
@@ -607,7 +615,7 @@ func (m *MailSvrSetReadTagRsp) Reset()         { *m = MailSvrSetReadTagRsp{} }
 func (m *MailSvrSetReadTagRsp) String() string { return proto.CompactTextString(m) }
 func (*MailSvrSetReadTagRsp) ProtoMessage()    {}
 func (*MailSvrSetReadTagRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{10}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{10}
 }
 func (m *MailSvrSetReadTagRsp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrSetReadTagRsp.Unmarshal(m, b)
@@ -641,7 +649,7 @@ func (m *MailSvrSetReadTagRsp) GetErrDesc() string {
 	return ""
 }
 
-// msgid:MAILSVR_DEL_MAIL_REQ = 0x5007; 			// 删除邮件请求
+// msgid:MAILSVR_DEL_MAIL_REQ = 0x5009; 			// 删除邮件请求
 // 删除邮件请求
 type MailSvrDelMailReq struct {
 	MailId               *uint64  `protobuf:"varint,1,opt,name=mail_id,json=mailId" json:"mail_id,omitempty"`
@@ -654,7 +662,7 @@ func (m *MailSvrDelMailReq) Reset()         { *m = MailSvrDelMailReq{} }
 func (m *MailSvrDelMailReq) String() string { return proto.CompactTextString(m) }
 func (*MailSvrDelMailReq) ProtoMessage()    {}
 func (*MailSvrDelMailReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{11}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{11}
 }
 func (m *MailSvrDelMailReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrDelMailReq.Unmarshal(m, b)
@@ -681,7 +689,7 @@ func (m *MailSvrDelMailReq) GetMailId() uint64 {
 	return 0
 }
 
-// msgid:MAILSVR_DEL_MAIL_RSP = 0x5008; 			// 删除邮件应答
+// msgid:MAILSVR_DEL_MAIL_RSP = 0x500A; 			// 删除邮件应答
 // 删除邮件回复
 type MailSvrDelMailRsp struct {
 	ErrCode              *int32   `protobuf:"varint,1,opt,name=err_code,json=errCode" json:"err_code,omitempty"`
@@ -695,7 +703,7 @@ func (m *MailSvrDelMailRsp) Reset()         { *m = MailSvrDelMailRsp{} }
 func (m *MailSvrDelMailRsp) String() string { return proto.CompactTextString(m) }
 func (*MailSvrDelMailRsp) ProtoMessage()    {}
 func (*MailSvrDelMailRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{12}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{12}
 }
 func (m *MailSvrDelMailRsp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrDelMailRsp.Unmarshal(m, b)
@@ -729,7 +737,7 @@ func (m *MailSvrDelMailRsp) GetErrDesc() string {
 	return ""
 }
 
-// msgid:MAILSVR_AWARD_ATTACH_REQ = 0x5009; 		// 领取附件奖励请求
+// msgid:MAILSVR_AWARD_ATTACH_REQ = 0x500B; 		// 领取附件奖励请求
 // 领取附件奖励请求
 type MailSvrAwardAttachReq struct {
 	MailId               *uint64  `protobuf:"varint,1,opt,name=mail_id,json=mailId" json:"mail_id,omitempty"`
@@ -742,7 +750,7 @@ func (m *MailSvrAwardAttachReq) Reset()         { *m = MailSvrAwardAttachReq{} }
 func (m *MailSvrAwardAttachReq) String() string { return proto.CompactTextString(m) }
 func (*MailSvrAwardAttachReq) ProtoMessage()    {}
 func (*MailSvrAwardAttachReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{13}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{13}
 }
 func (m *MailSvrAwardAttachReq) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrAwardAttachReq.Unmarshal(m, b)
@@ -769,7 +777,7 @@ func (m *MailSvrAwardAttachReq) GetMailId() uint64 {
 	return 0
 }
 
-// msgid:MAILSVR_AWARD_ATTACH_RSP = 0x500A; 		// 领取附件奖励应答
+// msgid:MAILSVR_AWARD_ATTACH_RSP = 0x500C; 		// 领取附件奖励应答
 // 领取附件奖励回复
 type MailSvrAwardAttachRsp struct {
 	ErrCode              *int32   `protobuf:"varint,1,opt,name=err_code,json=errCode" json:"err_code,omitempty"`
@@ -784,7 +792,7 @@ func (m *MailSvrAwardAttachRsp) Reset()         { *m = MailSvrAwardAttachRsp{} }
 func (m *MailSvrAwardAttachRsp) String() string { return proto.CompactTextString(m) }
 func (*MailSvrAwardAttachRsp) ProtoMessage()    {}
 func (*MailSvrAwardAttachRsp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_mailserver_2c93cc521160c54b, []int{14}
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{14}
 }
 func (m *MailSvrAwardAttachRsp) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MailSvrAwardAttachRsp.Unmarshal(m, b)
@@ -825,6 +833,173 @@ func (m *MailSvrAwardAttachRsp) GetAttachGoods() []*Goods {
 	return nil
 }
 
+// AD信息
+type ADInfo struct {
+	AdId                 *uint64  `protobuf:"varint,1,opt,name=ad_id,json=adId" json:"ad_id,omitempty"`
+	AdTick               *int32   `protobuf:"varint,2,opt,name=ad_tick,json=adTick" json:"ad_tick,omitempty"`
+	PicUrl               *string  `protobuf:"bytes,3,opt,name=pic_url,json=picUrl" json:"pic_url,omitempty"`
+	GoUrl                *string  `protobuf:"bytes,4,opt,name=go_url,json=goUrl" json:"go_url,omitempty"`
+	AdParam              *string  `protobuf:"bytes,5,opt,name=ad_param,json=adParam" json:"ad_param,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ADInfo) Reset()         { *m = ADInfo{} }
+func (m *ADInfo) String() string { return proto.CompactTextString(m) }
+func (*ADInfo) ProtoMessage()    {}
+func (*ADInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{15}
+}
+func (m *ADInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ADInfo.Unmarshal(m, b)
+}
+func (m *ADInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ADInfo.Marshal(b, m, deterministic)
+}
+func (dst *ADInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ADInfo.Merge(dst, src)
+}
+func (m *ADInfo) XXX_Size() int {
+	return xxx_messageInfo_ADInfo.Size(m)
+}
+func (m *ADInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_ADInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ADInfo proto.InternalMessageInfo
+
+func (m *ADInfo) GetAdId() uint64 {
+	if m != nil && m.AdId != nil {
+		return *m.AdId
+	}
+	return 0
+}
+
+func (m *ADInfo) GetAdTick() int32 {
+	if m != nil && m.AdTick != nil {
+		return *m.AdTick
+	}
+	return 0
+}
+
+func (m *ADInfo) GetPicUrl() string {
+	if m != nil && m.PicUrl != nil {
+		return *m.PicUrl
+	}
+	return ""
+}
+
+func (m *ADInfo) GetGoUrl() string {
+	if m != nil && m.GoUrl != nil {
+		return *m.GoUrl
+	}
+	return ""
+}
+
+func (m *ADInfo) GetAdParam() string {
+	if m != nil && m.AdParam != nil {
+		return *m.AdParam
+	}
+	return ""
+}
+
+// msgid:MAILSVR_GET_AD_REQ = 0x500D; 			// 获取广告位请求
+// 获取广告位请求
+type MailSvrGetADReq struct {
+	PlayerId             *uint64  `protobuf:"varint,1,opt,name=player_id,json=playerId" json:"player_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *MailSvrGetADReq) Reset()         { *m = MailSvrGetADReq{} }
+func (m *MailSvrGetADReq) String() string { return proto.CompactTextString(m) }
+func (*MailSvrGetADReq) ProtoMessage()    {}
+func (*MailSvrGetADReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{16}
+}
+func (m *MailSvrGetADReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MailSvrGetADReq.Unmarshal(m, b)
+}
+func (m *MailSvrGetADReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MailSvrGetADReq.Marshal(b, m, deterministic)
+}
+func (dst *MailSvrGetADReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MailSvrGetADReq.Merge(dst, src)
+}
+func (m *MailSvrGetADReq) XXX_Size() int {
+	return xxx_messageInfo_MailSvrGetADReq.Size(m)
+}
+func (m *MailSvrGetADReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_MailSvrGetADReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MailSvrGetADReq proto.InternalMessageInfo
+
+func (m *MailSvrGetADReq) GetPlayerId() uint64 {
+	if m != nil && m.PlayerId != nil {
+		return *m.PlayerId
+	}
+	return 0
+}
+
+// msgid:MAILSVR_GET_AD_RSP = 0x500E; 			// 获取广告位应答
+// 获取广告位回复
+type MailSvrGetADRsp struct {
+	ErrCode              *int32    `protobuf:"varint,1,opt,name=err_code,json=errCode" json:"err_code,omitempty"`
+	ErrDesc              *string   `protobuf:"bytes,2,opt,name=err_desc,json=errDesc" json:"err_desc,omitempty"`
+	AdList               []*ADInfo `protobuf:"bytes,3,rep,name=ad_list,json=adList" json:"ad_list,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *MailSvrGetADRsp) Reset()         { *m = MailSvrGetADRsp{} }
+func (m *MailSvrGetADRsp) String() string { return proto.CompactTextString(m) }
+func (*MailSvrGetADRsp) ProtoMessage()    {}
+func (*MailSvrGetADRsp) Descriptor() ([]byte, []int) {
+	return fileDescriptor_mailserver_4a20e9f261c659b3, []int{17}
+}
+func (m *MailSvrGetADRsp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_MailSvrGetADRsp.Unmarshal(m, b)
+}
+func (m *MailSvrGetADRsp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_MailSvrGetADRsp.Marshal(b, m, deterministic)
+}
+func (dst *MailSvrGetADRsp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MailSvrGetADRsp.Merge(dst, src)
+}
+func (m *MailSvrGetADRsp) XXX_Size() int {
+	return xxx_messageInfo_MailSvrGetADRsp.Size(m)
+}
+func (m *MailSvrGetADRsp) XXX_DiscardUnknown() {
+	xxx_messageInfo_MailSvrGetADRsp.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MailSvrGetADRsp proto.InternalMessageInfo
+
+func (m *MailSvrGetADRsp) GetErrCode() int32 {
+	if m != nil && m.ErrCode != nil {
+		return *m.ErrCode
+	}
+	return 0
+}
+
+func (m *MailSvrGetADRsp) GetErrDesc() string {
+	if m != nil && m.ErrDesc != nil {
+		return *m.ErrDesc
+	}
+	return ""
+}
+
+func (m *MailSvrGetADRsp) GetAdList() []*ADInfo {
+	if m != nil {
+		return m.AdList
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Goods)(nil), "msgserver.Goods")
 	proto.RegisterType((*MailSvrGetUnReadSumReq)(nil), "msgserver.MailSvrGetUnReadSumReq")
@@ -841,46 +1016,57 @@ func init() {
 	proto.RegisterType((*MailSvrDelMailRsp)(nil), "msgserver.MailSvrDelMailRsp")
 	proto.RegisterType((*MailSvrAwardAttachReq)(nil), "msgserver.MailSvrAwardAttachReq")
 	proto.RegisterType((*MailSvrAwardAttachRsp)(nil), "msgserver.MailSvrAwardAttachRsp")
+	proto.RegisterType((*ADInfo)(nil), "msgserver.ADInfo")
+	proto.RegisterType((*MailSvrGetADReq)(nil), "msgserver.MailSvrGetADReq")
+	proto.RegisterType((*MailSvrGetADRsp)(nil), "msgserver.MailSvrGetADRsp")
 	proto.RegisterEnum("msgserver.GoodsType", GoodsType_name, GoodsType_value)
 }
 
-func init() { proto.RegisterFile("mailserver.proto", fileDescriptor_mailserver_2c93cc521160c54b) }
+func init() { proto.RegisterFile("mailserver.proto", fileDescriptor_mailserver_4a20e9f261c659b3) }
 
-var fileDescriptor_mailserver_2c93cc521160c54b = []byte{
-	// 560 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0xdd, 0x6e, 0xd3, 0x4c,
-	0x10, 0xfd, 0xfc, 0xa5, 0xf9, 0xf1, 0xa4, 0x2a, 0xc1, 0xb4, 0xd4, 0xfc, 0x89, 0xc8, 0xe2, 0x22,
-	0x42, 0x90, 0x40, 0x0a, 0x0f, 0x50, 0x08, 0x0a, 0x91, 0x5a, 0x12, 0x39, 0xe1, 0x02, 0x6e, 0x96,
-	0xc5, 0x3b, 0x4a, 0x57, 0xb2, 0x63, 0xb3, 0xbb, 0x09, 0xca, 0x0d, 0x42, 0xbc, 0x0a, 0x8f, 0xc8,
-	0x0b, 0xa0, 0xdd, 0x75, 0x1d, 0x35, 0xa4, 0x2d, 0xca, 0x15, 0x77, 0xbb, 0x33, 0xe7, 0xcc, 0x9c,
-	0x39, 0x3b, 0x4e, 0xa0, 0x91, 0x50, 0x1e, 0x4b, 0x14, 0x0b, 0x14, 0xed, 0x4c, 0xa4, 0x2a, 0xf5,
-	0xdc, 0x44, 0x4e, 0x6d, 0x20, 0x50, 0x50, 0xee, 0xa7, 0x29, 0x93, 0xde, 0x11, 0xc0, 0x54, 0x1f,
-	0x88, 0x5a, 0x66, 0xe8, 0x3b, 0x4d, 0xa7, 0xb5, 0xd7, 0xdd, 0x6f, 0x17, 0xc0, 0xb6, 0x41, 0x4d,
-	0x96, 0x19, 0x86, 0xee, 0xf4, 0xfc, 0xe8, 0xdd, 0x81, 0x9a, 0x25, 0x71, 0xe6, 0xff, 0xdf, 0x74,
-	0x5a, 0xe5, 0xb0, 0x6a, 0xee, 0x03, 0xe6, 0xdd, 0x03, 0x8b, 0x23, 0xb3, 0x79, 0xe2, 0x97, 0x4c,
-	0xce, 0x62, 0xdf, 0xcd, 0x93, 0xe0, 0x25, 0xdc, 0x3e, 0xa5, 0x3c, 0x1e, 0x2f, 0x44, 0x1f, 0xd5,
-	0xfb, 0x59, 0x88, 0x94, 0x8d, 0xe7, 0x49, 0x88, 0x5f, 0x34, 0x2d, 0x8b, 0xe9, 0x12, 0x85, 0x2e,
-	0xa9, 0x55, 0xec, 0x84, 0x35, 0x1b, 0x18, 0xb0, 0xe0, 0xd3, 0x66, 0x9a, 0xcc, 0xb4, 0x10, 0x14,
-	0x82, 0x44, 0x29, 0xb3, 0xda, 0xcb, 0x61, 0x15, 0x85, 0x78, 0x9d, 0x32, 0x3c, 0x4f, 0x31, 0x94,
-	0x91, 0xd1, 0xe8, 0x9a, 0x54, 0x0f, 0x65, 0xe4, 0x35, 0xa0, 0x24, 0x0b, 0x75, 0xfa, 0x18, 0xfc,
-	0x74, 0xc0, 0xd5, 0x2d, 0x26, 0x5c, 0xc5, 0xe8, 0x1d, 0x42, 0x55, 0x7b, 0xb7, 0x92, 0x52, 0xd1,
-	0xd7, 0x01, 0xf3, 0x1e, 0x00, 0x98, 0x84, 0xd2, 0xb0, 0xbc, 0xaa, 0x9b, 0x14, 0xbc, 0x47, 0xb0,
-	0xc7, 0x25, 0x39, 0xa3, 0x0b, 0x24, 0x54, 0x29, 0x1a, 0x9d, 0xe5, 0x2d, 0x76, 0xb9, 0x7c, 0x4b,
-	0x17, 0x78, 0x6c, 0x62, 0xba, 0x3a, 0x97, 0x44, 0x20, 0x65, 0xfe, 0x8e, 0x49, 0x57, 0xb8, 0xd4,
-	0x23, 0x79, 0x0f, 0xa1, 0x1e, 0x09, 0xa4, 0x0a, 0x89, 0xe2, 0x09, 0xfa, 0x65, 0x53, 0x1e, 0x6c,
-	0x68, 0xc2, 0x13, 0x0c, 0x5e, 0xc0, 0xc1, 0xca, 0x07, 0x7d, 0x3a, 0xe1, 0x52, 0x5d, 0xeb, 0xde,
-	0x77, 0x67, 0x23, 0x6d, 0x6b, 0xf7, 0x9e, 0x83, 0x19, 0x99, 0xc4, 0x5c, 0x2a, 0xbf, 0xd4, 0x2c,
-	0xb5, 0xea, 0x17, 0x16, 0xa6, 0xb0, 0x31, 0xac, 0x25, 0x79, 0xaf, 0xe0, 0x97, 0x03, 0xa0, 0xe3,
-	0x3d, 0x54, 0x94, 0xc7, 0xff, 0xaa, 0xbf, 0x9e, 0x0f, 0xd5, 0x28, 0x9d, 0x29, 0x9c, 0x29, 0xbf,
-	0x62, 0x67, 0xce, 0xaf, 0xde, 0x11, 0xec, 0xda, 0x8e, 0xc4, 0xec, 0xb2, 0x5f, 0x35, 0x63, 0x37,
-	0xd6, 0xbf, 0x93, 0xb0, 0x6e, 0x51, 0xe6, 0x12, 0x74, 0xe1, 0xf0, 0xa2, 0xef, 0x76, 0x7c, 0xfd,
-	0x60, 0x97, 0x39, 0x10, 0x7c, 0xbb, 0x84, 0xb3, 0xf5, 0x6b, 0x3d, 0x85, 0x0a, 0x33, 0x25, 0x8c,
-	0x57, 0xf5, 0xee, 0xc1, 0xda, 0x53, 0xe5, 0xf5, 0x73, 0x50, 0xd0, 0x81, 0xfd, 0xbc, 0xff, 0x18,
-	0x95, 0x76, 0x6d, 0x42, 0xa7, 0x57, 0x0a, 0x3e, 0xd9, 0x44, 0xd8, 0x56, 0x6d, 0xf0, 0x04, 0x6e,
-	0xe6, 0xd5, 0x7a, 0x18, 0x9f, 0x5e, 0x67, 0xd6, 0xe0, 0x0f, 0xf4, 0xd6, 0x8d, 0x9f, 0x15, 0xdf,
-	0xc8, 0xf1, 0x57, 0x2a, 0x98, 0x5d, 0xa5, 0x2b, 0x9b, 0xff, 0x70, 0x36, 0x52, 0xb6, 0x7e, 0xa8,
-	0xf5, 0x15, 0x2b, 0xfd, 0xc5, 0x8a, 0x3d, 0x6e, 0x82, 0x5b, 0xfc, 0x40, 0x7b, 0xb7, 0xe0, 0x46,
-	0x7f, 0x38, 0xec, 0x8d, 0x27, 0x1f, 0x46, 0x6f, 0xc8, 0x28, 0x1c, 0x8e, 0xc6, 0x8d, 0xff, 0x5e,
-	0xdd, 0xff, 0x78, 0x57, 0x2a, 0x5c, 0x60, 0x27, 0x8a, 0x39, 0xce, 0x14, 0xc9, 0x3e, 0x77, 0x56,
-	0xff, 0x0b, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x80, 0xfd, 0xe2, 0xda, 0x24, 0x06, 0x00, 0x00,
+var fileDescriptor_mailserver_4a20e9f261c659b3 = []byte{
+	// 684 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0xdd, 0x4e, 0x13, 0x4f,
+	0x14, 0xff, 0x2f, 0x6d, 0xb7, 0xdd, 0x53, 0x02, 0x65, 0x81, 0x3f, 0x8b, 0x1f, 0xb1, 0xd9, 0x78,
+	0xd1, 0x10, 0x2d, 0x5a, 0xf4, 0x01, 0xaa, 0x35, 0xd8, 0x04, 0xa4, 0xd9, 0x96, 0x0b, 0xbd, 0x59,
+	0xc7, 0x9d, 0x63, 0x99, 0xb0, 0xdb, 0x5d, 0x67, 0xa6, 0x35, 0xdc, 0x18, 0xf5, 0x01, 0x7c, 0x09,
+	0x5f, 0xd4, 0xcc, 0xcc, 0xd2, 0x42, 0x2d, 0x90, 0xf4, 0xca, 0xbb, 0x99, 0xf3, 0xf9, 0x3b, 0xbf,
+	0x73, 0xce, 0x0c, 0xd4, 0x12, 0xc2, 0x62, 0x81, 0x7c, 0x82, 0xbc, 0x99, 0xf1, 0x54, 0xa6, 0xae,
+	0x93, 0x88, 0xa1, 0x11, 0xf8, 0x12, 0x4a, 0x87, 0x69, 0x4a, 0x85, 0x7b, 0x00, 0x30, 0x54, 0x87,
+	0x50, 0x5e, 0x64, 0xe8, 0x59, 0x75, 0xab, 0xb1, 0xd6, 0xda, 0x6a, 0x4e, 0x0d, 0x9b, 0xda, 0x6a,
+	0x70, 0x91, 0x61, 0xe0, 0x0c, 0x2f, 0x8f, 0xee, 0x2e, 0x54, 0x8c, 0x13, 0xa3, 0xde, 0x4a, 0xdd,
+	0x6a, 0x94, 0x82, 0xb2, 0xbe, 0x77, 0xa9, 0x7b, 0x1f, 0x8c, 0x5d, 0x38, 0x1a, 0x27, 0x5e, 0x41,
+	0xeb, 0x8c, 0xed, 0xbb, 0x71, 0xe2, 0xbf, 0x84, 0xff, 0x8f, 0x09, 0x8b, 0xfb, 0x13, 0x7e, 0x88,
+	0xf2, 0x74, 0x14, 0x20, 0xa1, 0xfd, 0x71, 0x12, 0xe0, 0x17, 0xe5, 0x96, 0xc5, 0xe4, 0x02, 0xb9,
+	0x0a, 0xa9, 0x50, 0x14, 0x83, 0x8a, 0x11, 0x74, 0xa9, 0xff, 0x71, 0xb1, 0x9b, 0xc8, 0x14, 0x10,
+	0xe4, 0x3c, 0x8c, 0x52, 0x6a, 0xb0, 0x97, 0x82, 0x32, 0x72, 0xfe, 0x3a, 0xa5, 0x78, 0xa9, 0xa2,
+	0x28, 0x22, 0x8d, 0xd1, 0xd1, 0xaa, 0x0e, 0x8a, 0xc8, 0xad, 0x41, 0x41, 0x4c, 0xd1, 0xa9, 0xa3,
+	0xff, 0xdb, 0x02, 0x47, 0xa5, 0x18, 0x30, 0x19, 0xa3, 0xbb, 0x03, 0x65, 0xc5, 0xdd, 0x0c, 0x8a,
+	0xad, 0xae, 0x5d, 0xea, 0x3e, 0x04, 0xd0, 0x0a, 0xa9, 0xcc, 0xf2, 0xa8, 0x4e, 0x32, 0xf5, 0x7b,
+	0x0c, 0x6b, 0x4c, 0x84, 0x67, 0x64, 0x82, 0x21, 0x91, 0x92, 0x44, 0x67, 0x79, 0x8a, 0x55, 0x26,
+	0xde, 0x92, 0x09, 0xb6, 0xb5, 0x4c, 0x45, 0x67, 0x22, 0xe4, 0x48, 0xa8, 0x57, 0xd4, 0x6a, 0x9b,
+	0x09, 0x55, 0x92, 0xfb, 0x08, 0xaa, 0x11, 0x47, 0x22, 0x31, 0x94, 0x2c, 0x41, 0xaf, 0xa4, 0xc3,
+	0x83, 0x11, 0x0d, 0x58, 0x82, 0xfe, 0x0b, 0xd8, 0x9e, 0xf1, 0xa0, 0x4e, 0x47, 0x4c, 0xc8, 0x3b,
+	0xd9, 0xfb, 0x6e, 0x2d, 0x74, 0x5b, 0x9a, 0xbd, 0xe7, 0xa0, 0x4b, 0x0e, 0x63, 0x26, 0xa4, 0x57,
+	0xa8, 0x17, 0x1a, 0xd5, 0x6b, 0x03, 0x33, 0xa5, 0x31, 0xa8, 0x24, 0x79, 0x2e, 0xff, 0xd7, 0x0a,
+	0x80, 0x92, 0x77, 0x50, 0x12, 0x16, 0xff, 0xab, 0xfc, 0xba, 0x1e, 0x94, 0xa3, 0x74, 0x24, 0x71,
+	0x24, 0x3d, 0xdb, 0xd4, 0x9c, 0x5f, 0xdd, 0x03, 0x58, 0x35, 0x19, 0x43, 0x3d, 0xcb, 0x5e, 0xb9,
+	0x6e, 0x35, 0xaa, 0xad, 0xda, 0xfc, 0x9e, 0x04, 0x55, 0x63, 0x65, 0x56, 0x6b, 0x17, 0x2a, 0x14,
+	0x63, 0x93, 0xac, 0x62, 0xe2, 0x51, 0x8c, 0x75, 0x27, 0x5b, 0xb0, 0x73, 0xbd, 0x25, 0x86, 0x19,
+	0xd5, 0xcb, 0x9b, 0xc8, 0xf1, 0xbf, 0xdd, 0xe0, 0xb3, 0x74, 0x23, 0x9f, 0x82, 0x4d, 0x75, 0x08,
+	0x4d, 0x63, 0xb5, 0xb5, 0x3d, 0xd7, 0xc5, 0x3c, 0x7e, 0x6e, 0xe4, 0xef, 0xc3, 0x56, 0x9e, 0xbf,
+	0x8f, 0x52, 0x11, 0x3a, 0x20, 0xc3, 0x5b, 0x01, 0x1f, 0x2d, 0x72, 0x58, 0x16, 0xad, 0xff, 0x04,
+	0x36, 0xf2, 0x68, 0x1d, 0x8c, 0x8f, 0xef, 0x22, 0xab, 0xfb, 0x97, 0xf5, 0xd2, 0x89, 0x9f, 0x4d,
+	0xd7, 0xa7, 0xfd, 0x95, 0x70, 0x6a, 0xa6, 0xec, 0xd6, 0xe4, 0x3f, 0xad, 0x85, 0x2e, 0x4b, 0x37,
+	0x6a, 0x7e, 0xfa, 0xcc, 0xd2, 0xdd, 0x3e, 0x7d, 0xfe, 0x0f, 0x0b, 0xec, 0x76, 0xa7, 0x3b, 0xfa,
+	0x9c, 0xba, 0x9b, 0x50, 0x22, 0x74, 0x06, 0xb3, 0x48, 0x68, 0x97, 0x2a, 0xf4, 0x84, 0x86, 0x92,
+	0x45, 0xe7, 0xf9, 0x13, 0x6e, 0x13, 0x3a, 0x60, 0xd1, 0xb9, 0x52, 0x64, 0x2c, 0x0a, 0xc7, 0xdc,
+	0xcc, 0x85, 0x13, 0xd8, 0x19, 0x8b, 0x4e, 0x79, 0xec, 0x6e, 0x83, 0x3d, 0x4c, 0xb5, 0xbc, 0xa8,
+	0xe5, 0xa5, 0x61, 0xaa, 0xc4, 0xbb, 0x50, 0x21, 0x34, 0xcc, 0x08, 0x27, 0x49, 0xbe, 0x53, 0x65,
+	0x42, 0x7b, 0xea, 0xea, 0x37, 0x61, 0x7d, 0x36, 0xb2, 0xed, 0xce, 0x9d, 0x4f, 0x95, 0x98, 0xb3,
+	0x5f, 0x9a, 0xb1, 0x3d, 0x5d, 0xdc, 0x95, 0x17, 0x6a, 0xe3, 0x0a, 0x59, 0x86, 0x15, 0x55, 0xaf,
+	0x7a, 0x9c, 0xf6, 0xea, 0xe0, 0x4c, 0x3f, 0x39, 0x77, 0x13, 0xd6, 0x0f, 0x4f, 0x4e, 0x3a, 0xfd,
+	0xc1, 0xfb, 0xde, 0x9b, 0xb0, 0x17, 0x9c, 0xf4, 0xfa, 0xb5, 0xff, 0x5e, 0x3d, 0xf8, 0x70, 0x4f,
+	0x48, 0x9c, 0xe0, 0x7e, 0x14, 0x33, 0x1c, 0xc9, 0x30, 0xfb, 0xb4, 0x3f, 0xfb, 0x5b, 0xff, 0x04,
+	0x00, 0x00, 0xff, 0xff, 0xe8, 0x2f, 0x3b, 0xef, 0x68, 0x07, 0x00, 0x00,
 }

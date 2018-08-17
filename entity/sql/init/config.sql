@@ -3,6 +3,7 @@
 */
 
 /*商品表*/
+DELETE FROM `t_common_config` WHERE `key`="charge" AND `subkey`="item_list";
 INSERT `t_common_config`(`key`, `subkey`, `value`) values(
     'charge', 'item_list', 
     '{
@@ -10,37 +11,67 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 100,
+                "name": "3万金豆",
+                "tag": "",
+                "price": 500,
+                "coin": 30000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 1000",
-                "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
-            }
-        ],
-        "city400200": [
-            {
-                "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
+                "name": "3.6万金豆",
+                "tag": "",
                 "price": 600,
-                "coin": 100,
+                "coin": 36000,
                 "present_coin": 0
             },
             {
-                "item_id": 2,
-                "name": "金豆 1000",
-                "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
+                "item_id": 3,
+                "name": "6.2万金豆",
+                "tag": "",
+                "price": 1000,
+                "coin": 60000,
+                "present_coin": 2000
+            },
+            {
+                "item_id": 4,
+                "name": "7.4万金豆",
+                "tag": "",
+                "price": 1200,
+                "coin": 72000,
+                "present_coin": 2000
+            },
+            {
+                "item_id": 5,
+                "name": "18.8万金豆",
+                "tag": "",
+                "price": 3000,
+                "coin": 180000,
+                "present_coin": 8000
+            },
+            {
+                "item_id": 6,
+                "name": "64万金豆",
+                "tag": "",
+                "price": 9800,
+                "coin": 588000,
+                "present_coin": 52000
+            },
+            {
+                "item_id": 7,
+                "name": "125万金豆",
+                "tag": "",
+                "price": 18800,
+                "coin": 1128000,
+                "present_coin": 122000
+            },
+            {
+                "item_id": 8,
+                "name": "320万金豆",
+                "tag": "",
+                "price": 44800,
+                "coin": 2688000,
+                "present_coin": 512000
             }
         ]
     },
@@ -48,37 +79,67 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 100,
+                "name": "3万金豆",
+                "tag": "",
+                "price": 500,
+                "coin": 30000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 1000",
-                "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
-            }
-        ],
-        "city400200": [
-            {
-                "item_id": 1,
-                "name": "金豆 100",
-                "tag": "热卖",
+                "name": "3.6万金豆",
+                "tag": "",
                 "price": 600,
-                "coin": 100,
+                "coin": 36000,
                 "present_coin": 0
             },
             {
-                "item_id": 2,
-                "name": "金豆 1000",
-                "tag": "特惠",
-                "price": 800,
-                "coin": 1000,
-                "present_coin": 0
+                "item_id": 3,
+                "name": "6.2万金豆",
+                "tag": "",
+                "price": 1000,
+                "coin": 60000,
+                "present_coin": 2000
+            },
+            {
+                "item_id": 4,
+                "name": "7.4万金豆",
+                "tag": "",
+                "price": 1200,
+                "coin": 72000,
+                "present_coin": 2000
+            },
+            {
+                "item_id": 5,
+                "name": "18.8万金豆",
+                "tag": "",
+                "price": 3000,
+                "coin": 180000,
+                "present_coin": 8000
+            },
+            {
+                "item_id": 6,
+                "name": "64万金豆",
+                "tag": "",
+                "price": 9800,
+                "coin": 588000,
+                "present_coin": 52000
+            },
+            {
+                "item_id": 7,
+                "name": "125万金豆",
+                "tag": "",
+                "price": 18800,
+                "coin": 1128000,
+                "present_coin": 122000
+            },
+            {
+                "item_id": 8,
+                "name": "320万金豆",
+                "tag": "",
+                "price": 44800,
+                "coin": 2688000,
+                "present_coin": 512000
             }
         ]
     }
@@ -93,6 +154,55 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     "max_charge": 200000
     }'
 );
+
+INSERT `t_common_config`(`key`, `subkey`, `value`) values ( 
+    'prop', 
+    'interactive',
+    '[
+            {
+                "propID": 1,
+                "name": "rose",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 2,
+                "name": "beer",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 3,
+                "name": "bomb",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 4,
+                "name": "grabChicken",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-100,
+                "attrLimit":10000
+            },
+            {
+                "propID": 5,
+                "name": "eggGun",
+                "attrType": 1,
+                "attrID":1,
+                "attrValue":-10000,
+                "attrLimit":500000
+            }
+    ]
+    '
+); 
+
 
 INSERT INTO `t_common_config` (`id`, `key`, `subkey`, `value`)
 VALUES
@@ -589,6 +699,87 @@ VALUES
             }
         ],
         "lastUpdateTime": "2018-08-07 12:08:22"
+    }
+]');
+
+
+
+INSERT INTO `t_common_config` (`key`, `subkey`, `value`)
+VALUES
+  ( 'ad', 'config', '[
+    {
+        "id":1,
+        "prov":0,
+        "city":0,
+        "channel":0,
+        "is_use":1,
+        "ad_list":[
+            {
+                "ad_id":1,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"1"
+            },
+            {
+                "ad_id":2,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"2"
+            },
+            {
+                "ad_id":3,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"3"
+            },
+            {
+                "ad_id":4,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"4"
+            }
+        ]
+    },
+    {
+        "id":2,
+        "prov":0,
+        "city":0,
+        "channel":1,
+        "is_use":1,
+        "ad_list":[
+            {
+                "ad_id":1,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"1"
+            },
+            {
+                "ad_id":2,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"2"
+            },
+            {
+                "ad_id":3,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"3"
+            },
+            {
+                "ad_id":4,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"4"
+            }
+        ]
     }
 ]');
 

@@ -110,6 +110,7 @@ func (s *ZiMoSettleState) doZiMoSettle(flow interfaces.MajongFlow) {
 		GenCount:       genCount,
 		HuaCount:       huaCount,
 		SettleID:       mjContext.CurrentSettleId,
+		BaseCoin:       mjContext.BaseCoin,
 	}
 	totalValue := uint32(0)
 	settlerFactory := settle.SettlerFactory{}

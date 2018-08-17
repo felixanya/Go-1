@@ -62,6 +62,8 @@ func (model *MjEventModel) StartProcessEvents() {
 	event := desk.DeskEvent{EventID: int(server_pb.EventID_event_start_game), EventType: fixed.NormalEvent, Desk: model.GetDesk(),
 		StateNumber: model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).StateNumber,
 	}
+	logrus.Debugf("mjContext----------------------(%v)", model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).MjContext.BaseCoin)
+
 	model.PushEvent(event)
 
 	logrus.Debugln("eventmodel启动成功")

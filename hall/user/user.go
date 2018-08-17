@@ -224,6 +224,11 @@ func HandleGetPlayerGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Hea
 	// 不存在直接返回
 	if !exist && playerID == uid {
 		response.ErrCode = proto.Uint32(0)
+		response.TotalBureau = proto.Uint32(uint32(0))
+		response.WinningRate = proto.Float32(float32(0))
+		response.MaxWinningStream = proto.Uint32(uint32(0))
+		response.MaxMultiple = proto.Uint32(uint32(0))
+		logrus.Debugf("Handle get player game info response : %v", response)
 		return
 	}
 
@@ -243,6 +248,8 @@ func HandleGetPlayerGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Hea
 	// 获取自己游戏信息直接返回
 	if playerID == uid {
 		response.ErrCode = proto.Uint32(0)
+		logrus.Debugf("Handle get player game info response : %v", response)
+
 		return
 	}
 
@@ -274,7 +281,7 @@ func HandleGetPlayerGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Hea
 		userProperty := new(common.Property)
 		userProperty.PropId = proto.Int32(propConfig.PropID)
 		userProperty.PropName = proto.String(propConfig.PropName)
-		userProperty.PropType = common.PropType(propConfig.Type).Enum()
+		userProperty.PropType = common.PropType(propConfig.PropID).Enum()
 		userProperty.PropCost = proto.Int64(int64(math.Abs(float64(propConfig.Value))))
 		userProperty.PropCount = proto.Uint32(uint32(propCount[propConfig.PropID]))
 		response.UserProperty = append(response.UserProperty, userProperty)

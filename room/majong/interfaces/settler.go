@@ -14,6 +14,7 @@ type Settler interface {
 // HuSettleParams 胡结算参数
 type HuSettleParams struct {
 	SettleOptionID int                 // 游戏结算id
+	BaseCoin       uint32              // 底分
 	HuPlayers      []uint64            // 胡玩家
 	SrcPlayer      uint64              // 点炮胡为放炮者的玩家id，自摸为玩家自己
 	GangCard       majongpb.GangCard   // 放炮者杠的牌(呼叫转移时需要)
@@ -38,6 +39,7 @@ type HuSettle interface {
 // GangSettleParams 杠结算参数
 type GangSettleParams struct {
 	SettleOptionID int               // 游戏结算id
+	BaseCoin       uint32            // 底分
 	GangPlayer     uint64            // 杠的玩家
 	SrcPlayer      uint64            // 放杠者玩家
 	AllPlayers     []uint64          // 所有玩家
@@ -56,6 +58,7 @@ type GangSettle interface {
 // RoundSettleParams 单局结算参数
 type RoundSettleParams struct {
 	SettleOptionID   int                    // 游戏结算id
+	BaseCoin         uint32                 // 底分
 	FlowerPigPlayers []uint64               // 花猪玩家
 	HuPlayers        []uint64               // 胡牌玩家
 	TingPlayersInfo  map[uint64]int64       // 听玩家及胡牌最大倍数
