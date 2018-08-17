@@ -28,6 +28,8 @@ func InitServer() error {
 	// 初始化游戏场次配置
 	logic.InitGameConfig()
 
+	//  初始化角色配置
+	logic.InitRoleConfig()
 	return nil
 }
 
