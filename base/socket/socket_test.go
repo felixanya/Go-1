@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -54,8 +55,10 @@ func Test_socketImpl_SendReceive(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
+		fmt.Println(clientSocket.GetRemoteAddr().String())
 		err := clientSocket.SendPackage([]byte(sendData))
 		assert.Nilf(t, err, "%v", err)
+
 	}()
 
 	go func() {
@@ -69,6 +72,7 @@ func Test_socketImpl_SendReceive(t *testing.T) {
 			return data, nil
 		})
 
+		fmt.Println(serverSocket.GetRemoteAddr().String())
 		data, err := serverSocket.RecvPackage()
 		assert.Nilf(t, err, "%v", err)
 		assert.Equal(t, sendData, string(data))
