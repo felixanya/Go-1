@@ -72,7 +72,9 @@ func execLogin(clientID uint64, clientRequest *login.LoginAuthReq) (clientRespon
 		entry.Errorln(err)
 		return
 	}
+	entry.WithField("response", response.String()).Debugln("登录服返回")
 	if response.GetErrCode() != login.ErrorCode_SUCCESS {
+		entry.WithField("err_code", response.GetErrCode()).Debugln("登录失败")
 		return
 	}
 	clientResponse = *response
