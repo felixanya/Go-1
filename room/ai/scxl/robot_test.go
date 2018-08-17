@@ -160,6 +160,11 @@ func Test_SplitCards5(t *testing.T) {
 	assert.Equal(t, s.Gangs, []Split{{GANG, []majong.Card{global.Card1B, global.Card1B, global.Card1B, global.Card1B}}})
 }
 
+func Test_SplitCards6(t *testing.T) {
+	s := SplitCards([]majong.Card{global.Card1T, global.Card1T, global.Card1T, global.Card1T, global.Card2T, global.Card2T, global.Card2T, global.Card3T, global.Card3T, global.Card3T, global.Card3T, global.Card4T, global.Card5T, global.Card5T})
+	assert.Equal(t, s.Gangs, []Split{{GANG, []majong.Card{global.Card1T, global.Card1T, global.Card1T, global.Card1T}}})
+}
+
 func Test_ValidCard(t *testing.T) {
 	//单牌
 	single := getValidCard(Split{SINGLE, []majong.Card{global.Card1W}})
