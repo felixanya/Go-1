@@ -78,31 +78,28 @@ func Test_BindPhone(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, player)
 
-	assert.Nil(t, bindPhone(player, "15013701957", "abcd"))
+	assert.Nil(t, bindPhone(player, "10000000020", "abcd"))
 }
 
 func Test_ChangePhone(t *testing.T) {
 	if !useAccountSystem { // 需要正式账号系统，不开启此测试
 		return
 	}
-	player, err := utils.LoginPlayerYouke("abacdeea1acx")
+	// 由于验证码发送间隔时间有限制，使用 Test_BindPhone 中的账号
+	player, err := utils.LoginPlayerYouke("abacdeeaa")
 	assert.Nil(t, err)
 	assert.NotNil(t, player)
 
-	assert.Nil(t, bindPhone(player, "10000000010", "abcd"))
-
-	// 等待 冷却时间
-	time.Sleep(time.Second * 10)
-	assert.Nil(t, sendDymcCode(player, 10000000010, hall.AuthCodeSendScene_RESET_CELLPHONE))
-	assert.Nil(t, sendDymcCode(player, 10000000011, hall.AuthCodeSendScene_RESET_CELLPHONE))
+	assert.Nil(t, sendDymcCode(player, 10000000020, hall.AuthCodeSendScene_RESET_CELLPHONE))
+	assert.Nil(t, sendDymcCode(player, 10000000013, hall.AuthCodeSendScene_RESET_CELLPHONE))
 
 	rsp := hall.ChangePhoneRsp{}
 	err = player.GetClient().Request(utils.CreateMsgHead(msgid.MsgID_CHANGE_PHONE_REQ), &hall.ChangePhoneReq{
-		OldPhone:     proto.String("10000000010"),
+		OldPhone:     proto.String("10000000020"),
 		OldPhoneCode: proto.String("123456"),
-		NewPhone:     proto.String("10000000011"),
+		NewPhone:     proto.String("10000000013"),
 		NewPhoneCode: proto.String("123456"),
-	}, time.Second*5, uint32(msgid.MsgID_BIND_PHONE_RSP), &rsp)
+	}, time.Second*5, uint32(msgid.MsgID_CHANGE_PHONE_RSP), &rsp)
 
 	assert.Nil(t, err)
 }

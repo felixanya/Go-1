@@ -26,7 +26,7 @@ func Test_ChangePasswd(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, player)
 
-	assert.Nil(t, bindPhone(player, "10000000013", "abcd"))
+	assert.Nil(t, bindPhone(player, "10000000022", "abcd"))
 
 	rsp := hall.ChangePasswordRsp{}
 	err = player.GetClient().Request(utils.CreateMsgHead(msgid.MsgID_CHANGE_PASSWORD_REQ), &hall.ChangePasswordReq{
