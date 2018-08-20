@@ -39,6 +39,16 @@ func Test_Remove(t *testing.T) {
 	assert.Equal(t, cards, []majong.Card{global.Card3W, global.Card3W})
 }
 
+func Test_JoinGang(t *testing.T) {
+	s := Splits{KeZis: []Split{{KEZI, []majong.Card{global.Card1T, global.Card1T, global.Card1T}},
+		{KEZI, []majong.Card{global.Card2T, global.Card2T, global.Card2T}}},
+		Singles: []Split{{SINGLE, []majong.Card{global.Card1T}},
+			{SINGLE, []majong.Card{global.Card2T}}},
+	}
+	s.JoinGang()
+	assert.Equal(t, s.Gangs, []Split{{GANG, []majong.Card{global.Card1T, global.Card1T, global.Card1T, global.Card1T}}, {GANG, []majong.Card{global.Card2T, global.Card2T, global.Card2T, global.Card2T}}})
+}
+
 func Test_SplitShunZiFirst(t *testing.T) {
 	cards := []majong.Card{global.Card5W, global.Card5W, global.Card5W, global.Card6W, global.Card6W, global.Card6W, global.Card6W, global.Card7W, global.Card7W, global.Card7W}
 	splits := splitCardsWithoutGang(cards, true)
