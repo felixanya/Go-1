@@ -351,12 +351,14 @@ type Splits struct {
 }
 
 func (s *Splits) JoinGang() {
+restart:
 	for i, keZi := range s.KeZis {
 		for j, single := range s.Singles {
 			if keZi.cards[0] == single.cards[0] {
 				s.KeZis = append(s.KeZis[:i], s.KeZis[i+1:]...)
 				s.Singles = append(s.Singles[:j], s.Singles[j+1:]...)
 				s.Gangs = append(s.Gangs, Split{GANG, append(keZi.cards, single.cards...)})
+				goto restart
 			}
 		}
 	}
