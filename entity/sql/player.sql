@@ -188,7 +188,7 @@ CREATE TABLE `t_show_id` (
   PRIMARY KEY (`n_id`),
   UNIQUE KEY `t_show_id_UN_showid` (`n_showid`),
   KEY `t_show_id_n_isUse_IDX` (`n_isUse`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='showid记录表'
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='showid记录表';
 
 -- ----------------------------
 -- Table structure for t_player_id
@@ -199,6 +199,6 @@ CREATE TABLE `t_player_id` (
   `n_value` bigint(20) DEFAULT '0' COMMENT '变量值',
   `n_des` varchar(255) DEFAULT NULL COMMENT '变量描述',
   PRIMARY KEY (`n_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='playerid表'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='playerid表';
 
 SET FOREIGN_KEY_CHECKS = 1;
