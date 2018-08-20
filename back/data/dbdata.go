@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"steve/entity/cache"
 	"steve/entity/db"
 	"steve/structs"
 	"strconv"
@@ -39,7 +40,19 @@ func GetMaxMultiple() {
 
 // GetTPlayerGame 获取t_player_game的信息
 func GetTPlayerGame(gameID int, playerID uint64) (*db.TPlayerGame, error) {
-	tpg := &db.TPlayerGame{}
+	tpg := &db.TPlayerGame{
+		Playerid: int64(playerID),
+		Gameid:   gameID,
+	}
+
+	// 从redis获取
+	fields := []string{cache.WinningRate, cache.WinningBurea, cache.TotalBurea, cache.MaxWinningStream, cache.MaxMultiple}
+
+	gameInfo, err := getPlayerGameFieldsFromRedis(playerID, uint32(gameID), fields)
+	if err == nil {
+		return gameInfo, nil
+	}
+
 	engine, err := MysqlEngineGetter(dbPlayer)
 	if err != nil {
 		logrus.Errorln(err)

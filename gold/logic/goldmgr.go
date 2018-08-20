@@ -6,6 +6,9 @@ import (
 	"steve/gold/define"
 	"sync"
 	"time"
+	"steve/structs"
+	"github.com/golang/protobuf/proto"
+	"steve/server_pb/gold"
 )
 
 /*
@@ -234,6 +237,8 @@ func (gm *GoldMgr) AddGold(uid uint64, goldType int16, value int64, seq string, 
 	// 交易记录写到日志
 	entry.Infoln("add succeed")
 
+	gm.UpGoldChangeToNsq(uid, int32(goldType), before, value, after)
+
 	// 交易记录写到redis
 	// 交易记录写到DB
 	err = gm.saveUserToCacheAndDB(entry, u, goldType, value)
@@ -244,6 +249,28 @@ func (gm *GoldMgr) AddGold(uid uint64, goldType int16, value int64, seq string, 
 	data.InsertGoldLog(plog)
 
 	return after, nil
+}
+
+// 同步金币变化到nsq
+func (gm *GoldMgr)UpGoldChangeToNsq(uid uint64, goldType int32,  before,change, after int64) {
+
+	msg := &gold.GoldChangeNtf{}
+	msg.Uid = uid
+	msg.GoldType = goldType
+	msg.BeforeGold = before
+	msg.AfterGold = after
+	msg.ChangeGold = change
+
+	messageData, err := proto.Marshal(msg)
+	if err != nil {
+		logrus.Errorln("发布登录消息时消息序列化失败")
+		return
+	}
+	exposer := structs.GetGlobalExposer()
+	if err := exposer.Publisher.Publish("gold_change", messageData); err != nil {
+		logrus.Errorln("发布消息失败")
+	}
+	logrus.Debugf("pub gold change:uid=%d, bf=%d, chg=%d, af=%d",uid, before, change, after )
 }
 
 // 获取金币

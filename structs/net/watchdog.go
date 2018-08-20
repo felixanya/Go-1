@@ -1,6 +1,7 @@
 package net
 
 import (
+	"net"
 	"steve/structs/proto/base"
 )
 
@@ -26,7 +27,7 @@ type MessageObserver interface {
 // ConnectObserver 连接观察者
 // 当客户端连接或者断开连接时会触发回调
 type ConnectObserver interface {
-	OnClientConnect(clientID uint64)
+	OnClientConnect(clientID uint64, remoteAddr net.Addr)
 	OnClientDisconnect(clientID uint64)
 }
 
