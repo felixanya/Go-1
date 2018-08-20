@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"steve/idserver/data"
 	"sync"
-	"time"
 	"fmt"
+	"time"
 )
 
 /*
@@ -26,29 +26,43 @@ func Init() error {
 	return nil
 }
 
-// 运行逻辑任务
-func runLogicTask() {
+func runMakeId() {
 	sum, _ := data.GetMakeSumFromDB()
 	if sum >= 10000 {
 		keepSum = sum
 	}
 
+	// 目前号码总量达到一半，就不生成号码
 	can, _ := data.GetCanUseSumFromDB()
-	if can < keepSum/2 {
-
+	if can > keepSum/2 {
+		return
 	}
 
-	rand.Seed(int64(time.Now().UnixNano()))
-	for t := 0; t < 100; t++ {
-		makeNewShowId()
-		time.Sleep(time.Millisecond * 20)
-	}
 	for {
-		time.Sleep(time.Minute)
 		for t := 0; t < 100; t++ {
 			makeNewShowId()
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(time.Millisecond * 20)
 		}
+		time.Sleep(time.Minute)
+
+		sum, _ := data.GetMakeSumFromDB()
+		if sum >= 10000 {
+			keepSum = sum
+		}
+		can, _ := data.GetCanUseSumFromDB()
+		if can >= keepSum {
+			// 可用号码得到设置水位，就不再生成新的号码
+			break
+		}
+	}
+}
+
+// 运行逻辑任务
+func runLogicTask() {
+	rand.Seed(int64(time.Now().UnixNano()))
+	for {
+		runMakeId()
+		time.Sleep(time.Minute*5)
 	}
 }
 
