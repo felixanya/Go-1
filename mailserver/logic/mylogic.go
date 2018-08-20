@@ -349,8 +349,15 @@ func DelMail(uid uint64, mailId uint64) error {
 }
 
 // 领取附件奖励请求
-func AwardAttach(uid uint64, mailId uint64) ([]*mailserver.Goods, error) {
+func AwardAttach(uid uint64, mailId uint64) (*mailserver.Goods, error) {
 
+	mail, ok := mailList[mailId]
+	if !ok {
+		return nil, errors.New("指定邮件不存在")
+	}
+	if len(mail.AttachGoods) == 0 {
+		return nil, errors.New("此邮件无附件")
+	}
 	// 从DB获取玩家的已读邮件列表
 	one, _ := data.GetTheMailFromDB(uid, mailId)
 	if one != nil && one.IsDel {
@@ -375,7 +382,14 @@ func AwardAttach(uid uint64, mailId uint64) ([]*mailserver.Goods, error) {
 	// 标记为已领取
 	data.SetAttachGettedDB(uid, mailId)
 
-	return nil, nil
+	attach := &mailserver.Goods{}
+	attach.GoodsId = &mail.AttachGoods[0].GoodsId
+	attach.GoodsNum = &mail.AttachGoods[0].GoodsNum
+
+	gType := mailserver.GoodsType_GOODSTYPE_PROPS
+	attach.GoodsType = &gType
+
+	return attach, nil
 }
 
 // 启动邮件列表变化检测协程
