@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package web;
+
+// RequestData 请求数据
+message RequestData {
+    string cmd = 1; // 请求命令
+    bytes data = 2; // 请求数据
+}
+
+// ResponseData 响应数据
+message ResponseData {
+    int32 code = 1; // 响应错误码
+    string msg = 2; // 响应信息
+    bytes data = 3; // 响应数据
+}
+
+// RequestHandler 请求处理器
+service RequestHandler {
+    rpc Handle(RequestData) returns (ResponseData) {}
+}

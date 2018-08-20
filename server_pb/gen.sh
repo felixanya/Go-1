@@ -8,3 +8,4 @@ protoc -I match --go_out=plugins=grpc:match match/*.proto
 protoc -I robot --go_out=plugins=grpc:robot robot/*.proto
 protoc -I config --go_out=plugins=grpc:config config/*.proto 
 protoc -I alms --go_out=plugins=grpc:alms alms/*.proto 
+protoc -I web --go_out=plugins=grpc:web web/*.proto 
