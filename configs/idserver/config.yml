@@ -5,7 +5,7 @@ log_prefix: idserver
 log_stderr: true 
 
 #号码水位
-hw: 200000
+hw: 100000
 
 #RPC服务地址
 rpc_addr: 127.0.0.1

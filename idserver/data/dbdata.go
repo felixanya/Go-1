@@ -140,7 +140,7 @@ func NewShowIdFromDB() (uint64, error) {
 		return 0, fmt.Errorf("connect db error")
 	}
 
-	sql := fmt.Sprintf("select n_showid  from t_show_id  where n_isUse='%d';", 0)
+	sql := fmt.Sprintf("select n_showid  from t_show_id  where n_isUse='%d' limit 1;", 0)
 	res, err := engine.QueryString(sql)
 	if err != nil {
 		return 0, err
