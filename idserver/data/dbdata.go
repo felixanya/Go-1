@@ -21,39 +21,24 @@ CREATE TABLE `t_show_id` (
   KEY `t_show_id_n_isUse_IDX` (`n_isUse`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='showid记录表'
 
+CREATE TABLE `t_player_id` (
+  `n_id` bigint(20) NOT NULL COMMENT '通用变量ID',
+  `n_value` bigint(20) DEFAULT '0' COMMENT '变量值',
+  `n_des` varchar(255) DEFAULT NULL COMMENT '变量描述',
+  PRIMARY KEY (`n_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='playerid表'
+
 */
 
 const dbName = "player"
 
 const TagPlayerId = 1
-const TagMakeSum = 2
+
+// 开始号码ID
+var playerIdBegin = 100000
 
 
-// 获取每次生成号码数量，也是号码池维持号码总数
-func GetMakeSumFromDB() (uint64, error) {
-	exposer := structs.GetGlobalExposer()
-	engine, err := exposer.MysqlEngineMgr.GetEngine(dbName)
-	if err != nil {
-		return 0, fmt.Errorf("connect db error")
-	}
 
-	sql := fmt.Sprintf("select n_value from t_param  where n_id='%d';", TagMakeSum)
-	res, err := engine.QueryString(sql)
-	if err != nil {
-		return 0, err
-	}
-	if len(res) == 0 {
-		return 0, fmt.Errorf("make sum param no exist")
-	}
-	row := res[0]
-
-	sum, err := strconv.ParseUint(row["n_value"], 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("make sum parse error")
-	}
-	logrus.Debugf("GetMakeSumFromDB: sum=%d", sum)
-	return sum, nil
-}
 
 // 获取目前可用号码总数
 func GetCanUseSumFromDB() (uint64, error) {
@@ -81,6 +66,29 @@ func GetCanUseSumFromDB() (uint64, error) {
 	return sum, nil
 }
 
+func initPlayerIdToDB() (uint64, error) {
+	exposer := structs.GetGlobalExposer()
+	engine, err := exposer.MysqlEngineMgr.GetEngine(dbName)
+	if err != nil {
+		return 0, fmt.Errorf("connect db error")
+	}
+
+	sql := fmt.Sprintf("insert into t_player_id (n_id, n_value, n_des) values('%d', '%d','%s');", TagPlayerId, playerIdBegin+1, "playerId计数")
+	resUpdate, err := engine.Exec(sql)
+	if err != nil {
+		return 0, err
+	}
+	if aff, err := resUpdate.RowsAffected(); aff == 0 {
+		// 如果插入行=0，表明插入失败
+		return 0, fmt.Errorf("init player id failed:%v", err)
+	}
+
+	id := uint64(playerIdBegin)
+	logrus.Debugf("get init player id  win: id=%d", id)
+
+	return id, nil
+
+}
 
 // 从DB生成一个playerId
 func NewPlayerIdFromDB() (uint64, error) {
@@ -91,13 +99,14 @@ func NewPlayerIdFromDB() (uint64, error) {
 		return 0, fmt.Errorf("connect db error")
 	}
 
-	sql := fmt.Sprintf("select n_value from t_param  where n_id='%d';", TagPlayerId)
+	sql := fmt.Sprintf("select n_value from t_player_id  where n_id='%d';", TagPlayerId)
 	res, err := engine.QueryString(sql)
 	if err != nil {
 		return 0, err
 	}
 	if len(res) == 0 {
-		return 0, fmt.Errorf("player id param no exist")
+		// 如果没有初始化数据，直接插入第一个ID
+		return initPlayerIdToDB()
 	}
 	row := res[0]
 
@@ -106,14 +115,14 @@ func NewPlayerIdFromDB() (uint64, error) {
 		return 0, fmt.Errorf("player id parse error")
 	}
 
-	sql = fmt.Sprintf("update t_param set n_value=n_value+1 where n_id='%d';", TagPlayerId)
+	sql = fmt.Sprintf("update t_player_id set n_value=n_value+1 where n_id='%d';", TagPlayerId)
 
 	resUpdate, err := engine.Exec(sql)
 	if err != nil {
 		return 0, err
 	}
 	if aff, err := resUpdate.RowsAffected(); aff == 0 {
-		// 如果插入行=0，表明插入失败
+		// 如果影响行=0，表明修改失败
 		return 0, fmt.Errorf("inc player id failed:%v", err)
 	}
 	id = uint64(id)

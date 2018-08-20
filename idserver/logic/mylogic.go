@@ -7,6 +7,7 @@ import (
 	"sync"
 	"fmt"
 	"time"
+	"github.com/spf13/viper"
 )
 
 /*
@@ -21,16 +22,18 @@ var muLock *sync.Mutex // 锁
 var keepSum = uint64(100000)
 
 func Init() error {
+
+	hw := viper.GetInt64("hw")
+	if hw >= 10000 && hw < 100000000{
+		keepSum = uint64(hw)
+	}
+
 	muLock = new(sync.Mutex)
 	go runLogicTask()
 	return nil
 }
 
 func runMakeId() {
-	sum, _ := data.GetMakeSumFromDB()
-	if sum >= 10000 {
-		keepSum = sum
-	}
 
 	// 目前号码总量达到一半，就不生成号码
 	can, _ := data.GetCanUseSumFromDB()
@@ -45,10 +48,6 @@ func runMakeId() {
 		}
 		time.Sleep(time.Minute)
 
-		sum, _ := data.GetMakeSumFromDB()
-		if sum >= 10000 {
-			keepSum = sum
-		}
 		can, _ := data.GetCanUseSumFromDB()
 		if can >= keepSum {
 			// 可用号码得到设置水位，就不再生成新的号码

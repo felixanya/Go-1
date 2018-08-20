@@ -4,6 +4,9 @@ log_dir: ./log
 log_prefix: idserver
 log_stderr: true 
 
+#号码水位
+hw: 200000
+
 #RPC服务地址
 rpc_addr: 192.168.8.17
 #RPC服务监听Port
