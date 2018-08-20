@@ -3,6 +3,7 @@ package connection
 import (
 	"context"
 	"fmt"
+	stdnet "net"
 	"steve/gateway/watchdog"
 	"steve/gutils/topics"
 	"steve/structs"
@@ -42,9 +43,13 @@ func (cm *ConnMgr) kickClient(clientID uint64) {
 }
 
 // OnClientConnect 客户端断开连接
-func (cm *ConnMgr) OnClientConnect(clientID uint64) {
+func (cm *ConnMgr) OnClientConnect(clientID uint64, addr stdnet.Addr) {
 	logrus.WithField("client_id", clientID).Info("client connected")
-	connection := newConnection(clientID, cm)
+	connection := &Connection{
+		clientID: clientID,
+		connMgr:  cm,
+		addr:     addr,
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cm.connections.Store(clientID, &connectionWithCancelFunc{
 		connection: connection,
@@ -56,15 +61,14 @@ func (cm *ConnMgr) OnClientConnect(clientID uint64) {
 	})
 }
 
-
-// GetPlayerConnection 获取玩家的连接对象
+// GetAllClientID 获取所有连接 ID
 func (cm *ConnMgr) GetAllClientID() []uint64 {
 	list := make([]uint64, 0)
-	cm.playerConnectionMap.Range( func(key, value interface{}) bool {
+	cm.playerConnectionMap.Range(func(key, value interface{}) bool {
 		clientID := value.(uint64)
 		list = append(list, clientID)
 		return true
-		})
+	})
 	return list
 }
 

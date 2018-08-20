@@ -1,12 +1,14 @@
 package watchdog
 
 import (
+	stdnet "net"
 	"steve/structs/net"
 )
 
 type exchanger interface {
 	Recv() ([]byte, error)
 	Send([]byte) error
+	GetRemoteAddr() stdnet.Addr
 }
 
 type workerFunc func(exchanger exchanger) error

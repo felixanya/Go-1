@@ -21,6 +21,15 @@ enum GoldType {
 	GOLD_CARD  = 3;				// 房卡
 }
 
+// 金币变化通知
+message GoldChangeNtf {
+    uint64 uid = 1; 				// 玩家 ID
+    int32 gold_type = 2; 			// 货币类型,参看GoldType
+    int64 before_gold = 3;   		// 变化前金币
+    int64 change_gold = 4;   		// 变化值=加减金币
+    int64 after_gold = 5;   		// 变化后金币
+}
+
 
 // 添加项
 message AddItem {

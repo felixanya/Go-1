@@ -9,7 +9,6 @@ import (
 	"steve/simulate/interfaces"
 	"steve/simulate/utils"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -35,7 +34,6 @@ func TestApplyJoinDesk(t *testing.T) {
 		_, err = utils.ApplyJoinDesk(player, common.GameId_GAMEID_XUELIU)
 		assert.Nil(t, err)
 	}
-
 	for _, e := range createNtfExpectors {
 		ntf := &room.RoomDeskCreatedNtf{}
 		assert.Nil(t, e.Recv(global.DefaultWaitMessageTime, ntf))
@@ -45,7 +43,6 @@ func TestApplyJoinDesk(t *testing.T) {
 		ntf := &room.RoomStartGameNtf{}
 		assert.Nil(t, e.Recv(global.DefaultWaitMessageTime, ntf))
 	}
-	time.Sleep(2 * time.Minute)
 }
 
 // TestNoMoneyMatch 测试金币数为0时参与匹配

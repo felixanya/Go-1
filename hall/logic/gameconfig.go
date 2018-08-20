@@ -17,6 +17,9 @@ var GameConf []entityConf.GameConfig
 // LevelConf 场次配置
 var LevelConf []entityConf.GameLevelConfig
 
+// RoleConfig 角色配置
+var RoleConfig []entityConf.RoleInitConfig
+
 // loadGameConfig load game config from configuration server
 func loadGameConfig(retry int) (gameConf []entityConf.GameConfig, err error) {
 	gameConfigJSON, err := configclient.GetConfigUntilSucc(constant.GameConfigKey.Key, constant.GameConfigKey.SubKey, retry, 5*time.Second)
@@ -66,5 +69,17 @@ func InitGameConfig() {
 	if err != nil {
 		logrus.WithError(err).Errorln("initGameConfig 获取游戏场次配置失败")
 	}
+	return
+}
+
+// InitRoleConfig 初始化角色配置
+func InitRoleConfig() {
+	var err error
+	RoleConfig, err = configclient.GetRoleInitConfigMap()
+	if err != nil {
+		logrus.Debugf("hall服启动加载角色失败，RoleConfig:(%v)，error:(%s)", RoleConfig, err.Error())
+	}
+	logrus.Debugf("hall服启动加载角色配置，RoleConfig:(%v)", RoleConfig)
+
 	return
 }
