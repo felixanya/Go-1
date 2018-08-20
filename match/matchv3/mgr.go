@@ -175,6 +175,7 @@ func init() {
 
 	// 初始化
 	if !matchMgr.init() {
+		logrus.Panicln("匹配服初始化失败")
 		return
 	}
 
@@ -303,12 +304,6 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 			return false
 		}
 
-		// 检测:费用,金币要求最小值,金币要求最大值
-		if pLevelConf.Fee > pLevelConf.LowScores || pLevelConf.LowScores >= pLevelConf.HighScores || pLevelConf.LowScores <= 0 {
-			logrus.Errorln("读取游戏场次配置时游戏ID:%v中场次ID:%v,数据错误,费用:%v, 金币最小值:%v, 金币最大值:%v,", pLevelConf.GameID, pLevelConf.LevelID)
-			return false
-		}
-
 		// 新场次配置信息
 		newLevelConf := gameLevelConfig{
 			levelID:     uint32(pLevelConf.LevelID),
@@ -317,6 +312,17 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 			bottomScore: uint32(pLevelConf.BaseScores),
 			minGold:     int64(pLevelConf.LowScores),
 			maxGold:     int64(pLevelConf.HighScores),
+		}
+
+		// -1代表最大值
+		if newLevelConf.maxGold == -1 {
+			newLevelConf.maxGold = MAX_GOLD
+		}
+
+		// 检测:费用,金币要求最小值,金币要求最大值
+		if newLevelConf.fee > newLevelConf.minGold || newLevelConf.minGold >= newLevelConf.maxGold || newLevelConf.minGold <= 0 {
+			logrus.Errorf("读取游戏场次配置时游戏ID:%v中场次ID:%v,数据错误,费用:%v, 金币最小值:%v, 金币最大值:%v,", pLevelConf.GameID, pLevelConf.LevelID, newLevelConf.fee, newLevelConf.minGold, newLevelConf.maxGold)
+			return false
 		}
 
 		// 加入该场次
