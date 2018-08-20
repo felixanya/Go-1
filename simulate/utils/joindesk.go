@@ -41,7 +41,7 @@ func ApplyJoinDesk(player interfaces.ClientPlayer, gameID common.GameId) (*match
 	})
 	req := match.MatchReq{
 		GameId:  proto.Uint32(uint32(gameID)),
-		LevelId: proto.Uint32(1),
+		LevelId: proto.Uint32(2),
 	}
 
 	rsp := match.MatchRsp{}
