@@ -1,15 +1,15 @@
 package structs
 
 import (
+	"steve/structs/arg"
 	"steve/structs/configuration"
+	"steve/structs/consul"
 	"steve/structs/exchanger"
 	"steve/structs/net"
 	"steve/structs/pubsub"
 	"steve/structs/redisfactory"
 	"steve/structs/rpc"
 	"steve/structs/sgrpc"
-	"steve/structs/arg"
-	"steve/structs/consul"
 )
 
 // Exposer provide common interfaces for services
@@ -24,7 +24,8 @@ type Exposer struct {
 	Publisher       pubsub.Publisher
 	Subscriber      pubsub.Subscriber
 	Option          arg.Option
-	ConsulReq       consul.Requester				// consul请求接口
+	ConsulReq       consul.Requester // consul请求接口
+	WebHandleMgr    WebHandleMgr
 }
 
 var gExposer *Exposer
@@ -39,3 +40,13 @@ func GetGlobalExposer() *Exposer {
 func SetGlobalExposer(e *Exposer) {
 	gExposer = e
 }
+
+// ------------------------------------------------
+
+// WebHandleMgr 运维后台消息处理器管理
+type WebHandleMgr interface {
+	Register(command string, handler WebHandler) error
+}
+
+// WebHandler 运维后台消息处理器
+type WebHandler func(requestData []byte) (code int, msg string, responseData []byte)

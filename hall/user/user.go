@@ -182,7 +182,7 @@ func HandleGetGameInfoReq(playerID uint64, header *steve_proto_gaterpc.Header, r
 	}
 	rspMsg = []exchanger.ResponseMsg{
 		exchanger.ResponseMsg{
-			MsgID: uint32(msgid.MsgID_HALL_GET_GAME_INFO_RSP),
+			MsgID: uint32(msgid.MsgID_HALL_GET_GAME_LIST_INFO_RSP),
 			Body:  response,
 		},
 	}

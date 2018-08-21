@@ -29,6 +29,7 @@ startserver msgserver msgserver msgserver
 #startserver alms alms alms
 startserver match match match
 startserver propserver propserver propserver 
+startserver web web web 
 
 pushd back
 serviceloader back --config=config.yml &
