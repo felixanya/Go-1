@@ -42,7 +42,7 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 	}
 	var aiEvent ai.AIEvent
 	switch params.AIType {
-	case ai.OverTimeAI, ai.SpecialOverTimeAI, ai.TuoGuangAI:
+	case ai.OverTimeAI, ai.TuoGuangAI:
 		if viper.GetBool("ai.test") {
 			aiEvent = h.generateRobot(player, mjContext)
 		} else {

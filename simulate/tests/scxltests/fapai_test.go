@@ -4,6 +4,7 @@ import (
 	"steve/client_pb/common"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/simulate/cheater"
 	"steve/simulate/global"
 	"steve/simulate/interfaces"
 	"steve/simulate/utils"
@@ -13,6 +14,8 @@ import (
 )
 
 func Test_Fapai(t *testing.T) {
+	// 清空所有的匹配
+	cheater.ClearAllMatch()
 
 	fapaiNtfExpectors := map[int]interfaces.MessageExpector{}
 
@@ -28,6 +31,9 @@ func Test_Fapai(t *testing.T) {
 		expector, err := client.ExpectMessage(msgid.MsgID_ROOM_FAPAI_NTF)
 		assert.Nil(t, err)
 		fapaiNtfExpectors[i] = expector
+
+		// 设置金币
+		cheater.SetPlayerCommonCoin(player.GetID())
 
 		_, err = utils.ApplyJoinDesk(player, common.GameId_GAMEID_XUELIU)
 		assert.Nil(t, err)

@@ -22,6 +22,7 @@ type Player struct {
 	overTime    int    // 超时计数
 	maxOverTime int    // 最大超时次数
 	tuoguan     bool   // 是否在托管中
+	autoHu      bool   // 是否自动胡牌
 	robotLv     int    // 机器人等级
 	brokerCount int    // 破产次数
 	desk        *desk.Desk
@@ -128,6 +129,20 @@ func (dp *Player) SetTuoguan(tuoguan bool, notify bool) {
 	if notify {
 		dp.notifyTuoguan(dp.PlayerID, tuoguan)
 	}
+}
+
+// IsAutoHu 玩家是否自动胡牌
+func (dp *Player) IsAutoHu() bool {
+	dp.mu.RLock()
+	defer dp.mu.RUnlock()
+	return dp.autoHu
+}
+
+// SetAutoHu 设置自动胡牌
+func (dp *Player) SetAutoHu(autoHu bool) {
+	dp.mu.Lock()
+	defer dp.mu.Unlock()
+	dp.autoHu = autoHu
 }
 
 func (p *Player) GetCoin() uint64 {

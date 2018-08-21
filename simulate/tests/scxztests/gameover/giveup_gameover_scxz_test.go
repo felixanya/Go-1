@@ -1,16 +1,6 @@
 package tests
 
-import (
-	"steve/client_pb/common"
-	"steve/client_pb/room"
-	"steve/simulate/global"
-	"steve/simulate/utils"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-//Test_SCXZ_AnGang_GiveUp_GameOver 测试暗杠后，其他玩家钱不够都认输，认输后，正常状态玩家不足，游戏结束
+/* //Test_SCXZ_AnGang_GiveUp_GameOver 测试暗杠后，其他玩家钱不够都认输，认输后，正常状态玩家不足，游戏结束
 //步骤：所有玩家金币数只有1,庄家起手暗杠，其他玩家钱不足都认输
 //期望：暗杠后，正常状态玩家不足，游戏结束
 func Test_SCXZ_AnGang_GiveUp_GameOver(t *testing.T) {
@@ -208,3 +198,4 @@ func Test_SCXZ_MingGang_GiveUp_GameOver(t *testing.T) {
 	// 游戏结束
 	utils.WaitGameOverNtf(t, deskData)
 }
+*/

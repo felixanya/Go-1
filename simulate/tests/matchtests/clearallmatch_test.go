@@ -38,6 +38,8 @@ func TestClearAllMatch(t *testing.T) {
 		assert.Nil(t, err)
 		cancelMatchRspNtfExpectors[i] = cancelMatchRspNtfExpector
 
+		cheater.SetPlayerCommonCoin(player.GetID())
+
 		// 发起匹配
 		_, err = utils.RequestMatch(player, uint32(common.GameId_GAMEID_XUELIU), uint32(1))
 		assert.Nil(t, err)

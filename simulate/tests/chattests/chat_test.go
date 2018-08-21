@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/simulate/cheater"
 	"steve/simulate/global"
 	"steve/simulate/utils"
 	"testing"
@@ -15,6 +16,9 @@ import (
 //游戏过程中庄家发送聊天信息
 //期望：所有玩家都收到，庄家发送的聊天信息
 func TestChat(t *testing.T) {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
+
 	// 开始游戏
 	params := global.NewCommonStartGameParams()
 	deskData, err := utils.StartGame(params)

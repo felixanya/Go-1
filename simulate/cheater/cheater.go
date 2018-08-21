@@ -23,6 +23,11 @@ func SetPlayerCoin(playerID uint64, coin uint64) error {
 	return nil
 }
 
+// SetPlayerCommonCoin 设置玩家通用的游戏金币
+func SetPlayerCommonCoin(playerID uint64) {
+	SetPlayerCoin(playerID, 50000)
+}
+
 // ClearAllMatch 清空所有的匹配
 func ClearAllMatch() error {
 	url := fmt.Sprintf("%s/clear_all_match?", config.GetMatchHTTPAddr())
