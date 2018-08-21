@@ -219,10 +219,6 @@ func HandleUsePropReq(playerID uint64, header *steve_proto_gaterpc.Header, req r
 
 	propID := gutils.PropTypeClient2Server(req.GetPropId())
 	prop, err := propclient.GetPlayerOneProp(playerID, propID)
-	if err != nil {
-		logEntry.WithError(err).Debugln("获取玩家道具信息失败")
-		return
-	}
 
 	// 使用道具
 	if prop.Count > 0 {

@@ -4,6 +4,7 @@ import (
 	"steve/client_pb/common"
 	"steve/client_pb/hall"
 	"steve/client_pb/msgid"
+	"steve/simulate/cheater"
 	"steve/simulate/global"
 	"steve/simulate/interfaces"
 	"steve/simulate/utils"
@@ -13,6 +14,8 @@ import (
 )
 
 func assertPlayerState(t *testing.T, player interfaces.ClientPlayer, stateID common.PlayerState, gameID common.GameId) {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
 	player.AddExpectors(msgid.MsgID_HALL_GET_PLAYER_STATE_RSP)
 
 	client := player.GetClient()
@@ -29,6 +32,8 @@ func assertPlayerState(t *testing.T, player interfaces.ClientPlayer, stateID com
 
 // Test_PlayerStates 测试玩家空闲状态
 func Test_PlayerStates_Idle(t *testing.T) {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
 	player, err := utils.LoginNewPlayer()
 	assert.Nil(t, err)
 	assert.NotNil(t, player)
@@ -38,6 +43,10 @@ func Test_PlayerStates_Idle(t *testing.T) {
 
 // Test_PlayerStates_Gameing 测试玩家在游戏中的状态
 func Test_PlayerStates_Gameing(t *testing.T) {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
 	params := global.NewCommonStartGameParams()
 	deskData, err := utils.StartGame(params)
 	assert.Nil(t, err)

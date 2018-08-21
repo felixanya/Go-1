@@ -26,10 +26,11 @@ startserver login login login
 startserver robot robot robot
 startserver gold gold gold
 startserver msgserver msgserver msgserver
-#startserver alms alms alms
+startserver alms alms alms
 startserver match match match
 startserver propserver propserver propserver 
 startserver web web web 
+startserver mailserver mailserver
 
 pushd back
 serviceloader back --config=config.yml &
