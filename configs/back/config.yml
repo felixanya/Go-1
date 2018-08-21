@@ -12,7 +12,7 @@ redis_list:
     passwd:
   player: 
     addr: 127.0.0.1:6379
-    passwd:  
+    passwd:      
 
 # mysql 数据库列表, db用户名和密码中不能带@符号
 mysql_list:
