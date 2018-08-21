@@ -5,13 +5,16 @@ import (
 	"steve/entity/majong"
 	"steve/gutils"
 	"steve/room/ai"
+	playerpkg "steve/room/player"
 )
 
 func (h *zixunStateAI) getNormalZiXunAIEvent(player *majong.Player, mjContext *majong.MajongContext) (aiEvent ai.AIEvent) {
 	zxRecord := player.GetZixunRecord()
 	handCards := player.GetHandCards()
 	canHu := zxRecord.GetEnableZimo()
-	if (gutils.IsHu(player) || gutils.IsTing(player)) && canHu {
+	playerMgr := playerpkg.GetPlayerMgr()
+	deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
+	if (deskPlayer.IsAutoHu() || gutils.IsHu(player) || gutils.IsTing(player)) && canHu {
 		aiEvent = hu(player)
 		return
 	}
