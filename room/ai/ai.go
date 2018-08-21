@@ -15,10 +15,6 @@ const (
 	TuoGuangAI
 	// RobotAI 机器人 AI
 	RobotAI
-	// HuAI 胡牌状态下的AI
-	HuAI
-	// TingAI 听状态下的AI
-	TingAI
 )
 
 // PlayerAIInfo 玩家 AI 信息
@@ -45,11 +41,6 @@ type AIEvent struct {
 // AIEventGenerateResult AI 事件生成结果
 type AIEventGenerateResult struct {
 	Events []AIEvent
-}
-
-// MajongAI 麻将 AI
-type MajongAI interface {
-	GenerateAIEvent(params AIEventGenerateParams) (AIEventGenerateResult, error)
 }
 
 type CommonAI interface {

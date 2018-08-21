@@ -30,23 +30,6 @@ func (h *chupaiWenxunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (
 	// 	return
 	// }
 	switch params.AIType {
-	case ai.HuAI:
-		{
-			if gutils.IsTing(player) {
-				return
-			}
-			if h.containAction(player, majong.Action_action_gang) {
-				return
-			}
-			if gutils.IsHu(player) && h.containAction(player, majong.Action_action_hu) {
-				//执行胡操作
-				if event := h.chupaiWenxun(player); event != nil {
-					result.Events = append(result.Events, *event)
-				}
-			}
-		}
-	case ai.TingAI:
-		return
 	case ai.RobotAI:
 		{
 			if event := h.askMiddleAI(player, *mjContext.LastOutCard); event != nil {
@@ -55,6 +38,18 @@ func (h *chupaiWenxunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (
 		}
 	case ai.OverTimeAI, ai.TuoGuangAI:
 		{
+			if gutils.IsTing(player) {
+				return
+			}
+			if gutils.IsHu(player) && h.containAction(player, majong.Action_action_gang) {
+				return
+			}
+			if gutils.IsHu(player) && h.containAction(player, majong.Action_action_hu) {
+				//执行胡操作
+				if event := h.chupaiWenxun(player); event != nil {
+					result.Events = append(result.Events, *event)
+				}
+			}
 			if viper.GetBool("ai.test") {
 				if event := h.askMiddleAI(player, *mjContext.LastOutCard); event != nil {
 					result.Events = append(result.Events, *event)

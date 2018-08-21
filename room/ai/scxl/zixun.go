@@ -43,6 +43,25 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 	var aiEvent ai.AIEvent
 	switch params.AIType {
 	case ai.OverTimeAI, ai.TuoGuangAI:
+		zxRecord := player.GetZixunRecord()
+		// 听状态下，能胡不做操作等玩家自行选择或者等超时事件，不能胡就打出摸到的牌
+		if gutils.IsTing(player) {
+			canHu := zxRecord.GetEnableZimo()
+			if !canHu {
+				aiEvent = h.chupai(player, mjContext.GetLastMopaiCard())
+			}
+			break
+		}
+		// 胡状态下，能胡直接让胡，不能胡就打出摸到的牌
+		if gutils.IsHu(player) {
+			canHu := zxRecord.GetEnableZimo()
+			if canHu {
+				aiEvent = h.hu(player)
+			} else {
+				aiEvent = h.chupai(player, mjContext.GetLastMopaiCard())
+			}
+			break
+		}
 		if viper.GetBool("ai.test") {
 			aiEvent = h.generateRobot(player, mjContext)
 		} else {
@@ -50,10 +69,6 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 		}
 	case ai.RobotAI:
 		aiEvent = h.generateRobot(player, mjContext)
-	case ai.TingAI:
-		aiEvent = h.getNormalZiXunTingStateAIEvent(player, mjContext)
-	case ai.HuAI:
-		aiEvent = h.getNormalZiXunHuStateAIEvent(player, mjContext)
 	}
 
 	result, err = ai.AIEventGenerateResult{
@@ -76,13 +91,13 @@ func (h *zixunStateAI) checkAIEvent(player *majong.Player, mjContext *majong.Maj
 		return fmt.Errorf("手牌数量少于2")
 	}
 	record := player.GetZixunRecord()
-	if params.AIType == ai.TingAI {
+	if gutils.IsTing(player) {
 		if record.GetEnableZimo() || len(record.GetEnableAngangCards()) > 0 ||
 			len(record.GetEnableBugangCards()) > 0 {
 			return fmt.Errorf("听的类型下，玩家有特殊操作的时候不处理")
 		}
 	}
-	if params.AIType == ai.HuAI {
+	if gutils.IsHu(player) {
 		if len(record.GetEnableAngangCards()) > 0 ||
 			len(record.GetEnableBugangCards()) > 0 {
 			return fmt.Errorf("胡的类型下，玩家有除了胡之外的特殊操作不处理")

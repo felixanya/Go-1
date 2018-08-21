@@ -62,10 +62,6 @@ func (aeg *autoEventGenerator) handlePlayerAI(result *AutoEventGenerateResult, A
 			eventType = fixed.RobotEvent
 		} else if aiType == TuoGuangAI {
 			eventType = fixed.TuoGuanEvent
-		} else if aiType == HuAI {
-			eventType = fixed.HuStateEvent
-		} else if aiType == TingAI {
-			eventType = fixed.TingStateEvent
 		}
 		for _, aiEvent := range aiResult.Events {
 			event := desk.DeskEvent{EventID: int(aiEvent.ID), EventType: eventType, Context: aiEvent.Context, PlayerID: playerID, StateNumber: gameContext.StateNumber, Desk: deskObj}
@@ -104,78 +100,6 @@ func (aeg *autoEventGenerator) handleDDZPlayerAI(result *AutoEventGenerateResult
 	}
 }
 
-// handleOverTime 处理超时
-func (aeg *autoEventGenerator) handleOverTime(AI CommonAI, stateTime time.Time, deskObj *desk.Desk) (
-	finish bool, result AutoEventGenerateResult) {
-
-	gameContext := deskObj.GetConfig().Context.(*contexts.MajongDeskContext)
-	mjContext := gameContext.MjContext
-
-	finish, result = false, AutoEventGenerateResult{
-		Events: []desk.DeskEvent{},
-	}
-	duration := time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
-	if duration == 0 || time.Now().Sub(stateTime) < duration {
-		return
-	}
-	players := mjContext.GetPlayers()
-	for _, player := range players {
-		if gutils.IsTing(player) || gutils.IsHu(player) {
-			aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), deskObj, TuoGuangAI, 0)
-		} else {
-			aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), deskObj, OverTimeAI, 0)
-		}
-	}
-	finish = len(result.Events) > 0
-	return
-
-}
-
-// handleHuStateAuto 处理胡状态下的自动事件
-func (aeg *autoEventGenerator) handleHuStateAuto(AI CommonAI, stateTime time.Time, deskObj *desk.Desk) (
-	finish bool, result AutoEventGenerateResult) {
-	finish, result = false, AutoEventGenerateResult{
-		Events: []desk.DeskEvent{},
-	}
-
-	gameContext := deskObj.GetConfig().Context.(*contexts.MajongDeskContext)
-	mjContext := gameContext.MjContext
-	duration := time.Second * time.Duration(viper.GetInt(fixed.HuStateTimeOut))
-	if duration == 0 || time.Now().Sub(stateTime) < duration {
-		return
-	}
-	players := mjContext.GetPlayers()
-	for _, player := range players {
-		if gutils.IsHu(player) {
-			aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), deskObj, HuAI, 0)
-		}
-	}
-	finish = len(result.Events) > 0
-	return
-}
-
-// handleTingStateAuto 处理听状态下的自动事件
-func (aeg *autoEventGenerator) handleTingStateAuto(AI CommonAI, stateTime time.Time, deskObj *desk.Desk) (
-	finish bool, result AutoEventGenerateResult) {
-	finish, result = false, AutoEventGenerateResult{
-		Events: []desk.DeskEvent{},
-	}
-	gameContext := deskObj.GetConfig().Context.(*contexts.MajongDeskContext)
-	mjContext := gameContext.MjContext
-	duration := time.Second * time.Duration(viper.GetInt(fixed.TingStateTimeOut))
-	if duration == 0 || time.Now().Sub(stateTime) < duration {
-		return
-	}
-	players := mjContext.GetPlayers()
-	for _, player := range players {
-		if gutils.IsTing(player) {
-			aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), deskObj, TingAI, 0)
-		}
-	}
-	finish = len(result.Events) > 0
-	return
-}
-
 // handleDDZOverTime 斗地主超时处理
 // finish : 是否处理完成
 // result : 产生的AI事件结果集合
@@ -210,26 +134,6 @@ func (aeg *autoEventGenerator) handleDDZOverTime(AI CommonAI, params *AutoEventG
 	return
 }
 
-// handleTuoGuan 执行所有玩家的托管
-func (aeg *autoEventGenerator) handleTuoGuan(deskObj *desk.Desk, AI CommonAI, stateTime time.Time) AutoEventGenerateResult {
-	result := AutoEventGenerateResult{
-		Events: []desk.DeskEvent{},
-	}
-	tuoguanOprTime := 1 * time.Second
-	if time.Now().Sub(stateTime) < tuoguanOprTime {
-		return result
-	}
-	playerIDs := deskObj.GetPlayerIds()
-	playerMgr := playerpkg.GetPlayerMgr()
-	for _, playerID := range playerIDs {
-		player := playerMgr.GetPlayer(playerID)
-		if player.IsTuoguan() {
-			aeg.handlePlayerAI(&result, AI, playerID, deskObj, TuoGuangAI, 0)
-		}
-	}
-	return result
-}
-
 // handleDDZTuoGuan 斗地主托管处理
 // finish : 是否处理完成
 // result : 产生的AI事件结果集合
@@ -257,10 +161,10 @@ func (aeg *autoEventGenerator) handleDDZTuoGuan(deskObj *desk.Desk, AI CommonAI,
 
 // GenerateV2 利用 AI 生成自动事件
 func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (result AutoEventGenerateResult) {
-	desk := params.Desk
+	mydesk := params.Desk
 
 	// 该桌子所属的游戏ID
-	gameID := desk.GetGameId()
+	gameID := mydesk.GetGameId()
 
 	// 该游戏各个状态对应的AI产生器
 	gameAIs, ok := aeg.commonAIs[int(gameID)]
@@ -268,7 +172,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		//logrus.WithField("gameId", gameID).Debug("Can't find game AI")
 		return
 	}
-	_gameContext := desk.GetConfig().Context
+	_gameContext := mydesk.GetConfig().Context
 
 	// 当前状态ID
 	var state int32
@@ -310,25 +214,39 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 			}
 		}
 	} else {
-		if overTime, result := aeg.handleOverTime(AI, params.StartTime, params.Desk); overTime {
-			return result
-		}
-		if overTime, result := aeg.handleHuStateAuto(AI, params.StartTime, params.Desk); overTime {
-			return result
-		}
-		if overTime, result := aeg.handleTingStateAuto(AI, params.StartTime, params.Desk); overTime {
-			return result
-		}
-		result = aeg.handleTuoGuan(params.Desk, AI, params.StartTime)
+		startTime := params.StartTime
+		gameContext := params.Desk.GetConfig().Context.(*contexts.MajongDeskContext)
+		mjContext := gameContext.MjContext
 
-		mjContext := _gameContext.(*contexts.MajongDeskContext).MjContext
-		// 超过 1s 处理机器人事件
-		if time.Now().Sub(params.StartTime) > 1*time.Second {
-			players := mjContext.GetPlayers()
-			for _, player := range players {
-				playerID := player.GetPlayerId()
-				if lv, exist := params.RobotLv[playerID]; exist && lv != 0 {
+		result := AutoEventGenerateResult{
+			Events: []desk.DeskEvent{},
+		}
+
+		players := mjContext.GetPlayers()
+		playerMgr := playerpkg.GetPlayerMgr()
+		for _, player := range players {
+			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
+			lv, exist := params.RobotLv[player.GetPlayerId()]
+			isRobot := exist && lv != 0
+			var duration time.Duration
+			if gutils.IsHu(player) {
+				duration = time.Second * time.Duration(viper.GetInt(fixed.HuStateTimeOut))
+			} else if gutils.IsTing(player) {
+				duration = time.Second * time.Duration(viper.GetInt(fixed.TingStateTimeOut))
+			} else if deskPlayer.IsTuoguan() {
+				duration = 1 * time.Second
+			} else if isRobot {
+				duration = 1 * time.Second
+			} else {
+				duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
+			}
+			if (duration != 0 || duration == 0 && (deskPlayer.IsTuoguan() || isRobot)) && time.Now().Sub(startTime) >= duration {
+				if gutils.IsTing(player) || gutils.IsHu(player) || deskPlayer.IsTuoguan() {
+					aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, TuoGuangAI, 0) //听、胡后超时不记录超时次数
+				} else if isRobot {
 					aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, RobotAI, lv)
+				} else {
+					aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, OverTimeAI, 0)
 				}
 			}
 		}

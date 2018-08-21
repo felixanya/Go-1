@@ -98,7 +98,7 @@ func (h *waitQiangganghuStateAI) checkAIEvent(player *majong.Player, mjContext *
 		len(player.GetHandCards())%3+1 != 2 ||
 		gutils.CheckHasDingQueCard(mjContext, player) ||
 		len(player.GetPossibleActions()) == 0 ||
-		params.AIType == ai.TingAI {
+		gutils.IsTing(player) {
 		return err
 	}
 	return nil
