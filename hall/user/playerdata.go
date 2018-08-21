@@ -13,6 +13,7 @@ import (
 
 	"steve/datareport/fixed"
 	"steve/external/datareportclient"
+	"steve/external/idclient"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -324,15 +325,9 @@ func (pds *PlayerDataService) UpdatePlayerServerAddr(ctx context.Context, req *u
 
 // createPlayer 创建玩家
 func createPlayer(accID uint64) (uint64, error) {
-	showUID := data.AllocShowUID()
-	playerID := data.AllocPlayerID()
-
-	if playerID == 0 {
-		return 0, fmt.Errorf("分配玩家 ID 失败")
-	}
-
-	if has, err := data.ExistPlayerID(playerID); err != nil || has {
-		return 0, fmt.Errorf("初始化玩家(%d)数据失败,玩家已存在: %v", playerID, err)
+	playerID, showUID, err := generateID(1)
+	if err != nil || playerID == 0 || showUID == 0 {
+		return playerID, fmt.Errorf("生成玩家playerId:(%d),showUID:(%d)失败: %v", playerID, showUID, err)
 	}
 	// 角色配置
 	roleConifg := logic.RoleConfig[0]
@@ -340,7 +335,7 @@ func createPlayer(accID uint64) (uint64, error) {
 	tpalyer := db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(playerID),
-		Showuid:      showUID,
+		Showuid:      int64(showUID),
 		Type:         1,
 		Channelid:    1,                                // TODO ，渠道 ID
 		Nickname:     fmt.Sprintf("player%d", showUID), // TODO,昵称
@@ -399,6 +394,29 @@ func createPlayer(accID uint64) (uint64, error) {
 		return playerID, fmt.Errorf("初始化玩家(%d)状态失败: %v", playerID, err)
 	}
 	return playerID, nil
+}
+
+// generateID 根据最大重试次数生成id
+func generateID(retry uint32) (uint64, uint64, error) {
+	count := uint32(0)
+	for {
+		playerID, showUID, err := idclient.NewPlayerShowId()
+		if count == retry {
+			return playerID, showUID, err
+		}
+		if err != nil || playerID == 0 || showUID == 0 {
+			logrus.Errorf("生成玩家 ID 失败")
+			count++
+			continue
+		}
+		// 若playerId或playerID，showUID 已存在，重新获取
+		if has, err := data.ExistID(playerID, showUID); err != nil || has {
+			logrus.Errorf("初始化玩家数据playerId:(%d),showUID:(%d)失败,玩家已存在: %v", playerID, showUID, err)
+			count++
+			continue
+		}
+	}
+
 }
 
 func getRandomAvator() string {
