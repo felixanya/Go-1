@@ -34,27 +34,26 @@ func recoverPanic() {
 // 用启动命令行参数，取代文件配置项
 func ArgReplaceOption(opt *Option) {
 	// 如果命令行启动参数定义了服务ID，启用启动参数定义的服务ID
-	port , ok := IntArg("port")
+	port, ok := IntArg("port")
 	if ok && port > 100 {
 		opt.rpcPort = int(port)
 	}
-	hport , ok := IntArg("hport")
+	hport, ok := IntArg("hport")
 	if ok && hport > 100 {
 		opt.healthPort = int(hport)
 	}
 	// 配置文件中的分组名称+启动参数中的分组ID，一起合成最后的分组ID
 	groupArg, ok := StringArg("gid")
-	if ok &&  len(groupArg) > 0 {
+	if ok && len(groupArg) > 0 {
 		if len(opt.groupName) > 0 {
 			opt.groupName += ","
 		}
 		opt.groupName += groupArg
 	}
 
-
 }
 
-// createExposer 创建 exposer 对象
+// CreateExposer 创建 exposer 对象
 func CreateExposer(opt *Option) *structs.Exposer {
 	ArgReplaceOption(opt)
 	exposer := &structs.Exposer{}
@@ -69,6 +68,7 @@ func CreateExposer(opt *Option) *structs.Exposer {
 	exposer.Subscriber = pubsub.CreateSubscriber()
 	exposer.Option = opt
 	exposer.ConsulReq = &ConsulRequestImp{}
+	exposer.WebHandleMgr = createWebHandlerMgr(exposer.RPCServer)
 
 	structs.SetGlobalExposer(exposer)
 	// 开启通用的负载报告服务
@@ -76,7 +76,7 @@ func CreateExposer(opt *Option) *structs.Exposer {
 	// Hash路由方式，将server Id 设置为负载值
 	if viper.GetString("rpc_lb") == "hash" {
 		ridArg, ok := IntArg("rid")
-		if ok && ridArg >= 0 && ridArg < 10000{
+		if ok && ridArg >= 0 && ridArg < 10000 {
 			exposer.RPCServer.SetScore(int64(ridArg))
 		}
 	}
