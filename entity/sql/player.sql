@@ -176,4 +176,29 @@ CREATE TABLE `t_player_props` (
   PRIMARY KEY (`playerID`,`propID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='玩家道具表';
 
+
+-- ----------------------------
+-- Table structure for t_show_id
+-- ----------------------------
+DROP TABLE IF EXISTS `t_show_id`;
+CREATE TABLE `t_show_id` (
+  `n_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '递增ID',
+  `n_showid` bigint(20) NOT NULL COMMENT 'show id 值',
+  `n_isUse` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否被使用',
+  PRIMARY KEY (`n_id`),
+  UNIQUE KEY `t_show_id_UN_showid` (`n_showid`),
+  KEY `t_show_id_n_isUse_IDX` (`n_isUse`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='showid记录表';
+
+-- ----------------------------
+-- Table structure for t_player_id
+-- ----------------------------
+DROP TABLE IF EXISTS `t_player_id`;
+CREATE TABLE `t_player_id` (
+  `n_id` bigint(20) NOT NULL COMMENT '通用变量ID',
+  `n_value` bigint(20) DEFAULT '0' COMMENT '变量值',
+  `n_des` varchar(255) DEFAULT NULL COMMENT '变量描述',
+  PRIMARY KEY (`n_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='playerid表';
+
 SET FOREIGN_KEY_CHECKS = 1;
