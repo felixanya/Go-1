@@ -191,7 +191,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		gameContext := params.Desk.GetConfig().Context.(*contexts.MajongDeskContext)
 		mjContext := gameContext.MjContext
 
-		result := AutoEventGenerateResult{
+		result = AutoEventGenerateResult{
 			Events: []desk.DeskEvent{},
 		}
 
@@ -202,26 +202,26 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 			lv, exist := params.RobotLv[player.GetPlayerId()]
 			isRobot := exist && lv != 0
 			var duration time.Duration
-			if gutils.IsHu(player) {
+			if isRobot {
+				duration = 1 * time.Second
+			} else if gutils.IsHu(player) {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.HuStateTimeOut))
 			} else if gutils.IsTing(player) {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.TingStateTimeOut))
 			} else if deskPlayer.IsTuoguan() {
 				duration = 1 * time.Second
-			} else if isRobot {
-				duration = 1 * time.Second
 			} else {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
 			}
-			if (duration != 0 || duration == 0 && (deskPlayer.IsTuoguan() || isRobot)) && time.Now().Sub(startTime) >= duration {
+			if time.Now().Sub(startTime) >= duration {
 				var aiType AIType
 				var eventType int
-				if gutils.IsTing(player) || gutils.IsHu(player) || deskPlayer.IsTuoguan() {
-					aiType = TuoGuangAI
-					eventType = fixed.TuoGuanEvent
-				} else if isRobot {
+				if isRobot {
 					aiType = RobotAI
 					eventType = fixed.RobotEvent
+				} else if gutils.IsTing(player) || gutils.IsHu(player) || deskPlayer.IsTuoguan() {
+					aiType = TuoGuangAI
+					eventType = fixed.TuoGuanEvent
 				} else {
 					aiType = OverTimeAI
 					eventType = fixed.OverTimeEvent
