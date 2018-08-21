@@ -149,6 +149,7 @@ func HandleAutoHuReq(playerID uint64, header *steve_proto_gaterpc.Header, req ro
 
 	body := &room.RoomAutoHuRsp{
 		ErrCode: room.RoomError_SUCCESS.Enum(),
+		Enable:  req.Enable,
 	}
 	ret = []exchanger.ResponseMsg{{
 		MsgID: uint32(msgid.MsgID_ROOM_AUTOHU_RSP),

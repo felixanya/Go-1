@@ -191,10 +191,6 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		gameContext := params.Desk.GetConfig().Context.(*contexts.MajongDeskContext)
 		mjContext := gameContext.MjContext
 
-		result = AutoEventGenerateResult{
-			Events: []desk.DeskEvent{},
-		}
-
 		players := mjContext.GetPlayers()
 		playerMgr := playerpkg.GetPlayerMgr()
 		for _, player := range players {
