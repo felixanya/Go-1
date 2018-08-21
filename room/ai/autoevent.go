@@ -44,33 +44,6 @@ func GetAtEvent() DeskAutoEventGenerator {
 }
 
 // handlePlayerAI 处理玩家 AI
-func (aeg *autoEventGenerator) handlePlayerAI(result *AutoEventGenerateResult, AI CommonAI,
-	playerID uint64, deskObj *desk.Desk, aiType AIType, robotLv int) {
-
-	gameContext := deskObj.GetConfig().Context.(*contexts.MajongDeskContext)
-	mjContext := gameContext.MjContext
-
-	aiResult, err := AI.GenerateAIEvent(AIEventGenerateParams{
-		MajongContext: &mjContext,
-		PlayerID:      playerID,
-		AIType:        aiType,
-		RobotLv:       robotLv,
-	})
-	if err == nil {
-		eventType := fixed.OverTimeEvent
-		if aiType == RobotAI {
-			eventType = fixed.RobotEvent
-		} else if aiType == TuoGuangAI {
-			eventType = fixed.TuoGuanEvent
-		}
-		for _, aiEvent := range aiResult.Events {
-			event := desk.DeskEvent{EventID: int(aiEvent.ID), EventType: eventType, Context: aiEvent.Context, PlayerID: playerID, StateNumber: gameContext.StateNumber, Desk: deskObj}
-			result.Events = append(result.Events, event)
-		}
-	}
-}
-
-// handlePlayerAI 处理玩家 AI
 // result 		: 存放AI事件的结果
 // AI			: 具体的AI产生器
 // playerID 	: AI针对的玩家的playerID
@@ -241,12 +214,30 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 				duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
 			}
 			if (duration != 0 || duration == 0 && (deskPlayer.IsTuoguan() || isRobot)) && time.Now().Sub(startTime) >= duration {
+				var aiType AIType
+				var eventType int
 				if gutils.IsTing(player) || gutils.IsHu(player) || deskPlayer.IsTuoguan() {
-					aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, TuoGuangAI, 0) //听、胡后超时不记录超时次数
+					aiType = TuoGuangAI
+					eventType = fixed.TuoGuanEvent
 				} else if isRobot {
-					aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, RobotAI, lv)
+					aiType = RobotAI
+					eventType = fixed.RobotEvent
 				} else {
-					aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, OverTimeAI, 0)
+					aiType = OverTimeAI
+					eventType = fixed.OverTimeEvent
+				}
+
+				aiResult, err := AI.GenerateAIEvent(AIEventGenerateParams{
+					MajongContext: &mjContext,
+					PlayerID:      player.GetPlayerId(),
+					AIType:        aiType,
+					RobotLv:       lv,
+				})
+				if err == nil {
+					for _, aiEvent := range aiResult.Events {
+						event := desk.DeskEvent{EventID: int(aiEvent.ID), EventType: eventType, Context: aiEvent.Context, PlayerID: player.GetPlayerId(), StateNumber: gameContext.StateNumber, Desk: params.Desk}
+						result.Events = append(result.Events, event)
+					}
 				}
 			}
 		}
