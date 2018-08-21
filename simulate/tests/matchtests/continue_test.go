@@ -5,6 +5,7 @@ import (
 	"steve/client_pb/match"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/simulate/cheater"
 	"steve/simulate/global"
 	"steve/simulate/interfaces"
 	"steve/simulate/utils"
@@ -19,6 +20,9 @@ import (
 // 开始游戏然后结束
 // 返回参与游戏的玩家列表
 func startAndFinishGame(t *testing.T) []interfaces.ClientPlayer {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
+
 	params := global.NewCommonStartGameParams()
 	params.WallCards = []uint32{}
 	deskData, err := utils.StartGame(params)
