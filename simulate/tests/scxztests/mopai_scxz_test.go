@@ -95,7 +95,7 @@ func Test_SCXZ_Hued_NotMopai(t *testing.T) {
 	assert.Nil(t, utils.WaitZixunNtf(deskData, 1))
 }
 
-// Test_GiveUp_MoPai 测试认输玩家是否还能在摸牌
+/* // Test_GiveUp_MoPai 测试认输玩家是否还能在摸牌
 // 步骤：（所有玩家金币数设置为2）
 //1.庄家出牌
 //2.下家摸牌出牌，庄家明杠下家，下家钱不足认输，
@@ -145,4 +145,4 @@ func Test_GiveUp_MoPai(t *testing.T) {
 
 	// （跳过下家摸牌）对家摸牌32
 	assert.Nil(t, utils.WaitZixunNtf(deskData, 2))
-}
+} */

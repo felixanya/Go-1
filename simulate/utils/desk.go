@@ -8,6 +8,7 @@ import (
 	"steve/client_pb/match"
 	msgid "steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/simulate/cheater"
 	"steve/simulate/global"
 	"steve/simulate/interfaces"
 	"steve/simulate/structs"
@@ -47,6 +48,9 @@ type DDZData struct {
 // StartGame 启动一局游戏
 // 开始后停留在等待庄家出牌状态
 func StartGame(params structs.StartGameParams) (*DeskData, error) {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
+
 	players, err := CreateAndLoginUsers(params.PlayerNum)
 	if err != nil {
 		return nil, err
@@ -59,6 +63,12 @@ func StartGame(params structs.StartGameParams) (*DeskData, error) {
 	if err := majongOption(params.PeiPaiGame, params.IsHsz); err != nil {
 		return nil, err
 	}
+
+	// 设置金币
+	for _, player := range players {
+		cheater.SetPlayerCommonCoin(player.GetID())
+	}
+
 	xipaiNtfExpectors := createExpectors(players, msgid.MsgID_ROOM_XIPAI_NTF)
 	fapaiNtfExpectors := createExpectors(players, msgid.MsgID_ROOM_FAPAI_NTF)
 	// hszNotifyExpectors := createHSZNotifyExpector(players)
@@ -117,6 +127,9 @@ func StartGame(params structs.StartGameParams) (*DeskData, error) {
 // 开始后停留在等待庄家出牌状态
 func StartDDZGame(params structs.StartPukeGameParams) (*DeskData, error) {
 
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
+
 	logEntry := logrus.WithFields(logrus.Fields{
 		"func_name": "desk.go::StartDDZGame",
 	})
@@ -152,6 +165,9 @@ func StartDDZGame(params structs.StartPukeGameParams) (*DeskData, error) {
 	for _, player := range players {
 		es, _ := player.GetClient().ExpectMessage(msgid.MsgID_ROOM_DDZ_START_GAME_NTF)
 		expectorsStart = append(expectorsStart, es)
+
+		// 设置金币
+		cheater.SetPlayerCoin(player.GetID(), 50000)
 	}
 
 	// 加入牌桌
@@ -380,7 +396,7 @@ func GetGameLevelBaseCoin(player interfaces.ClientPlayer, gameID uint32, levelID
 	rsp := hall.HallGetGameListInfoRsp{}
 
 	client := player.GetClient()
-	err := client.Request(createMsgHead(msgid.MsgID_HALL_GET_GAME_INFO_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_HALL_GET_GAME_INFO_RSP), &rsp)
+	err := client.Request(createMsgHead(msgid.MsgID_HALL_GET_GAME_LIST_INFO_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_HALL_GET_GAME_LIST_INFO_RSP), &rsp)
 	if err != nil {
 		logrus.WithError(err).Errorln(errRequestFailed)
 		return 1
