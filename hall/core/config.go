@@ -2,9 +2,12 @@ package core
 
 import (
 	"fmt"
+	"steve/gutils/topics"
+	"steve/hall/handle"
 	"steve/hall/logic"
 	"steve/structs"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
 )
 
@@ -30,6 +33,12 @@ func InitServer() error {
 
 	//  初始化角色配置
 	logic.InitRoleConfig()
+
+	// 订阅
+	exposer := structs.GetGlobalExposer()
+	if err := exposer.Subscriber.Subscribe(topics.GoldChangeNtf, "gold", &handle.GoldChanngleHandler{}); err != nil {
+		logrus.WithError(err).Panicln("订阅单局玩家金币变化通知消息失败")
+	}
 	return nil
 }
 

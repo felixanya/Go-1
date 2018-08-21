@@ -401,19 +401,16 @@ func generateID(retry uint32) (uint64, uint64, error) {
 	count := uint32(0)
 	for {
 		playerID, showUID, err := idclient.NewPlayerShowId()
-		if count == retry {
-			return playerID, showUID, err
-		}
+		count++
 		if err != nil || playerID == 0 || showUID == 0 {
 			logrus.Errorf("生成玩家 ID 失败")
-			count++
-			continue
 		}
 		// 若playerId或playerID，showUID 已存在，重新获取
 		if has, err := data.ExistID(playerID, showUID); err != nil || has {
 			logrus.Errorf("初始化玩家数据playerId:(%d),showUID:(%d)失败,玩家已存在: %v", playerID, showUID, err)
-			count++
-			continue
+		}
+		if count == retry {
+			return playerID, showUID, err
 		}
 	}
 
