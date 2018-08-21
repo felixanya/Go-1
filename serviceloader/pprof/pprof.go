@@ -11,6 +11,7 @@ import (
 	"runtime/pprof"
 	"strconv"
 	"strings"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type ProfileType string
@@ -66,7 +67,7 @@ func Init(profName string, exposeType string, httpPort int, moremux *http.ServeM
 	if context.exposeType == TypeExposeHttp {
 		serverMux := http.NewServeMux()
 		if moremux != nil {
-			serverMux.HandleFunc("/a", moremux.ServeHTTP)
+			serverMux.HandleFunc("/", moremux.ServeHTTP)
 		}
 		serverMux.HandleFunc("/debug/pprof/", http.HandlerFunc(pprofIndex))
 		startServer(serverMux, profName)
@@ -87,6 +88,7 @@ func Init(profName string, exposeType string, httpPort int, moremux *http.ServeM
 		serverMux.HandleFunc("/debug/pprofsvg/cpuprofile", http.HandlerFunc(svgPprof))
 		serverMux.HandleFunc("/debug/pprofsvg/profile", http.HandlerFunc(svgPprof))
 		serverMux.HandleFunc("/debug/pprofsvg/"+profName, http.HandlerFunc(svgPprof))
+		serverMux.Handle("/metrics", promhttp.Handler())
 		startServer(serverMux, profName)
 	}
 }
@@ -119,6 +121,7 @@ func startServer(serverMux *http.ServeMux, profName string) {
 func allIndex(res http.ResponseWriter, req *http.Request) {
 	httppprof.Index(res, req)
 	addNonIndex(res, "pprof")
+	res.Write([]byte("<div><br /><a href=\"/metrics\">Prometheus metrics</a></div>"))
 	res.Write([]byte(`<script>
 function replaceLinks(){
     var all = document.getElementsByTagName("a");
@@ -126,7 +129,7 @@ function replaceLinks(){
 		var link = all[i].href;
 		console.log (link, link.indexOf("pprofsvg"));
 		if(link.indexOf("pprofsvg") == -1 && link.indexOf("cmdline") == -1 && 
-			link.indexOf("symbol") == -1 && link.indexOf("trace") == -1) {
+			link.indexOf("symbol") == -1 && link.indexOf("trace") == -1 && link.indexOf("metrics") == -1) {
         	var link2 = link.replace("pprof", "pprofsvg");
 			var a = document.createElement('a');
 			var linkText = document.createTextNode("SVG");

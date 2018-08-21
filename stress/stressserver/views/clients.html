@@ -4,15 +4,20 @@
 	<a href="/debug/pprof/" target="_blank">PPROF</a>
     <a href="/log/" target="_blank">LOG</a>
 </div>
-<a id="finished_url" href="" target="_blank">已结束的压测</a>
+<div>
+{{/*<a id="finished_url" href="" target="_blank">已结束的压测</a>*/}}
 <br />
 <br />
 <br />
 <hr />
-进行中的压测（点击每行显示详情和Grafana报告链接）
+进行中的压测
 		<button id="refreshBtn" style="width:80px; height: 80px">刷新</button>
 		<input id="refreshCB" type="checkbox" checked="true">自动刷新</input>
 		<input id="refreshTF" type="text" style="width:30px" value="5">秒</input>
+</div>
+<div id="grafanaUrl" style="float:right; margin-right:100px; margin-top:-80px; text-align:right">
+
+</div>
 <hr />
 <div class="all">
 	<table id="example" class="display" width="100%"></table>
@@ -85,10 +90,11 @@
     }
 	var count = 5;
 	var refreshInterval;
-    var txtInterval;
+	var txtInterval;
+	var noItem = localStorage.getItem('refreshCount') === null;
     var refreshCount = Number(localStorage.getItem('refreshCount'));
     var refreshEnabled = Number(localStorage.getItem('refreshEnabled'));
-    if(isNaN(refreshCount) == false) {
+    if(noItem == false) {
         console.log("refreshCount: ", refreshCount, refreshEnabled);
         refreshInterval = refreshEnabled;
         if(refreshInterval == -1) {
@@ -136,8 +142,14 @@
 	var configColumn;
 	function onClients(data) {
 		var jsondata = JSON.parse(data);
+        console.log(jsondata)
+		var html = "Dashboard<br />";
+		for(var i = 0 ; i < jsondata.grafana.boards.length; i++) {
+		    var board = jsondata.grafana.boards[i];
+            html += "<a href=\"" + board.url + "\" target=\"_blank\">" + board.name + "</a><br />";
+        }
+        $("#grafanaUrl").html(html);
 		clients = jsondata.list;
-        console.log(clients)
 		grafana = jsondata.grafana;
         var t2 = new Date().getTime()
 		t1 = t2 - 60 * 60
@@ -223,7 +235,7 @@
 
         $('#example tbody').on( 'click', 'tr', function () {
             var clientId = $(this).closest('tr').find("td")[0].innerHTML;
-            setDetails(clientId);
+            // setDetails(clientId);
             if ( $(this).hasClass('selected') ) {
                 $(this).removeClass('selected');
             }

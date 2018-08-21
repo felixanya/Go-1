@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"steve/stress/proto"
 	"steve/stress/common"
+	"github.com/spf13/cast"
 )
 
 func startHttp() {
@@ -92,11 +93,25 @@ func getClients(w http.ResponseWriter, r *http.Request) {
 		return true
 	})
 	jsonmap["list"] = list
-	jsonmap["grafana"] = make(map[string]interface{})
-	jsonmap["grafana"].(map[string]interface{})["url"] = viper.GetString("grafana.url")
-	jsonmap["grafana"].(map[string]interface{})["clients_url"] = viper.GetString("grafana.clients_url")
-	jsonmap["grafana"].(map[string]interface{})["finished_url"] = viper.GetString("grafana.finished_url")
-	j, _ := json.Marshal(jsonmap)
+	grafana := make(map[string]interface{})
+	boards := viper.GetStringMap("grafana")
+	bb := boards["boards"].([]interface{})
+	grafanaBoards := make([]map[string]string, len(bb))
+	for i := 0; i < len(bb); i++ {
+		grafanaBoards[i] = make(map[string]string)
+		bbb := bb[i].(map[interface{}]interface{})
+		grafanaBoards[i]["name"] = cast.ToString(bbb["name"])
+		grafanaBoards[i]["url"] = cast.ToString(bbb["url"])
+	}
+	grafana["boards"] = grafanaBoards
+	grafana["url"] = viper.GetString("grafana.url")
+	grafana["clients_url"] = viper.GetString("grafana.clients_url")
+	grafana["finished_url"] = viper.GetString("grafana.finished_url")
+	jsonmap["grafana"] = grafana
+	j, err := json.Marshal(jsonmap)
+	if err != nil {
+		logrus.Error(err.Error())
+	}
 	s := string(j)
 	fmt.Fprintf(w, s)
 }

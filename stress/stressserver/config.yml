@@ -18,3 +18,8 @@ grafana:
   url: http://localhost:3000
   clients_url: 
   finished_url:
+  boards:
+    - name: stress client
+      url: http://localhost:3000/d/Gu2vIfcmz/stress-client?orgId=1&tab=metrics
+    - name: go process
+      url: http://localhost:3000/d/zVA3ofciz/go-processes?refresh=30s&orgId=1&var-job=client0&var-interval=10m
