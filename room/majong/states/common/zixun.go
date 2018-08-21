@@ -115,7 +115,7 @@ func (s *ZiXunState) chupai(flow interfaces.MajongFlow, message *majongpb.Chupai
 	activePlayer := utils.GetPlayerByID(mjContext.GetPlayers(), pid)
 	if gutils.IsHu(activePlayer) || gutils.IsTing(activePlayer) {
 		if !utils.CardEqual(card, mjContext.GetLastMopaiCard()) {
-			return majongpb.StateID_state_zixun, nil
+			return majongpb.StateID_state_zixun, fmt.Errorf("玩家当前只能出牌%s", *mjContext.GetLastMopaiCard())
 		}
 		if gutils.IsHu(activePlayer) && activePlayer.GetZixunRecord().GetEnableZimo() {
 			return majongpb.StateID_state_zixun, fmt.Errorf("玩家当前只能选择胡牌,不能进行出牌操作")
@@ -154,7 +154,7 @@ func (s *ZiXunState) chupai(flow interfaces.MajongFlow, message *majongpb.Chupai
 		logEntry.Infoln("玩家出牌请求")
 		return majongpb.StateID_state_chupai, nil
 	}
-	return majongpb.StateID_state_zixun, nil
+	return majongpb.StateID_state_zixun, fmt.Errorf("玩家当前手牌没有%s", *card)
 }
 
 //zimo 决策自摸
