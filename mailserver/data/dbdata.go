@@ -378,6 +378,7 @@ func GetUserMailFromDB(uid uint64) (map[uint64]*define.PlayerMail, error) {
 	return list, nil
 }
 
+
 // 从DB加载邮件列表
 func LoadMailListFromDB() (map[uint64]*define.MailInfo, error) {
 

@@ -6,6 +6,7 @@ import (
 	"steve/structs"
 
 	"google.golang.org/grpc"
+	"github.com/Sirupsen/logrus"
 )
 
 // Strategy 路由策略
@@ -74,5 +75,6 @@ func GetConnection(serverName string, playerID uint64, router uint32) (*grpc.Cli
 	if err != nil {
 		return nil, fmt.Errorf("获取服务连接失败，地址：%s, 错误：%v", addr, err)
 	}
+	logrus.Debugf("getconnection: svr=%s, uid=%d, router=%d, addr=%s", serverName, playerID, router, addr)
 	return cc, nil
 }

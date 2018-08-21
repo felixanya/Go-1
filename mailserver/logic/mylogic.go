@@ -11,6 +11,7 @@ import (
 	"steve/mailserver/define"
 	"steve/structs"
 	"time"
+	"sort"
 )
 
 /*
@@ -42,6 +43,21 @@ var provSendList map[int64][]*define.MailInfo
 var cityAdList map[int64]*define.ADJson    // 城市级别的AD列表
 var provAdList map[int64]*define.ADJson    // 省份级别的AD列表
 var channelAdList map[int64]*define.ADJson // 渠道级别的AD列表
+
+//定义interface{},并实现sort.Interface接口的三个方法
+type mailSlice  []*define.MailInfo
+
+func (c mailSlice) Len() int {
+	return len(c)
+}
+func (c mailSlice) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+func (c mailSlice) Less(i, j int) bool {
+	return c[i].StartTime > c[j].StartTime
+
+}
+
 
 func Init() error {
 	testADJson()
@@ -151,7 +167,9 @@ func GetGetUnReadSum(uid uint64) (int32, error) {
 	return sum, nil
 }
 
-// 获取邮件消息列表
+
+
+	// 获取邮件消息列表
 func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 	// 获取玩家渠道ID
 	channel, prov, _, ok := getUserInfo(uid)
@@ -214,6 +232,7 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 
 		titleList = append(titleList, title)
 	}
+
 
 	return titleList, nil
 }
@@ -593,7 +612,7 @@ func checkMailStatus(mailList map[uint64]*define.MailInfo) error {
 	// 更新发送列表provSendList
 	if bUpdate {
 		// 将发送中和发送截至的加入到指定列表中
-		myList := make(map[int64][]*define.MailInfo)
+		myList := make(map[int64]mailSlice)
 		for _, mail := range mailList {
 			if mail.State == define.StateSending || mail.State == define.StateSended {
 
@@ -603,7 +622,16 @@ func checkMailStatus(mailList map[uint64]*define.MailInfo) error {
 				}
 			}
 		}
-		provSendList = myList
+
+		// 排序邮件列表
+		myListSort := make(map[int64][]*define.MailInfo)
+
+		for k, slic := range myList {
+			sort.Sort(slic)
+			myListSort[k] = slic
+		}
+
+		provSendList = myListSort
 	}
 
 	return nil
