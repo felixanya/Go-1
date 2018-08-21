@@ -143,7 +143,7 @@ func GetGetUnReadSum(uid uint64) (int32, error) {
 				continue
 			}
 
-			if one, ok := readList[mail.Id]; !ok || !one.IsRead || !one.IsGetAttach{
+			if one, ok := readList[mail.Id]; !ok || !one.IsRead {
 				sum++
 			}
 		}
@@ -192,7 +192,7 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 
 		isRead := int32(0)
 		one, ok := readList[mail.Id]
-		if !ok || !one.IsRead || !one.IsGetAttach{
+		if !ok || !one.IsRead {
 
 		} else {
 			isRead = 1
