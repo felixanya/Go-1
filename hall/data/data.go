@@ -271,6 +271,9 @@ func GetPlayerState(playerID uint64, fields ...string) (pState *PlayerState, err
 
 	pState, err = getPlayerStateFromRedis(playerID, fields...)
 
+	if pState.State == uint64(user.PlayerState_PS_NIL) {
+		pState.State = uint64(user.PlayerState_PS_IDIE)
+	}
 	if err != nil {
 		enrty.WithError(err).Warningln("get player state from redis fail")
 		return pState, err
@@ -393,17 +396,17 @@ func setPlayerStateByWatch(redisName string, key string, oldState uint32, fields
 	}
 
 	err = redisCli.Watch(func(tx *redis.Tx) error {
-		currentState, rerr := tx.HGet(key, cache.GameState).Result()
-		if rerr != nil {
-			err = fmt.Errorf("修改玩家游戏状态出错，key:(%s)不存在,err:(%s)", key, rerr.Error())
-			return err
-		}
-		stateInt, _ := strconv.Atoi(currentState)
+		// currentState, rerr := tx.HGet(key, cache.GameState).Result()
+		// if rerr != nil {
+		// 	err = fmt.Errorf("修改玩家游戏状态出错，key:(%s)不存在,err:(%s)", key, rerr.Error())
+		// 	return err
+		// }
+		// stateInt, _ := strconv.Atoi(currentState)
 
-		if uint32(stateInt) != oldState {
-			err = fmt.Errorf("修改玩家游戏状态出错，玩家当前状态不为：(%d)", oldState)
-			return err
-		}
+		// if uint32(stateInt) != oldState {
+		// 	err = fmt.Errorf("修改玩家游戏状态出错，玩家当前状态不为：(%d)", oldState)
+		// 	return err
+		// }
 
 		_, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
 			pipe.HMSet(key, list)
@@ -486,6 +489,40 @@ func AllocShowUID() int64 {
 		logrus.Errorf("获取 redis 客户端失败(%s)。", err.Error())
 	}
 	return r.Incr(showUID).Val()
+}
+
+// CreatePlayer 创建玩家
+func CreatePlayer(player db.TPlayer, currency db.TPlayerCurrency, playerpProps []db.TPlayerProps) error {
+	engine, err := mysqlEngineGetter(playerMysqlName)
+	session := engine.NewSession()
+	defer session.Close()
+	err = session.Begin()
+	if err != nil {
+		return fmt.Errorf("create player session begin error:(%v)", err)
+	}
+	affected, err := session.Insert(&player)
+	if err != nil || affected == 0 {
+		sql, _ := session.LastSQL()
+		session.Rollback()
+		return fmt.Errorf("insert sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
+	}
+	affected, err = session.Insert(&currency)
+	if err != nil || affected == 0 {
+		sql, _ := session.LastSQL()
+		session.Rollback()
+		return fmt.Errorf("insert t_player_cuccency error：(%v), sql：(%v)， affect=(%d)", err, sql, affected)
+	}
+	affected, err = session.Insert(&playerpProps)
+	if err != nil || affected == 0 {
+		sql, _ := session.LastSQL()
+		return fmt.Errorf("insert sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
+	}
+	// add Commit() after all actions
+	err = session.Commit()
+	if err != nil {
+		return fmt.Errorf("create player session commit error:(%v)", err)
+	}
+	return nil
 }
 
 // ExistPlayerID 判断玩家ID是否存在

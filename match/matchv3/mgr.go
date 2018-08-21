@@ -40,6 +40,7 @@ type playerLogin struct {
 type gameLevelConfig struct {
 	levelID     uint32 // 场次ID
 	levelName   string // 场次名字
+	fee         int64  // 费用
 	bottomScore uint32 // 底分
 	minGold     int64  // 金币要求下限
 	maxGold     int64  // 金币要求上限
@@ -61,6 +62,9 @@ type levelGlobalInfo struct {
 
 	// 场次ID
 	levelID uint32
+
+	// 费用
+	fee int64
 
 	// 最低金币
 	minGold int64
@@ -171,6 +175,7 @@ func init() {
 
 	// 初始化
 	if !matchMgr.init() {
+		logrus.Panicln("匹配服初始化失败")
 		return
 	}
 
@@ -240,7 +245,7 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 	logrus.Debugln("进入函数")
 
 	// 游戏配置
-	gameConf, err := configclient.GetGameConfigMap()
+	gameConf, err := configclient.GetAllGameConfig()
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏配置失败！！")
 		return false
@@ -275,7 +280,7 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 
 	// 场次配置
 
-	levelConf, err := configclient.GetGameLevelConfigMap()
+	levelConf, err := configclient.GetAllGameLevelConfig()
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏级别配置失败！！")
 		return false
@@ -303,9 +308,21 @@ func (manager *matchManager) requestGameLevelConfig() bool {
 		newLevelConf := gameLevelConfig{
 			levelID:     uint32(pLevelConf.LevelID),
 			levelName:   pLevelConf.Name,
+			fee:         int64(pLevelConf.Fee),
 			bottomScore: uint32(pLevelConf.BaseScores),
 			minGold:     int64(pLevelConf.LowScores),
 			maxGold:     int64(pLevelConf.HighScores),
+		}
+
+		// -1代表最大值
+		if newLevelConf.maxGold == -1 {
+			newLevelConf.maxGold = MAX_GOLD
+		}
+
+		// 检测:费用,金币要求最小值,金币要求最大值
+		if newLevelConf.fee > newLevelConf.minGold || newLevelConf.minGold >= newLevelConf.maxGold || newLevelConf.minGold <= 0 {
+			logrus.Errorf("读取游戏场次配置时游戏ID:%v中场次ID:%v,数据错误,费用:%v, 金币最小值:%v, 金币最大值:%v,", pLevelConf.GameID, pLevelConf.LevelID, newLevelConf.fee, newLevelConf.minGold, newLevelConf.maxGold)
+			return false
 		}
 
 		// 加入该场次
@@ -564,6 +581,28 @@ func (manager *matchManager) getGoldRange(goldNum int64, inteval int64) (minGold
 	//金币匹配范围最大值
 	maxGold = int64(float64(goldNum) * float64(1+goldValue))
 
+	//logrus.Debugf("传入的金币值:%v, 时间间隔:%v, 范围最小值:%v, 范围最大值:%v", goldNum, inteval, minGold, maxGold)
+
+	return
+}
+
+// 获取指定金币数经过间隔为interval秒后的金币匹配范围,同时受限于指定的金币范围
+// goldNum  	: 金币数
+// inteval  	: 间隔的秒数
+// minLimit  	: 金币最小值限制
+// maxLimit  	: 金币最大值限制
+// 返回值
+// minGold  	: 金币最小值
+// maxGold  	: 金币最大值
+func (manager *matchManager) getGoldInRange(goldNum int64, inteval int64, minLimit int64, maxLimit int64) (minGold int64, maxGold int64) {
+	minGold, maxGold = manager.getGoldRange(goldNum, inteval)
+	if minGold < minLimit {
+		minGold = minLimit
+	}
+	if maxGold > maxLimit {
+		maxGold = maxLimit
+	}
+
 	return
 }
 
@@ -671,7 +710,7 @@ func (manager *matchManager) firstMatch(globalInfo *levelGlobalInfo, reqPlayer *
 			desk := *(iter.Value.(**matchDesk))
 
 			// 检测金币范围
-			minGold, maxGold := manager.getGoldRange(desk.aveGold, nowTime-desk.createTime)
+			minGold, maxGold := manager.getGoldInRange(desk.aveGold, nowTime-desk.createTime, globalInfo.minGold, globalInfo.maxGold)
 			if reqPlayer.gold < minGold || reqPlayer.gold > maxGold {
 				continue
 			}
@@ -771,7 +810,7 @@ func (manager *matchManager) firstMatch(globalInfo *levelGlobalInfo, reqPlayer *
 			}
 
 			// 检测金币范围
-			minGold, maxGold := manager.getGoldRange(desk.aveGold, nowTime-desk.createTime)
+			minGold, maxGold := manager.getGoldInRange(desk.aveGold, nowTime-desk.createTime, globalInfo.minGold, globalInfo.maxGold)
 			if reqPlayer.gold < minGold || reqPlayer.gold > maxGold {
 				continue
 			}
@@ -965,6 +1004,9 @@ func (manager *matchManager) cancelMatch(globalInfo *levelGlobalInfo, reqPlayer 
 			logEntry.WithError(err).Errorln("内部错误，通知hall服设置玩家的服务器类型及地址时失败")
 			return
 		}
+
+		// 通知客户端:匹配已取消
+		NotifyCancelMatch([]uint64{reqPlayer.playerID})
 	} else {
 		// 没找到该玩家，报错
 		logEntry.Errorf("玩家取消匹配时在匹配桌子中找不到该玩家，游戏ID:%v，级别ID:%v", globalInfo.gameID, globalInfo.levelID)
@@ -992,6 +1034,7 @@ func (manager *matchManager) startLevelMatch(gameID uint32, levelID uint32) {
 	globalInfo := levelGlobalInfo{
 		gameID:          gameID,
 		levelID:         levelID,
+		fee:             levelConfig.fee,
 		minGold:         levelConfig.minGold,
 		maxGold:         levelConfig.maxGold,
 		bottomScore:     int64(levelConfig.bottomScore),
@@ -1084,7 +1127,7 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 
 	// 该游戏不存在
 	if !exist {
-		logrus.Errorln("请求匹配的游戏不存在")
+		logEntry.Errorln("请求匹配的游戏不存在")
 		return fmt.Sprintf("请求匹配的游戏ID:%v不存在，请求的玩家ID:%v", gameID, playerID)
 	}
 
@@ -1093,32 +1136,32 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 
 	// 该场次不存在
 	if !exist {
-		logrus.Errorln("请求匹配的游戏存在，但场次不存在")
+		logEntry.Errorln("请求匹配的游戏存在，但场次不存在")
 		return fmt.Sprintf("请求匹配的游戏ID:%v存在，但场次ID:%v不存在，请求的玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	// 获取玩家金币数
 	playerGold, err := goldclient.GetGold(playerID, int16(gold.GoldType_GOLD_COIN))
 	if err != nil {
-		logrus.WithError(err).Errorln("从gold服获取玩家金币失败")
+		logEntry.WithError(err).Errorln("从gold服获取玩家金币失败")
 		return fmt.Sprintf("从gold服获取玩家金币失败，游戏ID:%v，场次ID:%v，请求的玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	// 金币范围检测
 	if playerGold < levelConfig.minGold {
-		logrus.Errorf("玩家金币数小于游戏场次金币要求最小值，要求最小值：%v，玩家金币:%v", levelConfig.minGold, playerGold)
+		logEntry.Errorf("玩家金币数小于游戏场次金币要求最小值，要求最小值：%v，玩家金币:%v", levelConfig.minGold, playerGold)
 		return fmt.Sprintf("玩家金币数小于游戏场次金币要求最小值，请求匹配的游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	if playerGold > levelConfig.maxGold {
-		logrus.Errorf("玩家金币数大于游戏场次金币要求最大值，要求最大值：%v，玩家金币:%v", levelConfig.maxGold, playerGold)
+		logEntry.Errorf("玩家金币数大于游戏场次金币要求最大值，要求最大值：%v，玩家金币:%v", levelConfig.maxGold, playerGold)
 		return fmt.Sprintf("玩家金币数大于游戏场次金币要求最大值，请求匹配的游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 
 	// 获取该玩家的游戏信息
 	playerGameInfo, err := hallclient.GetPlayerGameInfo(playerID, gameID)
 	if err != nil || playerGameInfo == nil {
-		logrus.WithError(err).Errorln("从hall服获取玩家游戏信息失败")
+		logEntry.WithError(err).Errorln("从hall服获取玩家游戏信息失败")
 		return fmt.Sprintf("从hall服获取玩家游戏信息失败，游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 	logEntry.Debugln("从hall服获取的玩家游戏信息：", playerGameInfo)
@@ -1137,7 +1180,7 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 	// 最终需在[0-100]内
 	if playerWinRate < 0 || playerWinRate > 100 {
 		playerWinRate = web.GetDefaultWinRate()
-		logrus.Errorln("从hall服获取玩家游戏信息后，计算胜率不在0-100内，已设置为默认胜率进行匹配")
+		logEntry.Errorln("从hall服获取玩家游戏信息后，计算胜率不在0-100内，已设置为默认胜率进行匹配")
 	}
 
 	// 全部检测通过
@@ -1145,7 +1188,7 @@ func (manager *matchManager) dispatchMatchReq(playerID uint64, gameID uint32, le
 	// 获取该场次的申请通道
 	reqMatchChan, exist := gameInfo.allLevelChan[levelID]
 	if !exist {
-		logrus.Errorln("内部错误，请求匹配的游戏存在，场次存在，但找不到该场次的匹配申请通道")
+		logEntry.Errorln("内部错误，请求匹配的游戏存在，场次存在，但找不到该场次的匹配申请通道")
 		return fmt.Sprintf("请求匹配的游戏存在，场次存在，但找不到该场次的匹配申请通道，请求匹配的游戏ID:%v，场次ID:%v，玩家ID:%v", gameID, levelID, playerID)
 	}
 
@@ -1380,43 +1423,22 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 			iterNext = iter.Next()
 
 			desk := *(iter.Value.(**matchDesk))
+			if len(desk.players) == 0 {
+				continue
+			}
+
+			logrus.Debugf("开始为桌子{%v}寻找可以合并的桌子", desk)
 
 			// 距离桌子创建时间的间隔
 			interval := tNowTime - desk.createTime
 
-			// 不足1秒的，不检测，因为新建一个桌子时已检测过，不存在可合并的
-			if interval < 1 {
-				continue
-			}
-
-			// 前一秒的胜率浮动值
-			lastRateValue := manager.getWinRateValue(interval - 1)
-
 			// 这一秒的胜率浮动值
 			nowRateValue := manager.getWinRateValue(interval)
-
-			// 所有的需要检测的胜率值，也是allRateDesks的下标值
-			checkIndexs := make([]int32, 0, 101)
 
 			// 左段起始值(包含自身)
 			leftStartIndex := index - nowRateValue
 			if leftStartIndex < 0 {
 				leftStartIndex = 0
-			}
-			// 左段结束值(不包含自身)
-			leftEndIndex := index - lastRateValue
-			if leftEndIndex < 0 {
-				leftEndIndex = 0
-			}
-			// 从[leftStartIndex - leftEndIndex)
-			for j := leftStartIndex; j < leftEndIndex; j++ {
-				checkIndexs = append(checkIndexs, j)
-			}
-
-			// 右段起始值(不包含自身)
-			rightStartIndex := index + lastRateValue
-			if rightStartIndex > 100 {
-				rightStartIndex = 100
 			}
 
 			// 右段结束值(包含自身)
@@ -1425,18 +1447,70 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 				rightEndIndex = 100
 			}
 
-			// 从[rightStartIndex - rightEndIndex)
-			for j := rightStartIndex + 1; j <= rightEndIndex; j++ {
+			/* 			// 距离桌子创建时间的间隔
+			   			interval := tNowTime - desk.createTime
+
+			   			// 不足1秒的，不检测，因为新建一个桌子时已检测过，不存在可合并的
+			   			if interval < 1 {
+			   				continue
+			   			}
+
+			   			// 前一秒的胜率浮动值
+			   			lastRateValue := manager.getWinRateValue(interval - 1)
+
+			   			// 这一秒的胜率浮动值
+			   			nowRateValue := manager.getWinRateValue(interval)
+
+			   			// 所有的需要检测的胜率值，也是allRateDesks的下标值
+			   			checkIndexs := make([]int32, 0, 101)
+
+			   			// 左段起始值(包含自身)
+			   			leftStartIndex := index - nowRateValue
+			   			if leftStartIndex < 0 {
+			   				leftStartIndex = 0
+			   			}
+			   			// 左段结束值(不包含自身)
+			   			leftEndIndex := index - lastRateValue
+			   			if leftEndIndex < 0 {
+			   				leftEndIndex = 0
+			   			}
+			   			// 从[leftStartIndex - leftEndIndex)
+			   			for j := leftStartIndex; j < leftEndIndex; j++ {
+			   				checkIndexs = append(checkIndexs, j)
+			   			}
+
+			   			// 右段起始值(不包含自身)
+			   			rightStartIndex := index + lastRateValue
+			   			if rightStartIndex > 100 {
+			   				rightStartIndex = 100
+			   			}
+
+			   			// 右段结束值(包含自身)
+			   			rightEndIndex := index + nowRateValue
+			   			if rightEndIndex > 100 {
+			   				rightEndIndex = 100
+			   			}
+
+			   			// 从[rightStartIndex - rightEndIndex)
+			   			for j := rightStartIndex + 1; j <= rightEndIndex; j++ {
+			   				checkIndexs = append(checkIndexs, j)
+			   			}
+
+			   			// 两段不应有重叠
+			   			if (leftStartIndex > leftEndIndex) || (rightStartIndex > rightEndIndex) || (leftEndIndex > rightStartIndex) {
+			   				logEntry.Errorf("左段或右段数据错误，跳过该桌子，左段起值：%v,左段终值：%v,右段起值：%v,右段终值：%v ", leftStartIndex, leftEndIndex, rightStartIndex, rightEndIndex)
+			   				continue
+			   			}
+
+			   			logEntry.Debugf("左段起值：%v,左段终值：%v,右段起值：%v,右段终值：%v ", leftStartIndex, leftEndIndex, rightStartIndex, rightEndIndex) */
+
+			// 所有的需要检测的胜率值，也是allRateDesks的下标值
+			checkIndexs := make([]int32, 0, 101)
+
+			// 从[leftStartIndex - rightEndIndex]
+			for j := leftStartIndex; j <= rightEndIndex; j++ {
 				checkIndexs = append(checkIndexs, j)
 			}
-
-			// 两段不应有重叠
-			if (leftStartIndex > leftEndIndex) || (rightStartIndex > rightEndIndex) || (leftEndIndex > rightStartIndex) {
-				logEntry.Errorf("左段或右段数据错误，跳过该桌子，左段起值：%v,左段终值：%v,右段起值：%v,右段终值：%v ", leftStartIndex, leftEndIndex, rightStartIndex, rightEndIndex)
-				continue
-			}
-
-			logEntry.Debugf("左段起值：%v,左段终值：%v,右段起值：%v,右段终值：%v ", leftStartIndex, leftEndIndex, rightStartIndex, rightEndIndex)
 
 			// 可合并桌子所在的信息
 			var pList2 *list.List = nil
@@ -1451,8 +1525,13 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 
 					merDesk := *(merIter.Value.(**matchDesk))
 
+					// 不能是本桌子
+					if desk.deskID == merDesk.deskID {
+						continue
+					}
+
 					// 检测金币范围
-					minGold, maxGold := manager.getGoldRange(merDesk.aveGold, tNowTime-merDesk.createTime)
+					minGold, maxGold := manager.getGoldInRange(merDesk.aveGold, tNowTime-merDesk.createTime, globalInfo.minGold, globalInfo.maxGold)
 					if desk.aveGold < minGold || desk.aveGold > maxGold {
 						continue
 					}
@@ -1468,6 +1547,8 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 					}
 
 					// 找到可合并的即跳出
+					logEntry.Debugf("为该桌子找到了可以合并的，本桌子:{%v}，找到的合并桌子:{%v},可以合并的桌子金币范围为:{%v,%v}", desk, merDesk, minGold, maxGold)
+
 					pList2 = &globalInfo.allRateDesks[merIndex]
 					iter2 = merIter
 					break
@@ -1487,14 +1568,14 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 
 				pDesk2 := *(iter2.Value.(**matchDesk))
 
-				logEntry.Debugln("找到了可以合并的，桌子1:%v，桌子2:%v", pDesk1, pDesk2)
-
 				// desk1需作为时间最早的桌子，desk2需作为被拆的桌子
 				if pDesk1.createTime > pDesk2.createTime {
 					iter1, iter2 = iter2, iter1
 					pDesk1, pDesk2 = pDesk2, pDesk1
 					pList1, pList2 = pList2, pList1
 				}
+
+				logEntry.Debugf("要拆的桌子是:{%v}", pDesk2)
 
 				// 把desk2的玩家移入到desk1
 
@@ -1506,14 +1587,18 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 
 				for i := 0; i < len(tempPlayers); i++ {
 
-					// 先从desk2中删除这个玩家
-					manager.removePlayerFromDesk(&pDesk2.players[i], pDesk2)
+					// 只处理真实玩家
+					if pDesk2.players[i].robotLv == 0 {
 
-					// desk1桌子满，则从列表中删除desk1桌子，跳出
-					if manager.addPlayerToDesk(&tempPlayers[i], pDesk1, globalInfo) {
-						logEntry.Debugln("由于拆入的玩家已满桌，删除桌子1")
-						pList1.Remove(iter1)
-						break
+						// 先从desk2中删除这个玩家
+						manager.removePlayerFromDesk(&pDesk2.players[i], pDesk2)
+
+						// 加入desk1,若desk1桌子满，则从列表中删除desk1桌子，跳出
+						if manager.addPlayerToDesk(&tempPlayers[i], pDesk1, globalInfo) {
+							logEntry.Debugln("由于拆入的玩家已满桌，删除桌子1")
+							pList1.Remove(iter1)
+							break
+						}
 					}
 				}
 
@@ -1528,6 +1613,7 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 				// 桌子2没真实玩家了，就删除桌子
 				if !bExistTruePlayer {
 					pList2.Remove(iter2)
+					logEntry.Debugln("由于被拆的桌子2中没有真实玩家了，删除桌子2")
 				}
 			}
 		}
@@ -1567,7 +1653,12 @@ func (manager *matchManager) removePlayerFromDesk(pPlayer *matchPlayer, pDesk *m
 	pDesk.players = tempPlayers
 
 	// 重新计算平均金币
-	pDesk.aveGold = allGold / int64(len(pDesk.players))
+	playerCount := len(pDesk.players)
+	if playerCount != 0 {
+		pDesk.aveGold = allGold / int64(playerCount)
+	} else {
+		pDesk.aveGold = 0
+	}
 }
 
 // checkDeskTimeout 检测桌子是否超时
@@ -1625,7 +1716,7 @@ func (manager *matchManager) checkDeskTimeout(globalInfo *levelGlobalInfo) {
 				// logEntry.Debugf("桌子的平均金币:%v", desk.aveGold)
 
 				// 金币范围
-				minGold, maxGold := manager.getGoldRange(desk.aveGold, interval)
+				minGold, maxGold := manager.getGoldInRange(desk.aveGold, interval, globalInfo.minGold, globalInfo.maxGold)
 
 				reqRobot := robotclient.LeisureRobotReqInfo{
 					CoinHigh:    maxGold,

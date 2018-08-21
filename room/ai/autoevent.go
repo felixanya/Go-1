@@ -66,8 +66,6 @@ func (aeg *autoEventGenerator) handlePlayerAI(result *AutoEventGenerateResult, A
 			eventType = fixed.HuStateEvent
 		} else if aiType == TingAI {
 			eventType = fixed.TingStateEvent
-		} else if aiType == SpecialOverTimeAI {
-			eventType = fixed.SpecialOverTimeEvent
 		}
 		for _, aiEvent := range aiResult.Events {
 			event := desk.DeskEvent{EventID: int(aiEvent.ID), EventType: eventType, Context: aiEvent.Context, PlayerID: playerID, StateNumber: gameContext.StateNumber, Desk: deskObj}
@@ -123,7 +121,7 @@ func (aeg *autoEventGenerator) handleOverTime(AI CommonAI, stateTime time.Time, 
 	players := mjContext.GetPlayers()
 	for _, player := range players {
 		if gutils.IsTing(player) || gutils.IsHu(player) {
-			aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), deskObj, SpecialOverTimeAI, 0)
+			aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), deskObj, TuoGuangAI, 0)
 		} else {
 			aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), deskObj, OverTimeAI, 0)
 		}

@@ -7,6 +7,7 @@ import (
 	"steve/entity/cache"
 	"steve/entity/db"
 	"steve/hall/data"
+	"steve/hall/logic"
 	"steve/server_pb/user"
 	"strconv"
 	"time"
@@ -240,9 +241,10 @@ func (pds *PlayerDataService) UpdatePlayerState(ctx context.Context, req *user.U
 
 	// 更新状态
 	result, err := false, nil
+	logrus.Debugf("UpdatePlayerState oldState :(%v),newState:(%v),serverType:(%v)", oldState, newState, serverType)
+
 	if oldState != 0 && newState != 0 {
 		result, err = data.UpdatePlayerState(playerID, oldState, newState, gameID, levelID)
-
 	}
 	// 更新服务地址
 	if serverType != 0 {
@@ -252,6 +254,8 @@ func (pds *PlayerDataService) UpdatePlayerState(ctx context.Context, req *user.U
 	if result && err == nil {
 		rsp.Result, rsp.ErrCode = true, int32(user.ErrCode_EC_SUCCESS)
 	}
+	logrus.Debugf("UpdatePlayerState rsp :(%v),err:(%v)", rsp, err)
+
 	return
 }
 
@@ -334,12 +338,14 @@ func createPlayer(accID uint64) (uint64, error) {
 		return 0, fmt.Errorf("获取账号信息失败：%v", err)
 	}
 	if has, err := data.ExistPlayerID(playerID); err != nil || has {
-		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
+		return 0, fmt.Errorf("初始化玩家(%d)数据失败,玩家已存在: %v", playerID, err)
 	}
 	province, _ := strconv.Atoi(accInfo.Province)
 	city, _ := strconv.Atoi(accInfo.City)
+	// 角色配置
+	roleConifg := logic.RoleConfig[0]
 
-	if err := data.InitPlayerData(db.TPlayer{
+	tpalyer := db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(playerID),
 		Showuid:      showUID,
@@ -362,15 +368,14 @@ func createPlayer(accID uint64) (uint64, error) {
 		Createby:     "",
 		Updatetime:   time.Now(),
 		Updateby:     "",
-	}); err != nil {
-		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
 	}
 	data.RecordLastUpdateWxInfoTime(playerID)
-	if err := data.InitPlayerCoin(db.TPlayerCurrency{
+
+	tplayerCurrency := db.TPlayerCurrency{
 		Playerid:       int64(playerID),
-		Coins:          100000,
-		Ingots:         0,
-		Keycards:       0,
+		Coins:          roleConifg.GoldNum,
+		Ingots:         roleConifg.YbNum,
+		Keycards:       roleConifg.CardNum,
 		Obtainingots:   0,
 		Obtainkeycards: 0,
 		Costingots:     0,
@@ -380,23 +385,27 @@ func createPlayer(accID uint64) (uint64, error) {
 		Createby:       "",
 		Updatetime:     time.Now(),
 		Updateby:       "",
-	}); err != nil {
-		return playerID, fmt.Errorf("初始化玩家(%d)金币数据失败: %v", playerID, err)
 	}
-	if err := data.InitPlayerState(int64(playerID)); err != nil {
-		return playerID, fmt.Errorf("初始化玩家(%d)状态失败: %v", playerID, err)
+	tplayerProps := make([]db.TPlayerProps, 0)
+
+	for _, item := range roleConifg.ItemArr {
+		tplayerProps = append(tplayerProps, db.TPlayerProps{
+			Playerid:   int64(playerID),
+			Propid:     int64(item[0]),
+			Count:      int64(item[1]),
+			Createtime: time.Now(),
+			Createby:   "programmer",
+			Updatetime: time.Now(),
+			Updateby:   "",
+		})
 	}
 
-	if err := data.InitPlayerProps(db.TPlayerProps{
-		Playerid:   int64(playerID),
-		Propid:     int64(1),
-		Count:      5,
-		Createtime: time.Now(),
-		Createby:   "programmer",
-		Updatetime: time.Now(),
-		Updateby:   "",
-	}); err != nil {
-		return playerID, fmt.Errorf("初始化玩家(%d)道具失败: %v", playerID, err)
+	if err := data.CreatePlayer(tpalyer, tplayerCurrency, tplayerProps); err != nil {
+		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
+	}
+
+	if err := data.InitPlayerState(int64(playerID)); err != nil {
+		return playerID, fmt.Errorf("初始化玩家(%d)状态失败: %v", playerID, err)
 	}
 	return playerID, nil
 }

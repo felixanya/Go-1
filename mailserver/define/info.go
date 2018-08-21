@@ -1,6 +1,7 @@
 package define
 
 import (
+	"steve/client_pb/mailserver"
 	"steve/entity/goods"
 )
 
@@ -38,12 +39,22 @@ CREATE TABLE `t_player_mail` (
 */
 
 // 玩家邮件信息
+type ADJson struct {
+	Id      uint64               `json:"id"`      // 玩家ID
+	Prov    int64                `json:"prov"`    // 省份
+	City    int64                `json:"city"`    // 城市
+	Channel int64                `json:"channel"` // 渠道ID
+	IsUse   int8                 `json:"is_use"`   // 是否使用
+	AdList  []*mailserver.ADInfo `json:"ad_list"`  // 广告内容列表
+}
+
+// 玩家邮件信息
 type PlayerMail struct {
-	PlayerId    uint64 	`json:"playerId"`		// 玩家ID
-	MailId      uint64  `json:"mailId"` 		// 邮件ID
-	IsRead      bool   `json:"isRead"` 		// 是否已读
+	PlayerId    uint64 `json:"playerId"`    // 玩家ID
+	MailId      uint64 `json:"mailId"`      // 邮件ID
+	IsRead      bool   `json:"isRead"`      // 是否已读
 	IsGetAttach bool   `json:"isGetAttach"` // 是否已领取附件
-	IsDel		bool   `json:"isDel"` 		// 是否被玩家删除
+	IsDel       bool   `json:"isDel"`       // 是否被玩家删除
 }
 
 type MailInfo struct {
@@ -60,14 +71,14 @@ type MailInfo struct {
 	AttachGoods []*goods.Goods // 附件奖励列表
 	DestList    []*SendDest    // 发送目标
 
-	IsUseEndTime bool 			// 是否使用截至时间
-	IsUseDelTime bool			//  是否使用删除时间
+	IsUseEndTime bool // 是否使用截至时间
+	IsUseDelTime bool //  是否使用删除时间
 }
 
 // 发送目标
 type SendDest struct {
-	SendType    int8     	`json:"sendType"`    		// 发送类型: 0=全部玩家, 1=指定玩家
-	Channel 	int64  		`json:"channel"` 			// 渠道ID
-	Prov    	int64  		`json:"prov"`    			// 省包ID
-	PlayerList  []uint64 	`json:"playerList"`  	// 玩家列表
+	SendType   int8     `json:"sendType"`   // 发送类型: 0=全部玩家, 1=指定玩家
+	Channel    int64    `json:"channel"`    // 渠道ID
+	Prov       int64    `json:"prov"`       // 省包ID
+	PlayerList []uint64 `json:"playerList"` // 玩家列表
 }

@@ -1,17 +1,6 @@
 package tests
 
-import (
-	"steve/client_pb/common"
-	"steve/client_pb/msgid"
-	"steve/client_pb/room"
-	"steve/simulate/global"
-	"steve/simulate/utils"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
-
-//Test_SCXZ_ZiMo_GiveUp_GameOver 测试庄家自摸天胡后，正常状态玩家人数不足，游戏是否结束
+/* //Test_SCXZ_ZiMo_GiveUp_GameOver 测试庄家自摸天胡后，正常状态玩家人数不足，游戏是否结束
 //步骤：所有玩家金币数只有2
 //1.庄家自摸天胡，其他玩家钱不足，都认输(1人胡，3人认输)
 //期望：正常状态玩家不足，游戏结束
@@ -199,3 +188,4 @@ func Test_SCXZ_DuoQiangganghu_GiveUp_GameOver(t *testing.T) {
 	//等待游戏结束通知等待游戏结束通知
 	utils.WaitGameOverNtf(t, deskData)
 }
+*/

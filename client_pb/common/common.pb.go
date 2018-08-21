@@ -268,6 +268,8 @@ const (
 	PropType_BOMB         PropType = 3
 	PropType_GRAB_CHICKEN PropType = 4
 	PropType_EGG_GUN      PropType = 5
+	PropType_VOUCHER      PropType = 6
+	PropType_GAME         PropType = 7
 )
 
 var PropType_name = map[int32]string{
@@ -277,6 +279,8 @@ var PropType_name = map[int32]string{
 	3: "BOMB",
 	4: "GRAB_CHICKEN",
 	5: "EGG_GUN",
+	6: "VOUCHER",
+	7: "GAME",
 }
 var PropType_value = map[string]int32{
 	"INVALID_PROP": 0,
@@ -285,6 +289,8 @@ var PropType_value = map[string]int32{
 	"BOMB":         3,
 	"GRAB_CHICKEN": 4,
 	"EGG_GUN":      5,
+	"VOUCHER":      6,
+	"GAME":         7,
 }
 
 func (x PropType) Enum() *PropType {
@@ -436,8 +442,8 @@ type GameLevelConfig struct {
 	LevelId          *uint32   `protobuf:"varint,2,opt,name=level_id,json=levelId" json:"level_id,omitempty"`
 	LevelName        *string   `protobuf:"bytes,3,opt,name=level_name,json=levelName" json:"level_name,omitempty"`
 	BaseScores       *uint32   `protobuf:"varint,4,opt,name=base_scores,json=baseScores" json:"base_scores,omitempty"`
-	LowScores        *uint32   `protobuf:"varint,5,opt,name=low_scores,json=lowScores" json:"low_scores,omitempty"`
-	HighScors        *uint32   `protobuf:"varint,6,opt,name=high_scors,json=highScors" json:"high_scors,omitempty"`
+	LowScores        *int64    `protobuf:"varint,5,opt,name=low_scores,json=lowScores" json:"low_scores,omitempty"`
+	HighScors        *int64    `protobuf:"varint,6,opt,name=high_scors,json=highScors" json:"high_scors,omitempty"`
 	ShowPeople       *uint32   `protobuf:"varint,7,opt,name=show_people,json=showPeople" json:"show_people,omitempty"`
 	RealPeople       *uint32   `protobuf:"varint,8,opt,name=real_people,json=realPeople" json:"real_people,omitempty"`
 	LevelTag         *LevelTag `protobuf:"varint,9,opt,name=level_tag,json=levelTag,enum=common.LevelTag" json:"level_tag,omitempty"`
@@ -477,14 +483,14 @@ func (m *GameLevelConfig) GetBaseScores() uint32 {
 	return 0
 }
 
-func (m *GameLevelConfig) GetLowScores() uint32 {
+func (m *GameLevelConfig) GetLowScores() int64 {
 	if m != nil && m.LowScores != nil {
 		return *m.LowScores
 	}
 	return 0
 }
 
-func (m *GameLevelConfig) GetHighScors() uint32 {
+func (m *GameLevelConfig) GetHighScors() int64 {
 	if m != nil && m.HighScors != nil {
 		return *m.HighScors
 	}

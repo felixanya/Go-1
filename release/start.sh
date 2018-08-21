@@ -73,10 +73,12 @@ echo "mailserver---------------------------------\n"
 pushd mailserver
 sh ./start.sh
 popd
+sleep 1s
 
-
-
-
+echo "idserver---------------------------------\n"
+pushd idserver
+sh ./start.sh
+popd
 sleep 1s
 
 ./p.sh

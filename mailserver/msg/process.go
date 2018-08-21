@@ -18,6 +18,34 @@ import (
 		3. 需要在GateWay配置消息ID开始~ 结束区间 关联到当前服务名,GateWay才会把消息转发到此服务
 */
 
+// 获取广告位列表请求
+func ProcessGetADReq(playerID uint64, header *steve_proto_gaterpc.Header, req mailserver.MailSvrGetADReq) (ret []exchanger.ResponseMsg) {
+
+	logrus.Debugln("ProcessGetADReq req", req)
+
+	response := &mailserver.MailSvrGetADRsp{
+		ErrCode: proto.Int32(0),
+		ErrDesc: proto.String("成功"),
+	}
+	//
+	ret = []exchanger.ResponseMsg{{
+		MsgID: uint32(msgid.MsgID_MAILSVR_GET_AD_RSP),
+		Body:  response,
+	}}
+
+	list, err := logic.GetAD(playerID)
+	if err != nil {
+		response.ErrCode = proto.Int32(int32(common.ErrCode_EC_FAIL))
+		response.ErrDesc = proto.String("失败")
+		logrus.Errorln("ProcessGetADReq err:", err)
+		return nil
+	}
+	response.AdList = list
+	logrus.Debugln("ProcessGetADReq resp", response)
+	return ret
+}
+
+
 // 获取未读消息总数请求
 func ProcessGetUnReadSumReq(playerID uint64, header *steve_proto_gaterpc.Header, req mailserver.MailSvrGetUnReadSumReq) (ret []exchanger.ResponseMsg) {
 
@@ -99,7 +127,6 @@ func ProcessGetMailDetailReq(playerID uint64, header *steve_proto_gaterpc.Header
 		logrus.Errorln("ProcessGetMailDetailReq err:", err)
 		return nil
 	}
-
 	response.Detail = detail
 	logrus.Debugln("ProcessGetMailDetailReq resp", response)
 	return ret

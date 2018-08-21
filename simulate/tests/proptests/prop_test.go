@@ -1,6 +1,7 @@
 package proptests
 
 import (
+	"fmt"
 	"steve/client_pb/common"
 	"steve/client_pb/hall"
 	"steve/client_pb/msgid"
@@ -31,7 +32,7 @@ func TestProp(t *testing.T) {
 	rsp := hall.HallGetPlayerGameInfoRsp{}
 	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, &rsp))
 	assert.NotEqual(t, 0, len(rsp.UserProperty))
-
+	fmt.Println(rsp.UserProperty)
 	for _, prop := range rsp.UserProperty {
 		err = utils.SendUsePropReq(seat, deskData, toPlayerID, common.PropType(*prop.PropId))
 		assert.Nil(t, err)
@@ -39,16 +40,16 @@ func TestProp(t *testing.T) {
 			expector, _ = player.Expectors[msgid.MsgID_ROOM_USE_PROP_RSP]
 			rsp1 := room.RoomUsePropRsp{}
 			assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, &rsp1))
-			assert.Equal(t, room.RoomError_FAILED, *rsp.ErrCode)
+			assert.Equal(t, room.RoomError_FAILED, rsp1.GetErrCode())
 			break
 		}
 		for _, playert := range deskData.Players {
 			expector, _ := playert.Expectors[msgid.MsgID_ROOM_USE_PROP_NTF]
 			ntf := room.RoomUsePropNtf{}
 			assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, &ntf))
-			assert.Equal(t, player.Player.GetID(), ntf.FromPlayerId)
-			assert.Equal(t, toPlayerID, ntf.ToPlayerId)
-			assert.Equal(t, common.PropType(*prop.PropId), ntf.PropId)
+			assert.Equal(t, player.Player.GetID(), ntf.GetFromPlayerId())
+			assert.Equal(t, toPlayerID, ntf.GetToPlayerId())
+			assert.Equal(t, common.PropType(*prop.PropId), ntf.GetPropId())
 		}
 	}
 }

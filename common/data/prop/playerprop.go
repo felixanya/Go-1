@@ -5,9 +5,12 @@ import (
 	"steve/entity/cache"
 	"steve/entity/db"
 	"steve/entity/prop"
+	"steve/external/propsclient"
 	"steve/structs"
 	"strconv"
 	"time"
+
+	"github.com/Sirupsen/logrus"
 
 	"github.com/go-redis/redis"
 	"github.com/go-xorm/xorm"
@@ -62,30 +65,30 @@ func GetPlayerAllProps(playerID uint64) (props []prop.Prop, err error) {
 	for index, attr := range propConfig {
 		props[index], _ = GetPlayerOneProp(playerID, attr.PropID)
 	}
-
+	logrus.Debugf("获取玩家playerID:(%d)的所有道具,道具:(%v)", playerID, props)
 	return
 }
 
 // GetPlayerOneProp 获取玩家的某些道具
 func GetPlayerOneProp(playerID uint64, propID int32) (prop prop.Prop, err error) {
-
-	// 获取玩家的道具
-	fields := []string{"propID", "count"}
-	prop, err = getPlayerProps(playerID, propID, fields...)
-	if err != nil {
-		return
+	prop.PropID = propID
+	prop.Count = 0
+	// 调用道具服获取玩家的道具
+	item, err := propsclient.GetUserProps(playerID, uint64(propID))
+	if len(item) != 0 {
+		prop.PropID = int32(item[0].PropsId)
+		prop.Count = item[0].PropsNum
 	}
-
 	return
 }
 
 // getPlayerProps 获取玩家的道具,获取单个或多个道具，通过fields参数区分
 func getPlayerProps(playerID uint64, propID int32, fields ...string) (prop prop.Prop, err error) {
 	// 从 redis 获取
-	prop, err = getPlayerPropFieldsFromRedis(playerID, propID, fields)
-	if err == nil {
-		return
-	}
+	// prop, err = getPlayerPropFieldsFromRedis(playerID, propID, fields)
+	// if err == nil {
+	// 	return
+	// }
 	// 从 DB 获取
 	prop, err = getPlayerPropFieldsFromDB(playerID, propID, fields)
 	return

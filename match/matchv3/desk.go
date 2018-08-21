@@ -56,8 +56,8 @@ type sucDesk struct {
 
 // matchDesk转为字符串
 func (pDesk *matchDesk) String() string {
-	return fmt.Sprintf("gameID: %v, levelID: %v, gold: %v, needPlayerCount:%v, players:%v, createTime:%v",
-		pDesk.gameID, pDesk.levelID, pDesk.aveGold, pDesk.needPlayerCount, pDesk.players, pDesk.createTime)
+	return fmt.Sprintf("deskID:%v, gameID:%v, levelID:%v, aveGold:%v, needPlayerCount:%v, players:%v, createTime:%v",
+		pDesk.deskID, pDesk.gameID, pDesk.levelID, pDesk.aveGold, pDesk.needPlayerCount, pDesk.players, pDesk.createTime)
 }
 
 // createMatchDesk 创建一个新的匹配桌子

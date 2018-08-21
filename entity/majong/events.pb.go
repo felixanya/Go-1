@@ -107,7 +107,7 @@ var EventID_value = map[string]int32{
 }
 
 func (x EventID) String() string {
-	s, ok := StateID_name[int32(x)]
+	s, ok := EventID_name[int32(x)]
 	if ok {
 		return s
 	}
