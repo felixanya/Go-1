@@ -17,3 +17,15 @@ const (
 	// PFGAMEUSE 游戏中使用
 	PFGAMEUSE PropsFuncType = 0
 )
+
+// http 错误码
+const (
+	// HTTPOK  成功
+	HTTPOK = 0
+
+	// HTTPFailure 失败
+	HTTPFailure = 1
+
+	// HTTPInvalidRequest 请求数据错误
+	HTTPInvalidRequest = 2
+)

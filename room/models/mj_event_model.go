@@ -339,6 +339,18 @@ func (model *MjEventModel) processEvent(eventID int, eventContext interface{}) b
 	model.Reply(result.ReplyMsgs)
 	model.GetDesk().GetConfig().Settle.(*MajongSettle).Settle(model.GetDesk(), model.GetDesk().GetConfig())
 
+	// 已胡牌玩家取消托管
+	mjContext := model.GetGameContext().(*context2.MajongDeskContext).MjContext
+	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
+	for _, majongPlayer := range mjContext.Players {
+		if !gutils.IsPlayerContinue(majongPlayer.GetXpState(), &mjContext) {
+			player := playerModel.GetDeskPlayerByID(majongPlayer.PlayerId)
+			if player.IsTuoguan() {
+				player.SetTuoguan(false, true)
+			}
+		}
+	}
+
 	// 自动事件不为空，继续处理事件
 	if result.AutoEvent != nil {
 		if result.AutoEvent.GetWaitTime() == 0 {
@@ -353,6 +365,7 @@ func (model *MjEventModel) processEvent(eventID int, eventContext interface{}) b
 // checkGameOver 检查游戏结束
 func (model *MjEventModel) checkGameOver(logEntry *logrus.Entry) bool {
 	mjContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).MjContext
+
 	// 游戏结束
 	if mjContext.GetCurState() == server_pb.StateID_state_gameover {
 		model.cancelTuoguanGameOver()

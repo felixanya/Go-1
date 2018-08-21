@@ -44,6 +44,11 @@ cp alms/config.yml configs/alms/config.yml
 go build -o bin/propserver/propserver.so -o propserver/propserver.so -buildmode=plugin steve/propserver  
 cp propserver/config.yml configs/propserver/config.yml  
 
+go build -o bin/web/web.so -o web/web.so -buildmode=plugin steve/web  
+cp web/config.yml configs/web/config.yml  
+
+go build -o bin/mailserver/mailserver.so -o mailserver/mailserver.so -buildmode=plugin steve/mailserver  
+cp mailserver/config.yml configs/mailserver/config.yml  
 ./simulate/packtests.sh 
 
 

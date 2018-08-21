@@ -121,7 +121,7 @@ func TestInitPlayerData(t *testing.T) {
 	assert.False(t, exist)
 	assert.Nil(t, err)
 	showUID := AllocShowUID()
-	err = InitPlayerData(db.TPlayer{
+	tplayer := db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(playerID),
 		Showuid:      int64(showUID),
@@ -144,10 +144,8 @@ func TestInitPlayerData(t *testing.T) {
 		Createby:     "",
 		Updatetime:   time.Now(),
 		Updateby:     "",
-	})
-	assert.Nil(t, err)
-
-	err = InitPlayerCoin(db.TPlayerCurrency{
+	}
+	tplayerCurrency := db.TPlayerCurrency{
 		Playerid:       int64(playerID),
 		Coins:          10000,
 		Ingots:         0,
@@ -161,7 +159,17 @@ func TestInitPlayerData(t *testing.T) {
 		Createby:       "",
 		Updatetime:     time.Now(),
 		Updateby:       "",
-	})
+	}
+	tplayerProps := db.TPlayerProps{
+		Playerid:   int64(playerID),
+		Propid:     int64(1),
+		Count:      int64(5),
+		Createtime: time.Now(),
+		Createby:   "programmer",
+		Updatetime: time.Now(),
+		Updateby:   "",
+	}
+	err = CreatePlayer(tplayer, tplayerCurrency, tplayerProps)
 	assert.Nil(t, err)
 
 	err = InitPlayerState(int64(playerID))

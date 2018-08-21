@@ -4,6 +4,7 @@ import (
 	"steve/client_pb/common"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/simulate/cheater"
 	"steve/simulate/interfaces"
 	"steve/simulate/utils"
 	"testing"
@@ -13,6 +14,9 @@ import (
 )
 
 func Test_Xipai(t *testing.T) {
+	// 清空所有的匹配
+	cheater.ClearAllMatch()
+
 	xipaiExpectors := map[int]interfaces.MessageExpector{}
 
 	for i := 0; i < 4; i++ {
@@ -20,6 +24,9 @@ func Test_Xipai(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, player)
 		client := player.GetClient()
+
+		// 设置金币
+		cheater.SetPlayerCommonCoin(player.GetID())
 
 		expector, err := client.ExpectMessage(msgid.MsgID_ROOM_XIPAI_NTF)
 		assert.Nil(t, err)
