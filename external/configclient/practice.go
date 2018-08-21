@@ -34,11 +34,10 @@ func GetRoleInitConfigMap() (roleConf []entityConf.RoleInitConfig, err error) {
 		logrus.WithError(err).Errorf("游戏级别配置数据反序列化失败：%s", err.Error())
 		return nil, err
 	}
-
-	for _, config := range roleConf {
-		config.InitItem()
+	for i := 0; i < len(roleConf); i++ {
+		roleConf[i].InitItem()
 	}
-	return
+	return roleConf, nil
 }
 
 // GetAlmsConfigMap 获取救济金配置

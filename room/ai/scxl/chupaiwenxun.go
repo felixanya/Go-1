@@ -53,7 +53,7 @@ func (h *chupaiWenxunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (
 				result.Events = append(result.Events, *event)
 			}
 		}
-	case ai.OverTimeAI, ai.SpecialOverTimeAI, ai.TuoGuangAI:
+	case ai.OverTimeAI, ai.TuoGuangAI:
 		{
 			if viper.GetBool("ai.test") {
 				if event := h.askMiddleAI(player, *mjContext.LastOutCard); event != nil {

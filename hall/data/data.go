@@ -491,6 +491,40 @@ func AllocShowUID() int64 {
 	return r.Incr(showUID).Val()
 }
 
+// CreatePlayer 创建玩家
+func CreatePlayer(player db.TPlayer, currency db.TPlayerCurrency, playerpProps []db.TPlayerProps) error {
+	engine, err := mysqlEngineGetter(playerMysqlName)
+	session := engine.NewSession()
+	defer session.Close()
+	err = session.Begin()
+	if err != nil {
+		return fmt.Errorf("create player session begin error:(%v)", err)
+	}
+	affected, err := session.Insert(&player)
+	if err != nil || affected == 0 {
+		sql, _ := session.LastSQL()
+		session.Rollback()
+		return fmt.Errorf("insert sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
+	}
+	affected, err = session.Insert(&currency)
+	if err != nil || affected == 0 {
+		sql, _ := session.LastSQL()
+		session.Rollback()
+		return fmt.Errorf("insert t_player_cuccency error：(%v), sql：(%v)， affect=(%d)", err, sql, affected)
+	}
+	affected, err = session.Insert(&playerpProps)
+	if err != nil || affected == 0 {
+		sql, _ := session.LastSQL()
+		return fmt.Errorf("insert sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
+	}
+	// add Commit() after all actions
+	err = session.Commit()
+	if err != nil {
+		return fmt.Errorf("create player session commit error:(%v)", err)
+	}
+	return nil
+}
+
 // ExistPlayerID 判断玩家ID是否存在
 func ExistPlayerID(playerID uint64) (bool, error) {
 	engine, err := mysqlEngineGetter(playerMysqlName)

@@ -3,6 +3,7 @@ package tests
 import (
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/simulate/cheater"
 	"steve/simulate/global"
 	"steve/simulate/utils"
 	"testing"
@@ -12,6 +13,9 @@ import (
 
 // Test_Peng 测试碰
 func Test_Peng(t *testing.T) {
+	// 清空所有的匹配
+	cheater.ClearAllMatch()
+
 	var Int5w uint32 = 15
 	params := global.NewCommonStartGameParams()
 	// 0 号玩家的最后一张牌改成 5W， 打出后 1 号玩家可碰
