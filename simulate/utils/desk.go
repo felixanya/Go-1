@@ -396,7 +396,7 @@ func GetGameLevelBaseCoin(player interfaces.ClientPlayer, gameID uint32, levelID
 	rsp := hall.HallGetGameListInfoRsp{}
 
 	client := player.GetClient()
-	err := client.Request(createMsgHead(msgid.MsgID_HALL_GET_GAME_LIST_INFO_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_HALL_GET_GAME_LIST_INFO_REQ), &rsp)
+	err := client.Request(createMsgHead(msgid.MsgID_HALL_GET_GAME_LIST_INFO_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_HALL_GET_GAME_LIST_INFO_RSP), &rsp)
 	if err != nil {
 		logrus.WithError(err).Errorln(errRequestFailed)
 		return 1
