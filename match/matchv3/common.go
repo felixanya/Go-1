@@ -14,6 +14,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// MAX_GOLD 金币最大值
+const MAX_GOLD int64 = 0x7FFFFFFFFFFFFFFF
+
 // IPUInt32ToString 整形IP地址转为字符串型IP
 func IPUInt32ToString(intIP uint32) string {
 	var bytes [4]byte

@@ -7,8 +7,38 @@ import (
 	"steve/client_pb/msgid"
 	"steve/simulate/global"
 	"steve/client_pb/mailserver"
+	"steve/simulate/interfaces"
 )
 
+
+var player interfaces.ClientPlayer
+var err error
+func init() {
+	player, err = utils.LoginNewPlayer()
+
+}
+
+func Test_GetAD(t *testing.T) {
+
+	reqCmd := msgid.MsgID_MAILSVR_GET_AD_REQ
+	rspCmd := msgid.MsgID_MAILSVR_GET_AD_RSP
+	req := &mailserver.MailSvrGetADReq{}
+	rsp := &mailserver.MailSvrGetADRsp{}
+
+	assert.NotNil(t, player)
+
+
+	player.AddExpectors(rspCmd)
+	player.GetClient().SendPackage(utils.CreateMsgHead(reqCmd), req)
+	expector := player.GetExpector(rspCmd)
+
+
+	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, rsp))
+	assert.Zero(t, rsp.GetErrCode())
+
+	t.Logf("Test_GetAD win:", rsp)
+
+}
 
 func Test_GetUnReadMailSum(t *testing.T) {
 
@@ -17,10 +47,7 @@ func Test_GetUnReadMailSum(t *testing.T) {
 	req := &mailserver.MailSvrGetUnReadSumReq{}
 	rsp := &mailserver.MailSvrGetUnReadSumRsp{}
 
-	player, err := utils.LoginNewPlayer()
-	assert.Nil(t, err)
 	assert.NotNil(t, player)
-
 
 
 	player.AddExpectors(rspCmd)
@@ -39,14 +66,16 @@ func Test_GetUnReadMailSum(t *testing.T) {
 var mailId uint64 = 0
 
 func Test_GetMailList(t *testing.T) {
+	getMailList(t)
+}
+func getMailList(t *testing.T) {
 
 	reqCmd := msgid.MsgID_MAILSVR_GET_MAIL_LIST_REQ
 	rspCmd := msgid.MsgID_MAILSVR_GET_MAIL_LIST_RSP
 	req := &mailserver.MailSvrGetMailListReq{}
 	rsp := &mailserver.MailSvrGetMailListRsp{}
 
-	player, err := utils.LoginNewPlayer()
-	assert.Nil(t, err)
+
 	assert.NotNil(t, player)
 
 
@@ -75,8 +104,7 @@ func Test_GetMailDetail(t *testing.T) {
 	rsp := &mailserver.MailSvrGetMailDetailRsp{}
 	req.MailId = &mailId
 
-	player, err := utils.LoginNewPlayer()
-	assert.Nil(t, err)
+
 	assert.NotNil(t, player)
 
 	player.AddExpectors(rspCmd)
@@ -98,8 +126,7 @@ func Test_SetMailReadTag(t *testing.T) {
 	rsp := &mailserver.MailSvrSetReadTagRsp{}
 	req.MailId = &mailId
 
-	player, err := utils.LoginNewPlayer()
-	assert.Nil(t, err)
+
 	assert.NotNil(t, player)
 
 
@@ -125,7 +152,6 @@ func Test_SetMailReadTag(t *testing.T) {
 	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, rsp2))
 	assert.Zero(t, rsp2.GetErrCode())
 
-	return
 
 	reqCmd = msgid.MsgID_MAILSVR_DEL_MAIL_REQ
 	rspCmd = msgid.MsgID_MAILSVR_DEL_MAIL_RSP
@@ -138,6 +164,8 @@ func Test_SetMailReadTag(t *testing.T) {
 
 	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, rsp3))
 	assert.Zero(t, rsp3.GetErrCode())
+
+	getMailList(t)
 
 }
 

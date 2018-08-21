@@ -2,8 +2,6 @@
 配置数据库初始化脚本
 */
 
-
-
 /*商品表*/
 DELETE FROM `t_common_config` WHERE `key`="charge" AND `subkey`="item_list";
 INSERT `t_common_config`(`key`, `subkey`, `value`) values(
@@ -13,43 +11,67 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 40000",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 40000,
+                "name": "3万金豆",
+                "tag": "",
+                "price": 500,
+                "coin": 30000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 80000",
-                "tag": "特惠",
-                "price": 1200,
-                "coin": 80000,
+                "name": "3.6万金豆",
+                "tag": "",
+                "price": 600,
+                "coin": 36000,
                 "present_coin": 0
             },
             {
                 "item_id": 3,
-                "name": "金豆 200000",
-                "tag": "特惠",
-                "price": 3000,
-                "coin": 200000,
-                "present_coin": 0
+                "name": "6.2万金豆",
+                "tag": "",
+                "price": 1000,
+                "coin": 60000,
+                "present_coin": 2000
             },
             {
                 "item_id": 4,
-                "name": "金豆 680000",
-                "tag": "特惠",
-                "price": 9800,
-                "coin": 680000,
-                "present_coin": 0
+                "name": "7.4万金豆",
+                "tag": "",
+                "price": 1200,
+                "coin": 72000,
+                "present_coin": 2000
             },
             {
                 "item_id": 5,
-                "name": "金豆 1280000",
-                "tag": "特惠",
+                "name": "18.8万金豆",
+                "tag": "",
+                "price": 3000,
+                "coin": 180000,
+                "present_coin": 8000
+            },
+            {
+                "item_id": 6,
+                "name": "64万金豆",
+                "tag": "",
+                "price": 9800,
+                "coin": 588000,
+                "present_coin": 52000
+            },
+            {
+                "item_id": 7,
+                "name": "125万金豆",
+                "tag": "",
                 "price": 18800,
-                "coin": 1280000,
-                "present_coin": 0
+                "coin": 1128000,
+                "present_coin": 122000
+            },
+            {
+                "item_id": 8,
+                "name": "320万金豆",
+                "tag": "",
+                "price": 44800,
+                "coin": 2688000,
+                "present_coin": 512000
             }
         ]
     },
@@ -57,43 +79,67 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values(
         "default": [
             {
                 "item_id": 1,
-                "name": "金豆 40000",
-                "tag": "热卖",
-                "price": 600,
-                "coin": 40000,
+                "name": "3万金豆",
+                "tag": "",
+                "price": 500,
+                "coin": 30000,
                 "present_coin": 0
             },
             {
                 "item_id": 2,
-                "name": "金豆 80000",
-                "tag": "特惠",
-                "price": 1200,
-                "coin": 80000,
+                "name": "3.6万金豆",
+                "tag": "",
+                "price": 600,
+                "coin": 36000,
                 "present_coin": 0
             },
             {
                 "item_id": 3,
-                "name": "金豆 200000",
-                "tag": "特惠",
-                "price": 3000,
-                "coin": 200000,
-                "present_coin": 0
+                "name": "6.2万金豆",
+                "tag": "",
+                "price": 1000,
+                "coin": 60000,
+                "present_coin": 2000
             },
             {
                 "item_id": 4,
-                "name": "金豆 680000",
-                "tag": "特惠",
-                "price": 9800,
-                "coin": 680000,
-                "present_coin": 0
+                "name": "7.4万金豆",
+                "tag": "",
+                "price": 1200,
+                "coin": 72000,
+                "present_coin": 2000
             },
             {
                 "item_id": 5,
-                "name": "金豆 1280000", 
-                "tag": "特惠",
+                "name": "18.8万金豆",
+                "tag": "",
+                "price": 3000,
+                "coin": 180000,
+                "present_coin": 8000
+            },
+            {
+                "item_id": 6,
+                "name": "64万金豆",
+                "tag": "",
+                "price": 9800,
+                "coin": 588000,
+                "present_coin": 52000
+            },
+            {
+                "item_id": 7,
+                "name": "125万金豆",
+                "tag": "",
                 "price": 18800,
-                "coin": 1280000,
-                "present_coin": 0
+                "coin": 1128000,
+                "present_coin": 122000
+            },
+            {
+                "item_id": 8,
+                "name": "320万金豆",
+                "tag": "",
+                "price": 44800,
+                "coin": 2688000,
+                "present_coin": 512000
             }
         ]
     }
@@ -223,11 +269,11 @@ VALUES
 "id":1,
 "gameID":1,
 "levelID":1,
-"name":"新手场",
-"fee":1,
-"baseScores":1,
-"lowScores":1,
-"highScores":1000000,
+"name":"1级场",
+"fee":100,
+"baseScores":100,
+"lowScores":2000,
+"highScores":80000,
 "realOnlinePeople":1,
 "showOnlinePeople":1,
 "status":1,
@@ -238,11 +284,11 @@ VALUES
 "id":2,
 "gameID":2,
 "levelID":1,
-"name":"新手场",
-"fee":1,
-"baseScores":1,
-"lowScores":1,
-"highScores":1000000,
+"name":"1级场",
+"fee":150,
+"baseScores":150,
+"lowScores":2000,
+"highScores":120000,
 "realOnlinePeople":1,
 "showOnlinePeople":1,
 "status":1,
@@ -253,11 +299,11 @@ VALUES
 "id":3,
 "gameID":3,
 "levelID":1,
-"name":"新手场",
-"fee":1,
-"baseScores":1,
-"lowScores":1,
-"highScores":1000000,
+"name":"1级场",
+"fee":100,
+"baseScores":150,
+"lowScores":20000,
+"highScores":100000,
 "realOnlinePeople":1,
 "showOnlinePeople":1,
 "status":1,
@@ -268,11 +314,11 @@ VALUES
 "id":4,
 "gameID":4,
 "levelID":1,
-"name":"新手场",
-"fee":1,
-"baseScores":2,
-"lowScores":1,
-"highScores":1000000,
+"name":"1级场",
+"fee":50,
+"baseScores":100,
+"lowScores":2000,
+"highScores":80000,
 "realOnlinePeople":1,
 "showOnlinePeople":1,
 "status":1,
@@ -283,11 +329,11 @@ VALUES
 "id":5,
 "gameID":1,
 "levelID":2,
-"name":"中级场",
-"fee":1,
-"baseScores":5,
-"lowScores":200,
-"highScores":1000000,
+"name":"2级场",
+"fee":600,
+"baseScores":500,
+"lowScores":10000,
+"highScores":500000,
 "realOnlinePeople":1,
 "showOnlinePeople":100,
 "status":1,
@@ -298,10 +344,10 @@ VALUES
 "id":6,
 "gameID":2,
 "levelID":2,
-"name":"中级场",
-"fee":1,
-"baseScores":5,
-"lowScores":200,
+"name":"2级场",
+"fee":600,
+"baseScores":600,
+"lowScores":80000,
 "highScores":1000000,
 "realOnlinePeople":1,
 "showOnlinePeople":100,
@@ -313,11 +359,11 @@ VALUES
 "id":7,
 "gameID":3,
 "levelID":2,
-"name":"中级场",
-"fee":1,
-"baseScores":5,
-"lowScores":200,
-"highScores":1000000,
+"name":"2级场",
+"fee":350,
+"baseScores":300,
+"lowScores":3000,
+"highScores":200000,
 "realOnlinePeople":1,
 "showOnlinePeople":100,
 "status":1,
@@ -328,11 +374,11 @@ VALUES
 "id":8,
 "gameID":4,
 "levelID":2,
-"name":"中级场",
-"fee":1,
-"baseScores":5,
-"lowScores":200,
-"highScores":1000000,
+"name":"2级场",
+"fee":500,
+"baseScores":300,
+"lowScores":10000,
+"highScores":400000,
 "realOnlinePeople":1,
 "showOnlinePeople":100,
 "status":1,
@@ -343,11 +389,11 @@ VALUES
 "id":9,
 "gameID":1,
 "levelID":3,
-"name":"大师场",
-"fee":1,
-"baseScores":10,
-"lowScores":800,
-"highScores":1000000,
+"name":"3级场",
+"fee":2500,
+"baseScores":2000,
+"lowScores":40000,
+"highScores":-1,
 "realOnlinePeople":1,
 "showOnlinePeople":200,
 "status":1,
@@ -359,11 +405,11 @@ VALUES
 "id":10,
 "gameID":2,
 "levelID":3,
-"name":"大师场",
-"fee":1,
-"baseScores":10,
-"lowScores":800,
-"highScores":1000000,
+"name":"3级场",
+"fee":2500,
+"baseScores":2500,
+"lowScores":30000,
+"highScores":-1,
 "realOnlinePeople":1,
 "showOnlinePeople":200,
 "status":1,
@@ -375,11 +421,11 @@ VALUES
 "id":11,
 "gameID":3,
 "levelID":3,
-"name":"大师场",
-"fee":1,
-"baseScores":10,
-"lowScores":800,
-"highScores":1000000,
+"name":"3级场",
+"fee":1200,
+"baseScores":1200,
+"lowScores":12000,
+"highScores":-1,
 "realOnlinePeople":1,
 "showOnlinePeople":200,
 "status":1,
@@ -391,11 +437,11 @@ VALUES
 "id":12,
 "gameID":4,
 "levelID":3,
-"name":"大师场",
-"fee":1,
-"baseScores":10,
-"lowScores":800,
-"highScores":1000000,
+"name":"3级场",
+"fee":3000,
+"baseScores":1500,
+"lowScores":50000,
+"highScores":-1,
 "realOnlinePeople":1,
 "showOnlinePeople":200,
 "status":1,
@@ -407,11 +453,11 @@ VALUES
 "id":13,
 "gameID":1,
 "levelID":4,
-"name":"土豪场",
-"fee":1,
-"baseScores":100,
-"lowScores":100000,
-"highScores":10000000,
+"name":"4级场",
+"fee":10000,
+"baseScores":8000,
+"lowScores":160000,
+"highScores":-1,
 "realOnlinePeople":1,
 "showOnlinePeople":500,
 "status":1,
@@ -423,11 +469,11 @@ VALUES
 "id":14,
 "gameID":2,
 "levelID":4,
-"name":"土豪场",
-"fee":1,
-"baseScores":100,
+"name":"4级场",
+"fee":8000,
+"baseScores":8000,
 "lowScores":100000,
-"highScores":10000000,
+"highScores":-1,
 "realOnlinePeople":1,
 "showOnlinePeople":500,
 "status":1,
@@ -439,11 +485,11 @@ VALUES
 "id":15,
 "gameID":3,
 "levelID":4,
-"name":"土豪场",
-"fee":1,
-"baseScores":100,
-"lowScores":100000,
-"highScores":10000000,
+"name":"4级场",
+"fee":5000,
+"baseScores":5000,
+"lowScores":50000,
+"highScores":-1,
 "realOnlinePeople":1,
 "showOnlinePeople":500,
 "status":1,
@@ -455,11 +501,11 @@ VALUES
 "id":16,
 "gameID":4,
 "levelID":4,
-"name":"土豪场",
-"fee":1,
-"baseScores":100,
+"name":"4级场",
+"fee":20000,
+"baseScores":8000,
 "lowScores":100000,
-"highScores":10000000,
+"highScores":-1, 
 "realOnlinePeople":1,
 "showOnlinePeople":500,
 "status":1,
@@ -658,25 +704,81 @@ VALUES
 
 
 
-/*游戏配置*/ 
-INSERT INTO `t_game_config` VALUES (1, 1, '血流麻将', 1, 4, 4, NULL, NULL, NULL, NULL, NULL, '2018-08-07 19:01:33', NULL, NULL, NULL);
-INSERT INTO `t_game_config` VALUES (2, 2, '血战麻将', 1, 4, 4, NULL, NULL, NULL, NULL, NULL, '2018-08-07 19:03:29', NULL, NULL, NULL);
-INSERT INTO `t_game_config` VALUES (3, 3, '斗地主', 2, 3, 3, NULL, NULL, NULL, NULL, NULL, '2018-08-07 20:36:58', NULL, NULL, NULL);
-INSERT INTO `t_game_config` VALUES (4, 4, '二人麻将', 1, 2, 2, NULL, NULL, NULL, NULL, NULL, '2018-08-07 20:37:11', NULL, NULL, NULL);
-
--- /*游戏场次配置*/
-INSERT INTO `t_game_level_config` VALUES (1, 1, 1, '新手场', 1, 1, 0, 1000000, 1, 1, 1, NULL, 1, NULL, '2018-08-08 18:17:31', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (2, 2, 1, '新手场', 1, 1, 0, 1000000, 1, 1, 1, NULL, 1, NULL, '2018-08-08 18:17:31', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (3, 3, 1, '新手场', 1, 1, 0, 1000000, 1, 1, 1, NULL, 1, NULL, '2018-08-08 18:17:31', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (4, 4, 1, '新手场', 1, 2, 0, 1000000, 1, 1, 1, NULL, 1, NULL, '2018-08-08 18:17:31', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (5, 1, 2, '中级场', 1, 5, 200, 1000000, 1, 100, 1, NULL, 1, NULL, '2018-08-10 10:40:50', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (6, 2, 2, '中级场', 1, 5, 200, 1000000, 1, 100, 1, NULL, 1, NULL, '2018-08-10 10:40:52', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (7, 3, 2, '中级场', 1, 5, 200, 1000000, 1, 100, 1, NULL, 1, NULL, '2018-08-10 10:41:35', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (8, 4, 2, '中级场', 1, 5, 200, 1000000, 1, 100, 1, NULL, 1, NULL, '2018-08-10 10:43:08', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (9, 1, 3, '大师场', 1, 10, 800, 1000000, 1, 200, 1, NULL, 1, NULL, '2018-08-10 10:43:11', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (10, 2, 3, '大师场', 1, 10, 800, 1000000, 1, 200, 1, NULL, 1, NULL, '2018-08-10 10:43:42', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (11, 3, 3, '大师场', 1, 10, 800, 1000000, 1, 200, 1, NULL, 1, NULL, '2018-08-10 10:45:00', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (12, 4, 3, '大师场', 1, 10, 800, 1000000, 1, 200, 1, NULL, 1, NULL, '2018-08-10 10:45:02', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (14, 2, 4, '土豪场', 1, 100, 100000, 10000000, 1, 500, 1, NULL, 1, NULL, '2018-08-10 10:48:20', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (15, 3, 4, '土豪场', 1, 100, 100000, 10000000, 1, 500, 1, NULL, 1, NULL, '2018-08-10 10:48:50', NULL, NULL, NULL);
-INSERT INTO `t_game_level_config` VALUES (16, 4, 4, '土豪场', 1, 100, 100000, 10000000, 1, 500, 1, NULL, 1, NULL, '2018-08-10 10:49:31', NULL, NULL, NULL);
+INSERT INTO `t_common_config` (`key`, `subkey`, `value`)
+VALUES
+  ( 'ad', 'config', '[
+    {
+        "id":1,
+        "prov":0,
+        "city":0,
+        "channel":0,
+        "is_use":1,
+        "ad_list":[
+            {
+                "ad_id":1,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"1"
+            },
+            {
+                "ad_id":2,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"2"
+            },
+            {
+                "ad_id":3,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"3"
+            },
+            {
+                "ad_id":4,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"4"
+            }
+        ]
+    },
+    {
+        "id":2,
+        "prov":0,
+        "city":0,
+        "channel":1,
+        "is_use":1,
+        "ad_list":[
+            {
+                "ad_id":1,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"1"
+            },
+            {
+                "ad_id":2,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"2"
+            },
+            {
+                "ad_id":3,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"3"
+            },
+            {
+                "ad_id":4,
+                "ad_tick":5,
+                "pic_url":"http:/www.qq.com/pic123.jpg",
+                "go_url":"http:/www.qq.com",
+                "ad_param":"4"
+            }
+        ]
+    }
+]');

@@ -3,6 +3,7 @@ package watchdog
 import (
 	"fmt"
 	"io"
+	stdnet "net"
 	"steve/base/socket"
 )
 
@@ -51,6 +52,10 @@ func (e *tcpExchanger) Send(data []byte) error {
 	copy(wholeData[2:], data)
 
 	return e.sock.SendPackage(wholeData)
+}
+
+func (e *tcpExchanger) GetRemoteAddr() stdnet.Addr {
+	return e.sock.GetRemoteAddr()
 }
 
 type tcpServer struct {

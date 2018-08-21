@@ -9,6 +9,7 @@ import (
 	"steve/entity/goods"
 	"github.com/Sirupsen/logrus"
 	"time"
+	"steve/external/configclient"
 )
 
 /*
@@ -51,6 +52,18 @@ CREATE TABLE `t_player_mail` (
 const dbName = "player"
 
 const dbConfigName = "config"
+
+
+// 从DB获取广告列表
+func GetADFromDB() ([]*define.ADJson,error) {
+	strJson, err := configclient.GetConfig("ad", "config")
+	if err != nil {
+		return nil, err
+	}
+
+	return parseADs(strJson)
+}
+
 
 
 // 从DB中删除过期邮件
@@ -451,6 +464,22 @@ func parseAttachGoods( strJson string) []*goods.Goods {
 }
 
 func MarshalAttachGoods(g []*goods.Goods) (string, error) {
+	data, err := json.Marshal(g)
+	return string(data), err
+}
+
+// 解析ad json
+func parseADs( strJson string) ([]*define.ADJson, error) {
+	jsonObject := make([]*define.ADJson,0,2)
+	err := json.Unmarshal([]byte(strJson), &jsonObject)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonObject, nil
+}
+
+func MarshalADs(g []*define.ADJson) (string, error) {
 	data, err := json.Marshal(g)
 	return string(data), err
 }

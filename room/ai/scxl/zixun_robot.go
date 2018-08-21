@@ -238,33 +238,37 @@ func getValidCard(split Split) (result []majong.Card) {
 }
 
 func SplitCards(cards []majong.Card) Splits {
-	var splits Splits
-	splits1 := splitCardsWithoutGang(cards, true)
-	splits2 := splitCardsWithoutGang(cards, false)
+	var s Splits
+	s1 := splitCardsWithoutGang(cards, true)
+	s1.JoinGang()
+	s2 := splitCardsWithoutGang(cards, false)
+	s2.JoinGang()
 
-	if splits1.BetterThan(splits2) {
-		splits = splits1
+	if s1.BetterThan(s2) {
+		s = s1
 	} else {
-		splits = splits2
+		s = s2
 	}
 
 	gangs := SplitGang(cards)
-	remain := RemoveSplits(cards, gangs)
-	splits3 := splitCardsWithoutGang(remain, true)
-	splits3.Gangs = gangs
-	splits4 := splitCardsWithoutGang(remain, false)
-	splits4.Gangs = gangs
+	if len(gangs) > 0 {
+		remain := RemoveSplits(cards, gangs)
+		splits3 := splitCardsWithoutGang(remain, true)
+		splits3.Gangs = gangs
+		splits4 := splitCardsWithoutGang(remain, false)
+		splits4.Gangs = gangs
 
-	if splits3.BetterThan(splits) {
-		splits = splits3
+		if splits3.BetterThan(s) {
+			s = splits3
+		}
+
+		if splits4.BetterThan(s) {
+			s = splits4
+		}
 	}
 
-	if splits4.BetterThan(splits) {
-		splits = splits4
-	}
-
-	logrus.WithFields(logrus.Fields{"手牌": cards, "拆牌": splits}).Debugln("中级AI拆牌结果")
-	return splits
+	logrus.WithFields(logrus.Fields{"手牌": cards, "拆牌": s}).Debugln("中级AI拆牌结果")
+	return s
 }
 
 func splitCardsWithoutGang(cards []majong.Card, shunZiFirst bool) Splits {
@@ -344,6 +348,41 @@ type Splits struct {
 	DoubleChas []Split
 	SingleChas []Split
 	Singles    []Split
+}
+
+func (s *Splits) JoinGang() {
+restart:
+	for i, keZi := range s.KeZis {
+		for j, single := range s.Singles {
+			if keZi.cards[0] == single.cards[0] {
+				s.KeZis = append(s.KeZis[:i], s.KeZis[i+1:]...)
+				s.Singles = append(s.Singles[:j], s.Singles[j+1:]...)
+				s.Gangs = append(s.Gangs, Split{GANG, append(keZi.cards, single.cards...)})
+				goto restart
+			}
+		}
+	}
+}
+
+func (s Splits) GetOKCount() int {
+	return len(s.Gangs) + len(s.ShunZis) + len(s.KeZis)
+}
+
+func (s Splits) GetNotOKCards() []majong.Card {
+	var result []majong.Card
+	for _, pair := range s.Pairs {
+		result = append(result, pair.cards...)
+	}
+	for _, doubleCha := range s.DoubleChas {
+		result = append(result, doubleCha.cards...)
+	}
+	for _, singleCha := range s.SingleChas {
+		result = append(result, singleCha.cards...)
+	}
+	for _, single := range s.Singles {
+		result = append(result, single.cards...)
+	}
+	return result
 }
 
 func (s Splits) String() string {

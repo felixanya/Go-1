@@ -9,6 +9,7 @@ type Socket interface {
 	SendPackage(pkg []byte) error
 	RecvPackage() (pkg []byte, err error)
 	Close() error
+	GetRemoteAddr() net.Addr
 }
 
 type SocketFactory interface {
@@ -39,6 +40,11 @@ func (socket *socketImpl) RecvPackage() (pkg []byte, err error) {
 
 func (socket *socketImpl) Close() error {
 	return socket.conn.Close()
+}
+
+// GetRemoteIP 获取远端地址
+func (socket *socketImpl) GetRemoteAddr() net.Addr {
+	return socket.conn.RemoteAddr()
 }
 
 type socketFactoryImpl struct{}
