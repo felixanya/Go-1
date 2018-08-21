@@ -68,7 +68,7 @@ func HandleGetPlayerInfoReq(playerID uint64, header *steve_proto_gaterpc.Header,
 	}
 
 	// 获取玩家基本个人资料
-	player, err := data.GetPlayerInfo(playerID, cache.ShowUID, cache.NickName, cache.Avatar, cache.Gender, cache.Name, cache.IDCard)
+	player, err := data.GetPlayerInfo(playerID, cache.ShowUID, cache.NickName, cache.Avatar, cache.Gender, cache.Name, cache.IDCard, cache.Phone)
 	if err == nil {
 		response.ErrCode = proto.Uint32(0)
 		response.NickName = proto.String(player.Nickname)
@@ -82,6 +82,7 @@ func HandleGetPlayerInfoReq(playerID uint64, header *steve_proto_gaterpc.Header,
 		}
 		realNameReward := viper.GetInt("real_name_reward")
 		response.RealnameReward = proto.Uint64(uint64(realNameReward))
+		response.Phone = proto.String(player.Phone)
 	}
 
 	// 获取玩家货币信息

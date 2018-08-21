@@ -39,6 +39,9 @@ const (
 	// IDCard ... 身份证
 	IDCard = "idCard"
 
+	// Phone 手机号
+	Phone = "phone"
+
 	// GameState ...玩家游戏状态
 	GameState = "game_state"
 	// GameID ...正在进行的游戏id
