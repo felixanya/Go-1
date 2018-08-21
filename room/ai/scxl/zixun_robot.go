@@ -18,7 +18,7 @@ func (h *zixunStateAI) generateRobot(player *majong.Player, mjContext *majong.Ma
 	handCards := player.GetHandCards()
 	canHu := zxRecord.GetEnableZimo()
 	if (gutils.IsHu(player) || gutils.IsTing(player)) && canHu {
-		aiEvent = h.hu(player)
+		aiEvent = hu(player)
 		return
 	}
 	// 优先出定缺牌
@@ -27,28 +27,28 @@ func (h *zixunStateAI) generateRobot(player *majong.Player, mjContext *majong.Ma
 			hc := handCards[i]
 			if mjoption.GetXingpaiOption(int(mjContext.GetXingpaiOptionId())).EnableDingque &&
 				hc.GetColor() == player.GetDingqueColor() {
-				aiEvent = h.chupai(player, hc)
+				aiEvent = chupai(player, hc)
 				return
 			}
 		}
 	}
 
 	logEntry := logrus.WithField("playerId", player.PlayerId)
-	outCard, gang := getOutCard(handCards, mjContext)
+	outCard, isGang := getOutCard(handCards, mjContext)
 	needHu := outCard == majong.Card{}
 	if needHu {
-		aiEvent = h.hu(player)
+		aiEvent = hu(player)
 		logEntry.Infoln("中级AI自摸胡牌")
 		return
 	}
 	if len(zxRecord.EnableBugangCards) > 0 {
 		buGangCard := global.ToMJCard(int(zxRecord.EnableBugangCards[0]))
-		aiEvent = h.gang(player, &buGangCard)
+		aiEvent = gang(player, &buGangCard)
 		logEntry.WithField("补杠牌", buGangCard).Infoln("中级AI补杠")
 		return
 	}
-	if gang && len(zxRecord.EnableAngangCards) > 0 {
-		aiEvent = h.gang(player, &outCard)
+	if isGang && len(zxRecord.EnableAngangCards) > 0 {
+		aiEvent = gang(player, &outCard)
 		logEntry.WithField("暗杠牌", outCard).Infoln("中级AI暗杠")
 		return
 	}
@@ -68,12 +68,12 @@ func (h *zixunStateAI) generateRobot(player *majong.Player, mjContext *majong.Ma
 				maxCard = gutils.Uint32ToServerCard(canTingInfo.OutCard)
 			}
 		}
-		aiEvent = h.chupai(player, &maxCard)
+		aiEvent = chupai(player, &maxCard)
 		logEntry.WithField("outCard", maxCard).Infoln("中级AI听牌")
 		return
 	}
 
-	aiEvent = h.chupai(player, &outCard)
+	aiEvent = chupai(player, &outCard)
 	logEntry.WithField("outCard", outCard).Infoln("中级AI出牌")
 	return
 }

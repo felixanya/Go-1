@@ -48,7 +48,7 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 		if gutils.IsTing(player) {
 			canHu := zxRecord.GetEnableZimo()
 			if !canHu {
-				aiEvent = h.chupai(player, mjContext.GetLastMopaiCard())
+				aiEvent = chupai(player, mjContext.GetLastMopaiCard())
 			}
 			break
 		}
@@ -56,9 +56,9 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 		if gutils.IsHu(player) {
 			canHu := zxRecord.GetEnableZimo()
 			if canHu {
-				aiEvent = h.hu(player)
+				aiEvent = hu(player)
 			} else {
-				aiEvent = h.chupai(player, mjContext.GetLastMopaiCard())
+				aiEvent = chupai(player, mjContext.GetLastMopaiCard())
 			}
 			break
 		}
