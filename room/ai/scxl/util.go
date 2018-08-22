@@ -61,6 +61,15 @@ func ContainsCard(cards []majong.Card, inCard majong.Card) bool {
 	return false
 }
 
+func ContainsUint32(cards []uint32, inCard uint32) bool {
+	for _, card := range cards {
+		if card == inCard {
+			return true
+		}
+	}
+	return false
+}
+
 func NonPointer(cards []*majong.Card) []majong.Card {
 	var result []majong.Card
 	for _, card := range cards {
