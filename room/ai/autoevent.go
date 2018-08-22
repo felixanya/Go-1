@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var MjTickTime = time.Millisecond * 200
+var TickTime = time.Millisecond * 200
 
 // AutoEventGenerateParams 生成自动事件的参数
 type AutoEventGenerateParams struct {
@@ -120,32 +120,44 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		return
 	}
 
-	// 斗地主的特殊处理
+	startTime := params.StartTime
+	playerMgr := playerpkg.GetPlayerMgr()
 	if gameID == int(room.GameId_GAMEID_DOUDIZHU) {
-
-		// 开始时间
-		startTime := params.StartTime
 		gameContext := params.Desk.GetConfig().Context.(*contexts.DDZDeskContext)
 		ddzContext := gameContext.DDZContext
 
-		// 倒计时的时长
+		// 超时事件优先处理
 		duration := time.Second * time.Duration(ddzContext.Duration)
-
-		// 未到倒计时，不处理
-		if duration != 0 && time.Now().Sub(startTime) > duration {
-			// 处理每一个处于倒计时的玩家，产生具体的AI事件，并把事件存入result
-			countDownPlayers := ddzContext.CountDownPlayers
-			for _, player := range countDownPlayers {
-				aeg.handleDDZPlayerAI(&result, AI, player, params.Desk, OverTimeAI, 0)
-			}
-
-			if len(result.Events) > 0 {
-				return
+		countDownPlayers := ddzContext.CountDownPlayers
+		if duration != 0 {
+			for _, playerId := range countDownPlayers {
+				deskPlayer := playerMgr.GetPlayer(playerId)
+				if time.Now().Sub(startTime) >= duration && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
+					deskPlayer.CountingDown = true
+					msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
+					util.SendMessageToPlayer(playerId, msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
+					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("msg", msg).Debugln("发送补时消息")
+				}
+				if deskPlayer.CountingDown {
+					deskPlayer.AddTime = deskPlayer.AddTime - TickTime
+					if deskPlayer.AddTime < 0 {
+						deskPlayer.AddTime = 0
+						deskPlayer.SetTuoguan(true, true)
+					}
+					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
+				}
+				if !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0 {
+					aeg.handleDDZPlayerAI(&result, AI, playerId, params.Desk, OverTimeAI, 0)
+				}
 			}
 		}
 
+		if len(result.Events) > 0 {
+			return
+		}
+
+		// 处理其他事件
 		players := ddzContext.GetPlayers()
-		playerMgr := playerpkg.GetPlayerMgr()
 		for _, player := range players {
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
 			isRobot := deskPlayer.GetRobotLv() != 0
@@ -166,12 +178,10 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 			}
 		}
 	} else {
-		startTime := params.StartTime
 		gameContext := params.Desk.GetConfig().Context.(*contexts.MajongDeskContext)
 		mjContext := gameContext.MjContext
 
 		players := mjContext.GetPlayers()
-		playerMgr := playerpkg.GetPlayerMgr()
 		for _, player := range players {
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
 			isRobot := deskPlayer.GetRobotLv() != 0
@@ -193,7 +203,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("msg", msg).Debugln("发送补时消息")
 				}
 				if deskPlayer.CountingDown {
-					deskPlayer.AddTime = deskPlayer.AddTime - MjTickTime
+					deskPlayer.AddTime = deskPlayer.AddTime - TickTime
 					if deskPlayer.AddTime < 0 {
 						deskPlayer.AddTime = 0
 						deskPlayer.SetTuoguan(true, true)

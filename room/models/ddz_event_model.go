@@ -137,7 +137,7 @@ func (model *DDZEventModel) processEvents(ctx context.Context) {
 	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
 	playerEnterChannel := playerModel.getEnterChannel()
 	playerLeaveChannel := playerModel.getLeaveChannel()
-	tick := time.NewTicker(time.Millisecond * 200)
+	tick := time.NewTicker(ai.TickTime)
 	defer tick.Stop()
 
 	for {
