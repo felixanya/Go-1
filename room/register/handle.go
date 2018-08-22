@@ -328,7 +328,7 @@ func HandlePlayerGameGiveUp(playerID uint64, header *steve_proto_gaterpc.Header,
 		logEntry.WithError(err).Debugln("序列化失败")
 		return
 	}
-	modelmanager.GetModelManager().GetMessageModel(desk.GetUid()).BroadcastMessage([]uint64{}, msgid.MsgID_ROOM_USE_PROP_NTF, msgBody, true)
+	modelmanager.GetModelManager().GetMessageModel(desk.GetUid()).BroadcastMessage([]uint64{}, msgid.MsgID_ROOM_PLAYER_GIVEUP_NTF, msgBody, true)
 
 	rsp.ErrCode = room.RoomError_SUCCESS.Enum()
 	return
