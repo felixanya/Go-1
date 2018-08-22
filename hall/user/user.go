@@ -175,7 +175,7 @@ func validateNickName(nickName string) bool {
 
 // HandleGetPlayerStateReq 获取玩家游戏状态信息
 func HandleGetPlayerStateReq(playerID uint64, header *steve_proto_gaterpc.Header, req hall.HallGetPlayerStateReq) (rspMsg []exchanger.ResponseMsg) {
-	logrus.Debugf("Handle get player state req: (%v)", req)
+	logrus.Debugf("Handle get player state req: (%v)", req.GetUserData())
 
 	// 默认返回消息
 	response := &hall.HallGetPlayerStateRsp{
