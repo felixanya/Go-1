@@ -38,8 +38,8 @@ cp msgserver/config.yml configs/msgserver/config.yml
 go build -o bin/back/back.so -o back/back.so -buildmode=plugin steve/back 
 cp back/config.yml configs/back/config.yml
 
-go build -o bin/alms/alms.so -o alms/alms.so -buildmode=plugin steve/alms 
-cp alms/config.yml configs/alms/config.yml
+#go build -o bin/alms/alms.so -o alms/alms.so -buildmode=plugin steve/alms 
+#cp alms/config.yml configs/alms/config.yml
 
 go build -o bin/propserver/propserver.so -o propserver/propserver.so -buildmode=plugin steve/propserver  
 cp propserver/config.yml configs/propserver/config.yml  
