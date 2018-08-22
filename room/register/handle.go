@@ -177,12 +177,18 @@ func HandleContinueReq(playerID uint64, header *steve_proto_gaterpc.Header, req 
 
 	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
+		response.ErrCode = proto.Int32(int32(common.ErrCode_EC_FAIL))
+		response.ErrDesc = proto.String("续局时获取玩家失败")
+
 		entry.Debugln("获取玩家失败")
 		return
 	}
 	desk := player.GetDesk()
 	if desk == nil {
-		entry.Debugln("玩家不在房间")
+		response.ErrCode = proto.Int32(int32(common.ErrCode_EC_FAIL))
+		response.ErrDesc = proto.String("续局时玩家不在房间")
+
+		entry.Debugln("续局时玩家不在房间")
 		return
 	}
 	continueModel := models.GetContinueModel(desk.GetUid())
