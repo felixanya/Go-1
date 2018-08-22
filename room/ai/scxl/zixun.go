@@ -45,7 +45,7 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 	case ai.OverTimeAI, ai.TuoGuangAI:
 		zxRecord := player.GetZixunRecord()
 		// 听状态下，能胡不做操作等玩家自行选择或者等超时事件，不能胡就打出摸到的牌
-		if gutils.IsTing(player) {
+		if gutils.IsTing(player) && params.AIType == ai.TuoGuangAI {
 			canHu := zxRecord.GetEnableZimo()
 			if !canHu {
 				aiEvent = chupai(player, mjContext.GetLastMopaiCard())
@@ -53,7 +53,7 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 			break
 		}
 		// 胡状态下，能胡直接让胡，不能胡就打出摸到的牌
-		if gutils.IsHu(player) {
+		if gutils.IsHu(player) && params.AIType == ai.TuoGuangAI {
 			canHu := zxRecord.GetEnableZimo()
 			if canHu {
 				aiEvent = hu(player)

@@ -212,7 +212,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 			} else if gutils.IsTing(player) {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.TingStateTimeOut))
 			} else if deskPlayer.IsTuoguan() {
-				duration = 1 * time.Second
+				duration = 2 * time.Second
 			} else {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
 				if time.Now().Sub(startTime) >= duration && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
@@ -226,7 +226,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 					if deskPlayer.AddTime < 0 {
 						deskPlayer.AddTime = 0
 					}
-					//logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
+					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
 				}
 			}
 			if !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0 {
