@@ -71,72 +71,22 @@ func (aeg *autoEventGenerator) handleDDZPlayerAI(result *AutoEventGenerateResult
 		RobotLv:    robotLv,
 	})
 
+	var eventType int
+	if aiType == OverTimeAI {
+		eventType = fixed.OverTimeEvent
+	} else if aiType == RobotAI {
+		eventType = fixed.RobotEvent
+	} else if aiType == TuoGuangAI {
+		eventType = fixed.TuoGuanEvent
+	}
+
 	// 未出错时，把产生的每一个AI事件压入结果集
 	if err == nil {
 		for _, aiEvent := range aiResult.Events {
-			event := desk.DeskEvent{EventID: int(aiEvent.ID), EventType: fixed.OverTimeEvent, Context: aiEvent.Context, PlayerID: playerID, Desk: deskObj}
+			event := desk.DeskEvent{EventID: int(aiEvent.ID), EventType: eventType, Context: aiEvent.Context, PlayerID: playerID, Desk: deskObj}
 			result.Events = append(result.Events, event)
 		}
 	}
-}
-
-// handleDDZOverTime 斗地主超时处理
-// finish : 是否处理完成
-// result : 产生的AI事件结果集合
-func (aeg *autoEventGenerator) handleDDZOverTime(AI CommonAI, params *AutoEventGenerateParams) (
-	finish bool, result AutoEventGenerateResult) {
-
-	finish, result = false, AutoEventGenerateResult{
-		Events: []desk.DeskEvent{},
-	}
-
-	// 开始时间
-	startTime := params.StartTime
-
-	gameContext := params.Desk.GetConfig().Context.(*contexts.DDZDeskContext)
-	ddzContext := gameContext.DDZContext
-
-	// 倒计时的时长
-	duration := time.Second * time.Duration(ddzContext.Duration)
-
-	// 未到倒计时，不处理
-	if duration == 0 || time.Now().Sub(startTime) < duration {
-		return
-	}
-
-	// 处理每一个处于倒计时的玩家，产生具体的AI事件，并把事件存入result
-	players := ddzContext.CountDownPlayers
-	for _, player := range players {
-		aeg.handleDDZPlayerAI(&result, AI, player, params.Desk, OverTimeAI, 0)
-	}
-
-	finish = true
-	return
-}
-
-// handleDDZTuoGuan 斗地主托管处理
-// finish : 是否处理完成
-// result : 产生的AI事件结果集合
-func (aeg *autoEventGenerator) handleDDZTuoGuan(deskObj *desk.Desk, AI CommonAI, stateTime time.Time) AutoEventGenerateResult {
-	result := AutoEventGenerateResult{
-		Events: []desk.DeskEvent{},
-	}
-
-	// 托管时的操作等待时间
-	tuoguanOprTime := 2 * time.Second
-
-	if time.Now().Sub(stateTime) < tuoguanOprTime {
-		return result
-	}
-	playerIDs := deskObj.GetPlayerIds()
-	playerMgr := playerpkg.GetPlayerMgr()
-	for _, playerID := range playerIDs {
-		player := playerMgr.GetPlayer(playerID)
-		if player.IsTuoguan() {
-			aeg.handleDDZPlayerAI(&result, AI, playerID, deskObj, TuoGuangAI, 0)
-		}
-	}
-	return result
 }
 
 // GenerateV2 利用 AI 生成自动事件
@@ -174,22 +124,46 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 	// 斗地主的特殊处理
 	if gameID == int(room.GameId_GAMEID_DOUDIZHU) {
 
-		// 先处理超时
-		if overTime, result := aeg.handleDDZOverTime(AI, params); overTime {
-			return result
+		// 开始时间
+		startTime := params.StartTime
+		gameContext := params.Desk.GetConfig().Context.(*contexts.DDZDeskContext)
+		ddzContext := gameContext.DDZContext
+
+		// 倒计时的时长
+		duration := time.Second * time.Duration(ddzContext.Duration)
+
+		// 未到倒计时，不处理
+		if duration != 0 && time.Now().Sub(startTime) > duration {
+			// 处理每一个处于倒计时的玩家，产生具体的AI事件，并把事件存入result
+			countDownPlayers := ddzContext.CountDownPlayers
+			for _, player := range countDownPlayers {
+				aeg.handleDDZPlayerAI(&result, AI, player, params.Desk, OverTimeAI, 0)
+			}
+
+			if len(result.Events) > 0 {
+				return
+			}
 		}
 
-		// 未超时，则处理托管
-		result = aeg.handleDDZTuoGuan(params.Desk, AI, params.StartTime)
-		ddzContext := _gameContext.(*contexts.DDZDeskContext).DDZContext
+		players := ddzContext.GetPlayers()
+		playerMgr := playerpkg.GetPlayerMgr()
+		for _, player := range players {
+			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
+			lv, exist := params.RobotLv[player.GetPlayerId()]
+			isRobot := exist && lv != 0
 
-		// 超过 1s 处理机器人事件
-		if time.Now().Sub(params.StartTime) > 1*time.Second {
-			players := ddzContext.GetPlayers()
-			for _, player := range players {
-				playerID := player.GetPlayerId()
-				if lv, exist := params.RobotLv[playerID]; exist && lv != 0 {
+			var duration time.Duration
+			if isRobot {
+				duration = 1 * time.Second
+			} else if deskPlayer.IsTuoguan() {
+				duration = 2 * time.Second
+			}
+
+			if time.Now().Sub(startTime) > duration {
+				if isRobot {
 					aeg.handleDDZPlayerAI(&result, AI, player.GetPlayerId(), params.Desk, RobotAI, lv)
+				} else if deskPlayer.IsTuoguan() {
+					aeg.handleDDZPlayerAI(&result, AI, player.GetPlayerId(), params.Desk, TuoGuangAI, 0)
 				}
 			}
 		}
