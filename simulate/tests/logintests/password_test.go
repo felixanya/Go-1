@@ -38,7 +38,7 @@ func Test_ChangePasswd(t *testing.T) {
 
 // Test_VerifyPasswd 校验密码测试
 func Test_VerifyPasswd(t *testing.T) {
-	useAccountSystem = true
+	// useAccountSystem = true
 	if !useAccountSystem {
 		return
 	}
@@ -60,7 +60,7 @@ func Test_VerifyPasswd(t *testing.T) {
 // Test_ResetPassword 重置密码测试
 // 由于发送验证码有冷却时间，使用已经存在的绑定手机的账号
 func Test_ResetPassword(t *testing.T) {
-	useAccountSystem = true
+	// useAccountSystem = true
 	if !useAccountSystem {
 		return
 	}
