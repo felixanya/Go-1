@@ -1,14 +1,19 @@
 package registers
 
 import (
+	"steve/client_pb/common"
 	"steve/client_pb/match"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
 	"steve/common/constant"
 	propclient "steve/common/data/prop"
+	"steve/entity/majong"
 	"steve/external/goldclient"
 	"steve/external/propsclient"
+	"steve/gold/define"
 	"steve/gutils"
+	"steve/room/contexts"
+	"steve/room/majong/utils"
 	"steve/room/models"
 	modelmanager "steve/room/models"
 	player2 "steve/room/player"
@@ -172,12 +177,18 @@ func HandleContinueReq(playerID uint64, header *steve_proto_gaterpc.Header, req 
 
 	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
+		response.ErrCode = proto.Int32(int32(common.ErrCode_EC_FAIL))
+		response.ErrDesc = proto.String("续局时获取玩家失败")
+
 		entry.Debugln("获取玩家失败")
 		return
 	}
 	desk := player.GetDesk()
 	if desk == nil {
-		entry.Debugln("玩家不在房间")
+		response.ErrCode = proto.Int32(int32(common.ErrCode_EC_FAIL))
+		response.ErrDesc = proto.String("续局时玩家不在房间")
+
+		entry.Debugln("续局时玩家不在房间")
 		return
 	}
 	continueModel := models.GetContinueModel(desk.GetUid())
@@ -263,4 +274,111 @@ func HandleUsePropReq(playerID uint64, header *steve_proto_gaterpc.Header, req r
 	}
 	modelmanager.GetModelManager().GetMessageModel(desk.GetUid()).BroadcastMessage([]uint64{}, msgid.MsgID_ROOM_USE_PROP_NTF, msgBody, true)
 	return nil
+}
+
+// HandlePlayerGameGiveUp 处理玩家游戏内认输
+func HandlePlayerGameGiveUp(playerID uint64, header *steve_proto_gaterpc.Header, req room.RoomGiveUpReq) (ret []exchanger.ResponseMsg) {
+	logEntry := logrus.WithFields(logrus.Fields{
+		"func_name": "HandlePlayerGameGiveUp",
+		"player_id": playerID,
+	})
+	logEntry.Debugf("开始玩家游戏内认输")
+
+	rsp := room.RoomGiveUpRsp{
+		ErrCode: room.RoomError_FAILED.Enum(),
+	}
+	ret = []exchanger.ResponseMsg{
+		exchanger.ResponseMsg{
+			MsgID: uint32(msgid.MsgID_ROOM_PLAYER_GIVEUP_RSP),
+			Body:  &rsp,
+		},
+	}
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
+	if player == nil {
+		logEntry.Debugln("获取玩家失败")
+		return
+	}
+	desk := player.GetDesk()
+	if desk == nil {
+		logEntry.Debugln("玩家不在房间中")
+		return
+	}
+
+	// 斗地主没有认输功能
+	if desk.GetGameId() == int(common.GameId_GAMEID_DOUDIZHU) {
+		return
+	}
+
+	// 麻将context,修改玩家状态为认输
+	majongContext := desk.GetConfig().Context.(*contexts.MajongDeskContext)
+	majongPlayer := utils.GetMajongPlayer(playerID, &majongContext.MjContext)
+	majongPlayer.XpState = majongPlayer.GetXpState() | majong.XingPaiState_give_up
+
+	// 麻将settle, 修改该破产玩家为认输
+	majongSettle := desk.GetConfig().Settle.(*models.MajongSettle)
+	majongSettle.HandleBrokerPlayer(desk, playerID)
+
+	// 广播该玩家认输
+	ntf := room.RoomGiveUpNtf{
+		PlayerId: []uint64{playerID},
+	}
+	logEntry.Println("认输玩家", playerID)
+	msgBody, err := proto.Marshal(&ntf)
+	if err != nil {
+		logEntry.WithError(err).Debugln("序列化失败")
+		return
+	}
+	modelmanager.GetModelManager().GetMessageModel(desk.GetUid()).BroadcastMessage([]uint64{}, msgid.MsgID_ROOM_USE_PROP_NTF, msgBody, true)
+
+	rsp.ErrCode = room.RoomError_SUCCESS.Enum()
+	return
+}
+
+// HandleRoomBrokerPlayerContinue 处理破产玩家继续游戏
+func HandleRoomBrokerPlayerContinue(playerID uint64, header *steve_proto_gaterpc.Header, req room.RoomBrokerPlayerContinueReq) (ret []exchanger.ResponseMsg) {
+	logEntry := logrus.WithFields(logrus.Fields{
+		"func_name": "HandlePlayerGameRenew",
+		"player_id": playerID,
+	})
+	logEntry.Debugf("开始玩家游戏内续费")
+
+	rsp := room.RoomBrokerPlayerContinueRsp{
+		ErrCode: room.RoomError_FAILED.Enum(),
+	}
+	ret = []exchanger.ResponseMsg{
+		exchanger.ResponseMsg{
+			MsgID: uint32(msgid.MsgID_ROOM_PLAYER_GIVEUP_RSP),
+			Body:  &rsp,
+		},
+	}
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
+	if player == nil {
+		logEntry.Debugln("获取玩家失败")
+		return
+	}
+	desk := player.GetDesk()
+	if desk == nil {
+		logEntry.Debugln("玩家不在房间中")
+		return
+	}
+
+	// 获取游戏金币
+	gold, err := goldclient.GetGold(playerID, define.GOLD_COIN)
+
+	if err != nil {
+		logEntry.Debugln("获取玩家playerId:(%d)金币错误，error:(%v)", playerID, err.Error())
+		return
+	}
+
+	if gold == 0 {
+		logEntry.Debugln("获取玩家playerId:(%d)金币为0", playerID)
+		return
+	}
+
+	// 麻将settle, 修改该破产玩家为认输
+	majongSettle := desk.GetConfig().Settle.(*models.MajongSettle)
+	majongSettle.HandleBrokerPlayer(desk, playerID)
+
+	rsp.ErrCode = room.RoomError_SUCCESS.Enum()
+	return
 }

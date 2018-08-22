@@ -33,6 +33,27 @@ func RequestMatch(player interfaces.ClientPlayer, gameID uint32, levelID uint32)
 	return &rsp, nil
 }
 
+// RequestCancelMatch 取消匹配
+func RequestCancelMatch(player interfaces.ClientPlayer) (*match.CancelMatchRsp, error) {
+	logEntry := logrus.WithFields(logrus.Fields{
+		"func_name": "RequestCancelMatch",
+	})
+
+	req := match.CancelMatchReq{
+		Reserve: proto.Uint32(0),
+	}
+
+	rsp := match.CancelMatchRsp{}
+
+	client := player.GetClient()
+	err := client.Request(createMsgHead(msgid.MsgID_CANCEL_MATCH_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_CANCEL_MATCH_RSP), &rsp)
+	if err != nil {
+		logEntry.WithError(err).Errorln(errRequestFailed)
+		return nil, errRequestFailed
+	}
+	return &rsp, nil
+}
+
 // ApplyJoinDesk 申请加入牌桌，从match
 func ApplyJoinDesk(player interfaces.ClientPlayer, gameID common.GameId) (*match.MatchRsp, error) {
 	logEntry := logrus.WithFields(logrus.Fields{
