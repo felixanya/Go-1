@@ -273,7 +273,7 @@ func (gm *MsgMgr) sendHorseRaceChangedNtf() error {
 		return nil
 	}
 	// 只有主节点发送广播通知
-	req := &msgserver.MsgSvrHorseRaceChangeNtf{}
+	req := &msgserver.MsgSvrHorseRaceUpdateNtf{}
 	channel := int32(0)
 	req.Channel = &channel
 	logrus.Debugln("horse race status changed...")
