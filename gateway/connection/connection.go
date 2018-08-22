@@ -17,7 +17,7 @@ const (
 	// 多长时间没有检测到心跳断开连接
 	heartBeatInterval time.Duration = time.Minute
 	// 多长时间没有认证断开连接
-	attachInterval time.Duration = time.Minute
+	attachInterval time.Duration = time.Minute * 10
 )
 
 // Connection 连接

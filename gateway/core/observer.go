@@ -170,10 +170,11 @@ func (o *observer) callRemoteHandler(clientID uint64, playerID uint64, reqHeader
 			if responses != nil {
 				o.responseRPCMessage(clientID, reqHeader, responses)
 			}
-		} else {
+			return
+		} else if msgrange.IsMessageNeedLogin(msgid.MsgID(msgID)) {
 			entry.Warningln("未绑定玩家，不能调用远程处理器")
+			return
 		}
-		return
 	}
 	cc, err := router.GetConnection(serverName, playerID, reqHeader.GetRoutine())
 	if err != nil {
