@@ -53,6 +53,10 @@ cp web/config.yml configs/web/config.yml
 go build -o bin/mailserver/mailserver.so -o mailserver/mailserver.so -buildmode=plugin steve/mailserver  
 cp mailserver/config.yml configs/mailserver/config.yml  
 
+go build -o bin/idserver/idserver.so -o idserver/idserver.so -buildmode=plugin steve/idserver  
+cp idserver/config.yml configs/idserver/config.yml  
+
+
 ./simulate/packtests.sh 
 
 
