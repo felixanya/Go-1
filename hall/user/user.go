@@ -189,13 +189,14 @@ func HandleGetPlayerStateReq(playerID uint64, header *steve_proto_gaterpc.Header
 	}
 
 	// 逻辑处理
-	fields := []string{cache.GameState, cache.GameID}
+	fields := []string{cache.GameState, cache.GameID, cache.LevelID}
 	pState, err := data.GetPlayerState(playerID, fields...)
 
 	// 返回结果
 	if err == nil {
 		response.PlayerState = common.PlayerState(pState.State).Enum()
 		response.GameId = common.GameId(pState.GameID).Enum()
+		response.LevelId = proto.Uint32(uint32(pState.LevelID))
 	}
 	logrus.Debugf("Handle get player state rsp: (%v)", response)
 	return
