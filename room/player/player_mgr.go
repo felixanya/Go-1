@@ -35,7 +35,7 @@ func (pm *PlayerMgr) GetPlayer(playerID uint64) *Player {
 }
 
 // InitDeskData init desk data
-func (pm *PlayerMgr) InitDeskData(players []uint64, maxOverTime int, robotLv []int) {
+func (pm *PlayerMgr) InitDeskData(players []uint64, robotLv []int) {
 	for seat, playerID := range players {
 		player := pm.GetPlayer(playerID)
 		if player == nil {
@@ -44,7 +44,6 @@ func (pm *PlayerMgr) InitDeskData(players []uint64, maxOverTime int, robotLv []i
 		}
 		player.SetSeat(uint32(seat))
 		player.SetEcoin(uint64(player.GetCoin()))
-		player.SetMaxOverTime(maxOverTime)
 		player.SetRobotLv(robotLv[seat])
 		player.AddTime = 15 * time.Second
 		player.SetQuit(false)
@@ -104,8 +103,4 @@ func (pm *PlayerMgr) InitPlayer(playerID uint64) {
 //TODO 离开房间服删除
 func (pm *PlayerMgr) RemovePlayer(playerID uint64) {
 	pm.playerMap.Delete(playerID)
-}
-
-func (pm *PlayerMgr) PlayerOverTime(player *Player) {
-	player.OnPlayerOverTime()
 }

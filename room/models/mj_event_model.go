@@ -187,7 +187,6 @@ func (model *MjEventModel) processEvents(ctx context.Context) {
 					if model.processEvent(event.EventID, context) {
 						return
 					}
-					model.recordTuoguanOverTimeCount(event)
 				}
 			}
 		}
@@ -306,25 +305,6 @@ func (model *MjEventModel) handlePlayerLeave(leaveInfo playerIDWithChannel) {
 	modelMgr.GetPlayerModel(model.GetDesk().GetUid()).handlePlayerLeave(playerID, model.needTuoguan())
 	logrus.WithField("player_id", playerID).Debugln("玩家退出")
 	close(leaveInfo.finishChannel)
-}
-
-// recordTuoguanOverTimeCount 记录托管超时计数
-func (model *MjEventModel) recordTuoguanOverTimeCount(event desk.DeskEvent) {
-	if event.EventType != fixed.OverTimeEvent {
-		return
-	}
-	playerID := event.PlayerID
-	if playerID == 0 {
-		return
-	}
-	id := event.EventID
-	if id == int(server_pb.EventID_event_huansanzhang_request) || id == int(server_pb.EventID_event_dingque_request) {
-		return
-	}
-	deskPlayer := player.GetPlayerMgr().GetPlayer(playerID)
-	if deskPlayer != nil {
-		deskPlayer.OnPlayerOverTime()
-	}
 }
 
 // processEvent 处理单个事件

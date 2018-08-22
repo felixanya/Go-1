@@ -170,7 +170,6 @@ func (model *DDZEventModel) processEvents(ctx context.Context) {
 					if model.processEvent(event.EventID, context) {
 						return
 					}
-					model.recordTuoguanOverTimeCount(event)
 				}
 			}
 		}
@@ -396,21 +395,6 @@ func (model *DDZEventModel) getEventPlayerID(event desk.DeskEvent) uint64 {
 // getEventContext 获取事件现场
 func (model *DDZEventModel) getEventContext(event desk.DeskEvent) interface{} {
 	return event.Context
-}
-
-// recordTuoguanOverTimeCount 记录托管超时计数
-func (model *DDZEventModel) recordTuoguanOverTimeCount(event desk.DeskEvent) {
-	if event.EventType != fixed.OverTimeEvent {
-		return
-	}
-	playerID := model.getEventPlayerID(event)
-	if playerID == 0 {
-		return
-	}
-	deskPlayer := player.GetPlayerMgr().GetPlayer(playerID)
-	if deskPlayer != nil {
-		deskPlayer.OnPlayerOverTime()
-	}
 }
 
 func (model *DDZEventModel) getMessageSender() ddzmachine.MessageSender {
