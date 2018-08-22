@@ -1,0 +1,12 @@
+syntax = "proto3";
+service Push {
+    rpc PushCommand(Client) returns (stream ServerCommand) {}
+}
+message Client {
+  string uid = 1;
+  int32 port = 2;
+}
+message ServerCommand {
+  int32 cmd = 1;
+  string params = 2;
+}

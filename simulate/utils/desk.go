@@ -375,7 +375,7 @@ func joinDesk(players []interfaces.ClientPlayer, gameID common.GameId) (map[int]
 	// 等待接收桌子创建消息
 	ntf := match.MatchSucCreateDeskNtf{}
 	if err := expectors[0].Recv(global.DefaultWaitMessageTime, &ntf); err != nil {
-		return nil, baseCoin, err
+		return nil, baseCoin, fmt.Errorf("没有收到创建房间通知: %v", err)
 	}
 
 	logEntry.Info("收到了桌子创建的通知")
@@ -396,7 +396,7 @@ func GetGameLevelBaseCoin(player interfaces.ClientPlayer, gameID uint32, levelID
 	rsp := hall.HallGetGameListInfoRsp{}
 
 	client := player.GetClient()
-	err := client.Request(createMsgHead(msgid.MsgID_HALL_GET_GAME_LIST_INFO_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_HALL_GET_GAME_LIST_INFO_REQ), &rsp)
+	err := client.Request(createMsgHead(msgid.MsgID_HALL_GET_GAME_LIST_INFO_REQ), &req, global.DefaultWaitMessageTime, uint32(msgid.MsgID_HALL_GET_GAME_LIST_INFO_RSP), &rsp)
 	if err != nil {
 		logrus.WithError(err).Errorln(errRequestFailed)
 		return 1

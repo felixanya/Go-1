@@ -3,8 +3,7 @@ package pprof
 import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
-	"log"
+		"log"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
@@ -12,6 +11,7 @@ import (
 	"runtime/pprof"
 	"strconv"
 	"strings"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type ProfileType string
@@ -34,7 +34,7 @@ var libProfile *pprof.Profile
 var context ProfileContext
 
 //Init 初始化pprof配置，启动http服务
-func Init(profName string, exposeType string, httpPort int) {
+func Init(profName string, exposeType string, httpPort int, moremux *http.ServeMux) {
 	context.exposeType = ProfileType(exposeType)
 	context.httpPort = httpPort
 	if context.exposeType == TypeNoExpose {
@@ -65,13 +65,19 @@ func Init(profName string, exposeType string, httpPort int) {
 	}
 
 	if context.exposeType == TypeExposeHttp {
-		serverMux := mux.NewRouter()
+		serverMux := http.NewServeMux()
+		if moremux != nil {
+			serverMux.HandleFunc("/", moremux.ServeHTTP)
+		}
 		serverMux.HandleFunc("/debug/pprof/", http.HandlerFunc(pprofIndex))
 		startServer(serverMux, profName)
 	}
 
 	if context.exposeType == TypeExposeSvg {
-		serverMux := mux.NewRouter()
+		serverMux := http.NewServeMux()
+		if moremux != nil {
+			serverMux.HandleFunc("/", moremux.ServeHTTP)
+		}
 		serverMux.HandleFunc("/debug/pprof/", http.HandlerFunc(allIndex))
 		serverMux.HandleFunc("/debug/pprofsvg/", http.HandlerFunc(svgPprof))
 		serverMux.HandleFunc("/debug/pprofsvg/block", http.HandlerFunc(svgPprof))
@@ -82,11 +88,12 @@ func Init(profName string, exposeType string, httpPort int) {
 		serverMux.HandleFunc("/debug/pprofsvg/cpuprofile", http.HandlerFunc(svgPprof))
 		serverMux.HandleFunc("/debug/pprofsvg/profile", http.HandlerFunc(svgPprof))
 		serverMux.HandleFunc("/debug/pprofsvg/"+profName, http.HandlerFunc(svgPprof))
+		serverMux.Handle("/metrics", promhttp.Handler())
 		startServer(serverMux, profName)
 	}
 }
 
-func startServer(serverMux *mux.Router, profName string) {
+func startServer(serverMux *http.ServeMux, profName string) {
 	serverMux.HandleFunc("/debug/pprof/block", http.HandlerFunc(httppprof.Index))
 	serverMux.HandleFunc("/debug/pprof/goroutine", http.HandlerFunc(httppprof.Index))
 	serverMux.HandleFunc("/debug/pprof/heap", http.HandlerFunc(httppprof.Index))
@@ -114,6 +121,7 @@ func startServer(serverMux *mux.Router, profName string) {
 func allIndex(res http.ResponseWriter, req *http.Request) {
 	httppprof.Index(res, req)
 	addNonIndex(res, "pprof")
+	res.Write([]byte("<div><br /><a href=\"/metrics\">Prometheus metrics</a></div>"))
 	res.Write([]byte(`<script>
 function replaceLinks(){
     var all = document.getElementsByTagName("a");
@@ -121,7 +129,7 @@ function replaceLinks(){
 		var link = all[i].href;
 		console.log (link, link.indexOf("pprofsvg"));
 		if(link.indexOf("pprofsvg") == -1 && link.indexOf("cmdline") == -1 && 
-			link.indexOf("symbol") == -1 && link.indexOf("trace") == -1) {
+			link.indexOf("symbol") == -1 && link.indexOf("trace") == -1 && link.indexOf("metrics") == -1) {
         	var link2 = link.replace("pprof", "pprofsvg");
 			var a = document.createElement('a');
 			var linkText = document.createTextNode("SVG");

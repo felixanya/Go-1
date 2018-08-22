@@ -59,7 +59,7 @@ func handleRealNameReq(playerID uint64, req *hall.HallRealNameReq) (rsp *hall.Ha
 		return
 	}
 	reward := int64(viper.GetInt("real_name_reward"))
-	newGold, err := goldclient.AddGold(playerID, define.GOLD_COIN, reward, 0, int64(dbPlayer.Channelid), 0, 0)
+	newGold, err := goldclient.AddGold(playerID, int16(define.GOLD_COIN), reward, 0, int64(dbPlayer.Channelid), 0, 0)
 	if err != nil {
 		entry.WithError(err).Errorln("添加金币失败")
 		// 已经实名，不返回失败

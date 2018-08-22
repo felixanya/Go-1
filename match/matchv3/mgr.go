@@ -442,10 +442,10 @@ func (manager *matchManager) checkDeskSameIP(pDesk1 *matchDesk, pDesk2 *matchDes
 		return false
 	}
 
-	for i := 0; i < len(pDesk1.players); i++ {
-		for j := 0; i < len(pDesk2.players); j++ {
+	for _, player1 := range pDesk1.players {
+		for _, player2 := range pDesk2.players {
 			// 都是真实玩家，存在IP相等的即返回
-			if (pDesk1.players[i].robotLv == 0) && (pDesk2.players[i].robotLv == 0) && (pDesk1.players[i].IP == pDesk2.players[j].IP) {
+			if (player1.robotLv == 0) && (player2.robotLv == 0) && (player1.IP == player2.IP) {
 				return true
 			}
 		}
@@ -474,9 +474,9 @@ func (manager *matchManager) checkPlayerSameIP(pPlayer *matchPlayer, pDesk *matc
 		return false
 	}
 
-	for i := 0; i < len(pDesk.players); i++ {
+	for _, player := range pDesk.players {
 		// 对方是真实玩家，且存在IP相等的即返回
-		if (pDesk.players[i].robotLv == 0) && (pPlayer.IP == pDesk.players[i].IP) {
+		if (player.robotLv == 0) && (pPlayer.IP == player.IP) {
 			return true
 		}
 	}
@@ -499,11 +499,11 @@ func (manager *matchManager) checkDeskLastSameDesk(pDesk1 *matchDesk, pDesk2 *ma
 		return false
 	}
 
-	for i := 0; i < len(pDesk1.players); i++ {
+	for _, player := range pDesk1.players {
 		// 只检测真实玩家
-		if pDesk1.players[i].robotLv == 0 {
+		if player.robotLv == 0 {
 			// 与pDesk2的某个玩家上一局有同桌即返回
-			if manager.checkPlayerLastSameDesk(&pDesk1.players[i], pDesk2, pGlobalInfo) {
+			if manager.checkPlayerLastSameDesk(player, pDesk2, pGlobalInfo) {
 				return true
 			}
 		}
@@ -540,9 +540,9 @@ func (manager *matchManager) checkPlayerLastSameDesk(pPlayer *matchPlayer, pDesk
 
 	tNowTime := time.Now().Unix()
 
-	for i := 0; i < len(pDesk.players); i++ {
+	for _, player := range pDesk.players {
 
-		deskID, exist := pGlobalInfo.sucPlayers[pDesk.players[i].playerID]
+		deskID, exist := pGlobalInfo.sucPlayers[player.playerID]
 
 		// 上一局的桌子ID相同，说明同桌
 		if exist && selfDeskID == deskID {
@@ -654,6 +654,7 @@ func (manager *matchManager) firstMatch(globalInfo *levelGlobalInfo, reqPlayer *
 	// 设置为匹配状态，后面匹配过程中出错删除时再标记为空闲状态，匹配成功时不需处理(room服会标记为游戏状态)
 	bSuc, err := hallclient.UpdatePlayerState(reqPlayer.playerID, user.PlayerState_PS_IDIE, user.PlayerState_PS_MATCHING, globalInfo.gameID, globalInfo.levelID)
 	if err != nil || !bSuc {
+		logEntry.Debugf("设置玩家为匹配状态,玩家ID:%v", reqPlayer.playerID)
 		logEntry.WithError(err).Errorf("内部错误，通知hall服设置玩家状态为匹配状态时失败，可能是客户端刚刚匹配了其他游戏导致，请求匹配的游戏ID:%v，场次ID:%v，玩家ID:%v", globalInfo.gameID, globalInfo.levelID, reqPlayer.playerID)
 		return
 	}
@@ -941,10 +942,10 @@ func (manager *matchManager) cancelMatch(globalInfo *levelGlobalInfo, reqPlayer 
 			desk := *(iter.Value.(**matchDesk))
 
 			// 该概率下所有的玩家
-			for i := 0; i < len(desk.players); i++ {
+			for _, player := range desk.players {
 
 				// 找到该玩家
-				if desk.players[i].playerID == reqPlayer.playerID {
+				if player.playerID == reqPlayer.playerID {
 					logEntry.Debugf("取消匹配时，在胜率为%v的桌子列表中找到了玩家，游戏ID:%v，级别ID:%v，从桌子删除前信息为:%v", index, globalInfo.gameID, globalInfo.levelID, desk)
 					bRemovePlayer = true
 					break
@@ -953,20 +954,15 @@ func (manager *matchManager) cancelMatch(globalInfo *levelGlobalInfo, reqPlayer 
 
 			// 找到桌子后，删掉该玩家
 			if bRemovePlayer {
-				tempPlayers := make([]matchPlayer, 0, desk.needPlayerCount)
-				for i := 0; i < len(desk.players); i++ {
-					// 不是该玩家则压入
-					if desk.players[i].playerID != reqPlayer.playerID {
-						tempPlayers = append(tempPlayers, desk.players[i])
-					}
-				}
-				desk.players = tempPlayers
+				// 删除该玩家
+				delete(desk.players, reqPlayer.playerID)
+
 				logEntry.Debugf("取消匹配时，在胜率为%v的桌子列表中找到了玩家，游戏ID:%v，级别ID:%v，从桌子删除后信息为:%v", index, globalInfo.gameID, globalInfo.levelID, desk)
 
 				// 剩余是否存在真实玩家
 				bExistTruePlayer := false
-				for i := 0; i < len(desk.players); i++ {
-					if desk.players[i].robotLv == 0 {
+				for _, player := range desk.players {
+					if player.robotLv == 0 {
 						bExistTruePlayer = true
 						break
 					}
@@ -1289,15 +1285,19 @@ func (manager *matchManager) addPlayerToDesk(pPlayer *matchPlayer, pDesk *matchD
 		"desk":   pDesk,
 	})
 
+	_, exist := pDesk.players[pPlayer.playerID]
+	if exist {
+		logrus.Errorf("向桌子中压入玩家时发现玩家已存在")
+		return false
+	}
+
 	// 压入该玩家
-	pDesk.players = append(pDesk.players, *pPlayer)
+	pDesk.players[pPlayer.playerID] = pPlayer
 
 	// 总金币
 	var allGold int64 = 0
-
-	// 把不是指定玩家的其他玩家加进来
-	for i := 0; i < len(pDesk.players); i++ {
-		allGold += pDesk.players[i].gold
+	for _, player := range pDesk.players {
+		allGold += player.gold
 	}
 
 	// 重新计算平均金币
@@ -1336,15 +1336,14 @@ func (manager *matchManager) onDeskFull(pDesk *matchDesk, globalInfo *levelGloba
 
 	logEntry.Debugln("进入函数")
 
-	tempPlayers := make([]matchPlayer, 0, pDesk.needPlayerCount)
+	tempPlayers := make(map[uint64]*matchPlayer, pDesk.needPlayerCount)
 
-	// 重新检测玩家状态，目的是移除不在线的
-	for i := 0; i < len(pDesk.players); i++ {
-		player := pDesk.players[i]
+	// 重新检测玩家状态，目的是移除不在线的,重新检测金币是否符合
+	for _, player := range pDesk.players {
 
 		// 机器人直接压入
 		if player.robotLv != 0 {
-			tempPlayers = append(tempPlayers, player)
+			tempPlayers[player.playerID] = player
 			continue
 		}
 
@@ -1354,7 +1353,7 @@ func (manager *matchManager) onDeskFull(pDesk *matchDesk, globalInfo *levelGloba
 			logEntry.Errorf("内部错误，从hall服获取玩家状态出错,玩家:%v", player)
 
 			// 暂时不移除玩家
-			tempPlayers = append(tempPlayers, player)
+			tempPlayers[player.playerID] = player
 			continue
 		}
 
@@ -1370,7 +1369,7 @@ func (manager *matchManager) onDeskFull(pDesk *matchDesk, globalInfo *levelGloba
 			continue
 		}
 
-		tempPlayers = append(tempPlayers, player)
+		tempPlayers[player.playerID] = player
 	}
 
 	pDesk.players = tempPlayers
@@ -1578,23 +1577,15 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 				logEntry.Debugf("要拆的桌子是:{%v}", pDesk2)
 
 				// 把desk2的玩家移入到desk1
-
-				// 临时玩家，和桌子2的玩家一一对应
-				tempPlayers := make([]matchPlayer, 0, len(pDesk2.players))
-				for i := 0; i < len(pDesk2.players); i++ {
-					tempPlayers = append(tempPlayers, pDesk2.players[i])
-				}
-
-				for i := 0; i < len(tempPlayers); i++ {
-
+				for playerID, player := range pDesk2.players {
 					// 只处理真实玩家
-					if pDesk2.players[i].robotLv == 0 {
+					if player.robotLv == 0 {
 
 						// 先从desk2中删除这个玩家
-						manager.removePlayerFromDesk(&pDesk2.players[i], pDesk2)
+						delete(pDesk2.players, playerID)
 
 						// 加入desk1,若desk1桌子满，则从列表中删除desk1桌子，跳出
-						if manager.addPlayerToDesk(&tempPlayers[i], pDesk1, globalInfo) {
+						if manager.addPlayerToDesk(player, pDesk1, globalInfo) {
 							logEntry.Debugln("由于拆入的玩家已满桌，删除桌子1")
 							pList1.Remove(iter1)
 							break
@@ -1602,16 +1593,37 @@ func (manager *matchManager) mergeDesks(globalInfo *levelGlobalInfo) {
 					}
 				}
 
-				// 是否存在真实玩家
+				// desk2是否还存在真实玩家
 				bExistTruePlayer := false
-				for i := 0; i < len(pDesk2.players); i++ {
-					if pDesk2.players[i].robotLv == 0 {
+				for _, player := range pDesk2.players {
+					if player.robotLv == 0 {
 						bExistTruePlayer = true
 					}
 				}
 
 				// 桌子2没真实玩家了，就删除桌子
 				if !bExistTruePlayer {
+
+					// 回收剩下的机器人
+					for playerID, player := range pDesk2.players {
+						if player.robotLv != 0 {
+							// 更新机器人状态
+							// 设置为空闲状态
+							bSuc, err := hallclient.UpdatePlayerState(playerID, user.PlayerState_PS_MATCHING, user.PlayerState_PS_MATCHING, 0, 0)
+							if err != nil || !bSuc {
+								logEntry.WithError(err).Errorf("内部错误，通知hall服设置机器人状态为空闲状态时失败，游戏ID:%v，场次ID:%v，机器人玩家ID:%v", globalInfo.gameID, globalInfo.levelID, playerID)
+								continue
+							}
+
+							// 更新机器人所在的服务器类型和地址
+							bSuc, err = hallclient.UpdatePlayeServerAddr(playerID, user.ServerType_ST_MATCH, "")
+							if err != nil || !bSuc {
+								logEntry.WithError(err).Errorf("内部错误，通知hall服设置机器人的服务器类型及地址时失败，游戏ID:%v，场次ID:%v，机器人玩家ID:%v", globalInfo.gameID, globalInfo.levelID, playerID)
+								continue
+							}
+						}
+					}
+
 					pList2.Remove(iter2)
 					logEntry.Debugln("由于被拆的桌子2中没有真实玩家了，删除桌子2")
 				}
@@ -1635,22 +1647,14 @@ func (manager *matchManager) removePlayerFromDesk(pPlayer *matchPlayer, pDesk *m
 		"desk":   pDesk,
 	})
 
+	// 删除该玩家
+	delete(pDesk.players, pPlayer.playerID)
+
 	// 总金币
 	var allGold int64 = 0
-
-	// 新玩家
-	tempPlayers := make([]matchPlayer, 0, pDesk.needPlayerCount)
-
-	// 把不是指定玩家的其他玩家加进来
-	for i := 0; i < len(pDesk.players); i++ {
-		if pPlayer.playerID != pDesk.players[i].playerID {
-			tempPlayers = append(tempPlayers, pDesk.players[i])
-			allGold += pDesk.players[i].gold
-		}
+	for _, player := range pDesk.players {
+		allGold += player.gold
 	}
-
-	// 新玩家
-	pDesk.players = tempPlayers
 
 	// 重新计算平均金币
 	playerCount := len(pDesk.players)
@@ -1858,10 +1862,10 @@ func (manager *matchManager) clearMatch(globalInfo *levelGlobalInfo) {
 			logrus.Debugf("clearMatch()，清空了游戏ID:{%v},场次ID:{%v}的桌子{%v}", globalInfo.gameID, globalInfo.levelID, desk)
 
 			// 通知桌内的所有真实玩家
-			playersID := make([]uint64, 0, 10)
-			for j := 0; j < len(desk.players); j++ {
-				if desk.players[j].robotLv == 0 {
-					playersID = append(playersID, desk.players[j].playerID)
+			playersID := make([]uint64, 0, desk.needPlayerCount)
+			for playerID, player := range desk.players {
+				if player.robotLv == 0 {
+					playersID = append(playersID, playerID)
 				}
 			}
 
