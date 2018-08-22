@@ -9,6 +9,7 @@ import (
 	"steve/hall/data"
 	"steve/hall/logic"
 	"steve/server_pb/user"
+	"strconv"
 	"time"
 
 	"steve/datareport/fixed"
@@ -329,6 +330,14 @@ func createPlayer(accID uint64) (uint64, error) {
 	if err != nil || playerID == 0 || showUID == 0 {
 		return playerID, fmt.Errorf("生成玩家playerId:(%d),showUID:(%d)失败: %v", playerID, showUID, err)
 	}
+
+	// 获取账号信息
+	accInfo, err := getAccountInfo(accID)
+	if err != nil {
+		return 0, fmt.Errorf("获取账号信息失败：%v", err)
+	}
+	province, _ := strconv.Atoi(accInfo.Province)
+	city, _ := strconv.Atoi(accInfo.City)
 	// 角色配置
 	roleConifg := logic.RoleConfig[0]
 
@@ -337,15 +346,15 @@ func createPlayer(accID uint64) (uint64, error) {
 		Playerid:     int64(playerID),
 		Showuid:      int64(showUID),
 		Type:         1,
-		Channelid:    1,                                // TODO ，渠道 ID
-		Nickname:     fmt.Sprintf("player%d", showUID), // TODO,昵称
-		Gender:       2,
-		Avatar:       getRandomAvator(), // TODO , 头像
-		Provinceid:   1,                 // TODO， 省ID
-		Cityid:       1,                 // TODO 市ID
-		Name:         "",                // TODO: 真实姓名
-		Phone:        "",                // TODO: 电话
-		Idcard:       "",                // TODO 身份证
+		Channelid:    accInfo.Channel,
+		Nickname:     generateNickName(playerID, &accInfo),
+		Gender:       generateGender(playerID, &accInfo),
+		Avatar:       generateAvartaURL(playerID, &accInfo),
+		Provinceid:   province,
+		Cityid:       city,
+		Name:         "",
+		Phone:        accInfo.Phone,
+		Idcard:       "",
 		Iswhitelist:  0,
 		Zipcode:      0,
 		Shippingaddr: "",
@@ -356,6 +365,7 @@ func createPlayer(accID uint64) (uint64, error) {
 		Updatetime:   time.Now(),
 		Updateby:     "",
 	}
+	data.RecordLastUpdateWxInfoTime(playerID)
 
 	tplayerCurrency := db.TPlayerCurrency{
 		Playerid:       int64(playerID),

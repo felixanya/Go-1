@@ -2,7 +2,6 @@ package matchv3
 
 import (
 	"context"
-	"math/rand"
 	"steve/client_pb/match"
 	"steve/client_pb/msgid"
 	"steve/external/gateclient"
@@ -17,17 +16,11 @@ import (
 
 // randSeat 给desk的所有玩家分配座位号
 func randSeat(desk *matchDesk) {
-	// 先分配为：0,1,2,3......
-	var seat int32 = 0
-	for i := range desk.players {
-		desk.players[i].seat = seat
-		seat++
+	var i int32 = 0
+	for _, player := range desk.players {
+		player.seat = i
+		i++
 	}
-
-	// 随机交换
-	rand.Shuffle(len(desk.players), func(i, j int) {
-		desk.players[i].seat, desk.players[j].seat = desk.players[j].seat, desk.players[i].seat
-	})
 }
 
 // sendCreateDesk 向room服请求创建牌桌，创建失败时则重新请求
@@ -54,11 +47,11 @@ func sendCreateDesk(desk matchDesk, globalInfo *levelGlobalInfo) {
 	// 通知玩家，匹配成功，创建桌子
 	// matchPlayer转换为deskPlayerInfo
 	deskPlayers := []*match.DeskPlayerInfo{}
-	for i := 0; i < len(desk.players); i++ {
+	for _, player := range desk.players {
 		// 给客户端扣除费用后的金币,实际扣除由room服开始游戏时扣除,李全林要求
-		desk.players[i].gold = desk.players[i].gold - globalInfo.fee
+		player.gold = player.gold - globalInfo.fee
 
-		pDeskPlayer := translateToDeskPlayer(&desk.players[i])
+		pDeskPlayer := translateToDeskPlayer(player)
 		if pDeskPlayer == nil {
 			logEntry.Errorln("把matchPlayer转换为deskPlayerInfo失败，跳过")
 			continue
@@ -76,20 +69,20 @@ func sendCreateDesk(desk matchDesk, globalInfo *levelGlobalInfo) {
 	logEntry.Debugf("匹配成功，发给客户端的消息:%v", ntf)
 
 	// 广播给桌子内的所有真实玩家
-	for i := 0; i < len(desk.players); i++ {
-		if desk.players[i].robotLv == 0 {
-			gateclient.SendPackageByPlayerID(desk.players[i].playerID, uint32(msgid.MsgID_MATCH_SUC_CREATE_DESK_NTF), &ntf)
+	for playerID, player := range desk.players {
+		if player.robotLv == 0 {
+			gateclient.SendPackageByPlayerID(playerID, uint32(msgid.MsgID_MATCH_SUC_CREATE_DESK_NTF), &ntf)
 		}
 	}
 
 	// 该桌子所有的玩家信息
 	createPlayers := []*roommgr.DeskPlayer{}
-	for i := 0; i < len(desk.players); i++ {
+	for playerID, player := range desk.players {
 
 		deskPlayer := &roommgr.DeskPlayer{
-			PlayerId:   desk.players[i].playerID,
-			RobotLevel: desk.players[i].robotLv,
-			Seat:       uint32(desk.players[i].seat),
+			PlayerId:   playerID,
+			RobotLevel: player.robotLv,
+			Seat:       uint32(player.seat),
 		}
 
 		createPlayers = append(createPlayers, deskPlayer)
@@ -127,9 +120,9 @@ func sendCreateDesk(desk matchDesk, globalInfo *levelGlobalInfo) {
 	// 成功时的处理
 
 	// 记录匹配成功的真实玩家同桌信息
-	for i := 0; i < len(desk.players); i++ {
-		if desk.players[i].robotLv == 0 {
-			globalInfo.sucPlayers[desk.players[i].playerID] = desk.deskID
+	for playerID, player := range desk.players {
+		if player.robotLv == 0 {
+			globalInfo.sucPlayers[playerID] = desk.deskID
 		}
 	}
 

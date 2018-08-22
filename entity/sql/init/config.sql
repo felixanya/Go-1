@@ -155,6 +155,15 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     }'
 );
 
+/*绑定手机奖励*/
+INSERT `t_common_config`(`key`, `subkey`, `value`) values (
+    'bindphone',
+    'reward',
+    '{
+    "type": 2,
+    "num": 5 
+    }'
+);
 INSERT `t_common_config`(`key`, `subkey`, `value`) values ( 
     'prop', 
     'interactive',

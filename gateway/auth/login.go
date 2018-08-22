@@ -53,10 +53,9 @@ func HandleLoginRequest(clientID uint64, reqHeader *base.Header, body []byte) (r
 // execLogin 执行登录
 func execLogin(clientID uint64, clientRequest *login.LoginAuthReq) (clientResponse login.LoginAuthRsp) {
 	entry := logrus.WithFields(logrus.Fields{
-		"func_name":  "execLogin",
-		"client_id":  clientID,
-		"account_id": clientRequest.GetAccountId(),
-		"token":      clientRequest.GetToken(),
+		"func_name": "execLogin",
+		"client_id": clientID,
+		"request":   clientRequest.String(),
 	})
 	clientResponse = login.LoginAuthRsp{
 		ErrCode:  login.ErrorCode_ABNORMAL.Enum(),
@@ -73,7 +72,9 @@ func execLogin(clientID uint64, clientRequest *login.LoginAuthReq) (clientRespon
 		entry.Errorln(err)
 		return
 	}
+	entry.WithField("response", response.String()).Debugln("登录服返回")
 	if response.GetErrCode() != login.ErrorCode_SUCCESS {
+		entry.WithField("err_code", response.GetErrCode()).Debugln("登录失败")
 		return
 	}
 	clientResponse = *response
@@ -116,10 +117,18 @@ func callLoginService(clientRequest *login.LoginAuthReq) (clientResponse *login.
 		err = fmt.Errorf("获取登录服连接失败:%v", err)
 		return
 	}
+	var requestData []byte
+	if clientRequest.GetRequestData() != nil {
+		requestData, err = proto.Marshal(clientRequest.GetRequestData())
+		if err != nil {
+			err = fmt.Errorf("序列化登录数据失败:%s", err.Error())
+			return
+		}
+	}
 	loginClient := server_login_pb.NewLoginServiceClient(cc)
 	request := server_login_pb.LoginRequest{
 		AccountId:   clientRequest.GetAccountId(),
-		RequestData: clientRequest.GetRequestData(),
+		RequestData: requestData,
 		PlayerId:    clientRequest.GetPlayerId(),
 		Token:       clientRequest.GetToken(),
 	}

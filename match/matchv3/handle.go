@@ -70,7 +70,7 @@ func HandleMatchReq(playerID uint64, header *steve_proto_gaterpc.Header, req mat
 		response.ErrCode = proto.Int32(int32(match.MatchError_EC_ALREADY_GAMEING))
 		response.ErrDesc = proto.String("已经在游戏中了")
 
-		logEntry.Warningf("匹配时发现已经在游戏状态中了，所在游戏ID:%v，所在场次ID:%v \n", curGameID, curLevelID)
+		logEntry.Warningf("匹配时发现已经在游戏状态中了，所在游戏ID:%v，所在场次ID:%v", curGameID, curLevelID)
 		return
 	}
 
@@ -79,7 +79,7 @@ func HandleMatchReq(playerID uint64, header *steve_proto_gaterpc.Header, req mat
 		response.ErrCode = proto.Int32(int32(match.MatchError_EC_ALREADY_MATCHING))
 		response.ErrDesc = proto.String("已经在匹配中了")
 
-		logEntry.Warningf("匹配时发现已经在匹配状态中了，正在匹配游戏ID:%v，正在匹配场次ID:%v \n", curGameID, curLevelID)
+		logEntry.Warningf("匹配时发现已经在匹配状态中了，正在匹配游戏ID:%v，正在匹配场次ID:%v", curGameID, curLevelID)
 		return
 	}
 
@@ -276,7 +276,7 @@ func (plh *playerLoginHandler) HandleMessage(message *nsq.Message) error {
 	}
 
 	// 操作:取消匹配
-
+	logrus.Debugf("处理玩家登陆时发现玩家处于匹配状态,取消其匹配,玩家ID:%v", loginMsg.GetPlayerId())
 	// 分发该游戏，该场次的匹配请求通道
 	errString := matchMgr.dispatchCancelMatchReq(loginMsg.GetPlayerId(), curGameID, curLevelID)
 
