@@ -525,13 +525,13 @@ func CreatePlayer(player db.TPlayer, currency db.TPlayerCurrency, playerpProps [
 	return nil
 }
 
-// ExistPlayerID 判断玩家ID是否存在
-func ExistPlayerID(playerID uint64) (bool, error) {
+// ExistID 判断玩家ID是否存在
+func ExistID(playerID, showUID uint64) (bool, error) {
 	engine, err := mysqlEngineGetter(playerMysqlName)
 	if err != nil {
 		return false, err
 	}
-	has, err := engine.SQL("select playerID from t_player where playerID = ?", fmt.Sprintf("%d", playerID)).Exist()
+	has, err := engine.SQL("select playerID from t_player where playerID = ? or showUID = ? ", fmt.Sprintf("%d", playerID), fmt.Sprintf("%d", showUID)).Exist()
 	if err != nil {
 		return false, err
 	}

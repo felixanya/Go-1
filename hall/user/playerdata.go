@@ -14,6 +14,7 @@ import (
 
 	"steve/datareport/fixed"
 	"steve/external/datareportclient"
+	"steve/external/idclient"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -46,6 +47,7 @@ func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.
 
 	var err2 error
 	playerID, err2 = createPlayer(accID)
+
 	if err2 != nil {
 		logrus.WithField("account_id", accID).Errorln(err2)
 		return
@@ -54,6 +56,7 @@ func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.
 	// 返回消息
 	rsp.PlayerId, rsp.ErrCode = playerID, int32(user.ErrCode_EC_SUCCESS)
 
+	logrus.Debugf("GetPlayerByAccount rsp: (%v)", rsp)
 	datareportclient.DataReport(fixed.LOG_TYPE_REG, 0, 0, 0, playerID, "1")
 
 	return
@@ -72,14 +75,14 @@ func (pds *PlayerDataService) GetPlayerInfo(ctx context.Context, req *user.GetPl
 	playerID := req.GetPlayerId()
 
 	// 逻辑处理
-	fields := []string{cache.NickName, cache.Gender, cache.Avatar, cache.ChannelID, cache.ProvinceID, cache.CityID}
+	fields := []string{cache.NickName, cache.ShowUID, cache.Gender, cache.Avatar, cache.ChannelID, cache.ProvinceID, cache.CityID}
 	player, err := data.GetPlayerInfo(playerID, fields...)
 
 	// 返回消息
 	if err == nil {
 		rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
 		rsp.PlayerId, rsp.Gender = playerID, uint32(player.Gender)
-		rsp.NickName, rsp.Avatar = player.Nickname, player.Avatar
+		rsp.NickName, rsp.ShowUid, rsp.Avatar = player.Nickname, uint64(player.Showuid), player.Avatar
 		rsp.ChannelId, rsp.ProvinceId, rsp.CityId = uint32(player.Channelid), uint32(player.Provinceid), uint32(player.Cityid)
 	}
 	logrus.Debugf("GetPlayerInfo rsp : (%v)", rsp)
@@ -325,20 +328,15 @@ func (pds *PlayerDataService) UpdatePlayerServerAddr(ctx context.Context, req *u
 
 // createPlayer 创建玩家
 func createPlayer(accID uint64) (uint64, error) {
-	showUID := data.AllocShowUID()
-	playerID := data.AllocPlayerID()
-
-	if playerID == 0 {
-		return 0, fmt.Errorf("分配玩家 ID 失败")
+	playerID, showUID, err := generateID(1)
+	if err != nil || playerID == 0 || showUID == 0 {
+		return playerID, fmt.Errorf("生成玩家playerId:(%d),showUID:(%d)失败: %v", playerID, showUID, err)
 	}
 
 	// 获取账号信息
 	accInfo, err := getAccountInfo(accID)
 	if err != nil {
 		return 0, fmt.Errorf("获取账号信息失败：%v", err)
-	}
-	if has, err := data.ExistPlayerID(playerID); err != nil || has {
-		return 0, fmt.Errorf("初始化玩家(%d)数据失败,玩家已存在: %v", playerID, err)
 	}
 	province, _ := strconv.Atoi(accInfo.Province)
 	city, _ := strconv.Atoi(accInfo.City)
@@ -348,7 +346,7 @@ func createPlayer(accID uint64) (uint64, error) {
 	tpalyer := db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(playerID),
-		Showuid:      showUID,
+		Showuid:      int64(showUID),
 		Type:         1,
 		Channelid:    accInfo.Channel,
 		Nickname:     generateNickName(showUID, &accInfo),
@@ -408,6 +406,26 @@ func createPlayer(accID uint64) (uint64, error) {
 		return playerID, fmt.Errorf("初始化玩家(%d)状态失败: %v", playerID, err)
 	}
 	return playerID, nil
+}
+
+// generateID 根据最大重试次数生成id
+func generateID(retry uint32) (uint64, uint64, error) {
+	count := uint32(0)
+	for {
+		playerID, showUID, err := idclient.NewPlayerShowId()
+		count++
+		if err != nil || playerID == 0 || showUID == 0 {
+			logrus.Errorf("生成玩家 ID 失败")
+		}
+		// 若playerId或playerID，showUID 已存在，重新获取
+		if has, err := data.ExistID(playerID, showUID); err != nil || has {
+			logrus.Errorf("初始化玩家数据playerId:(%d),showUID:(%d)失败,玩家已存在: %v", playerID, showUID, err)
+		}
+		if count == retry {
+			return playerID, showUID, err
+		}
+	}
+
 }
 
 func getRandomAvator() string {

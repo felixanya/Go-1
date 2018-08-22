@@ -2,6 +2,8 @@ package core
 
 import (
 	"fmt"
+	"steve/gutils/topics"
+	"steve/hall/handle"
 	"steve/hall/logic"
 	"steve/structs"
 
@@ -30,6 +32,12 @@ func InitServer() error {
 
 	//  初始化角色配置
 	logic.InitRoleConfig()
+
+	// 订阅
+	exposer := structs.GetGlobalExposer()
+	if err := exposer.Subscriber.Subscribe(topics.GoldChangeNtf, "gold", &handle.GoldChanngleHandler{}); err != nil {
+		return fmt.Errorf("订阅单局玩家金币变化通知消息失败(%s)", err.Error())
+	}
 	return nil
 }
 

@@ -31,6 +31,7 @@ startserver match match match
 startserver propserver propserver propserver 
 startserver web web web 
 startserver mailserver mailserver
+startserver idserver idserver
 
 pushd back
 serviceloader back --config=config.yml &
