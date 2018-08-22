@@ -49,13 +49,6 @@ func GetAtEvent() DeskAutoEventGenerator {
 	return generator
 }
 
-// handlePlayerAI 处理玩家 AI
-// result 		: 存放AI事件的结果
-// AI			: 具体的AI产生器
-// playerID 	: AI针对的玩家的playerID
-// ddzContext 	: 牌局信息
-// aiType		: 托管，超时等，对应枚举 AIType
-// robotLv		: 机器人级别
 func (aeg *autoEventGenerator) handleDDZPlayerAI(result *AutoEventGenerateResult, AI CommonAI,
 	playerID uint64, deskObj *desk.Desk, aiType AIType, robotLv int) {
 
@@ -132,21 +125,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		if duration != 0 {
 			for _, playerId := range countDownPlayers {
 				deskPlayer := playerMgr.GetPlayer(playerId)
-				if time.Now().Sub(startTime) >= duration && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
-					deskPlayer.CountingDown = true
-					msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
-					util.SendMessageToPlayer(playerId, msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
-					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("msg", msg).Debugln("发送补时消息")
-				}
-				if deskPlayer.CountingDown {
-					deskPlayer.AddTime = deskPlayer.AddTime - TickTime
-					if deskPlayer.AddTime < 0 {
-						deskPlayer.AddTime = 0
-						deskPlayer.SetTuoguan(true, true)
-					}
-					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
-				}
-				if !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0 {
+				if AddTimeCountDown(deskPlayer, startTime, duration) {
 					aeg.handleDDZPlayerAI(&result, AI, playerId, params.Desk, OverTimeAI, 0)
 				}
 			}
@@ -196,20 +175,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 				duration = 2 * time.Second
 			} else {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
-				if time.Now().Sub(startTime) >= duration && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
-					deskPlayer.CountingDown = true
-					msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
-					util.SendMessageToPlayer(player.GetPlayerId(), msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
-					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("msg", msg).Debugln("发送补时消息")
-				}
-				if deskPlayer.CountingDown {
-					deskPlayer.AddTime = deskPlayer.AddTime - TickTime
-					if deskPlayer.AddTime < 0 {
-						deskPlayer.AddTime = 0
-						deskPlayer.SetTuoguan(true, true)
-					}
-					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
-				}
+				AddTimeCountDown(deskPlayer, startTime, duration)
 			}
 			if !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0 {
 				deskPlayer.CountingDown = false
@@ -242,6 +208,24 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		}
 	}
 	return result
+}
+
+func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duration time.Duration) bool {
+	if time.Now().Sub(startTime) >= duration && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
+		deskPlayer.CountingDown = true
+		msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
+		util.SendMessageToPlayer(deskPlayer.GetPlayerID(), msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
+		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("msg", msg).Debugln("发送补时消息")
+	}
+	if deskPlayer.CountingDown {
+		deskPlayer.AddTime = deskPlayer.AddTime - TickTime
+		if deskPlayer.AddTime < 0 {
+			deskPlayer.AddTime = 0
+			deskPlayer.SetTuoguan(true, true)
+		}
+		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
+	}
+	return !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0
 }
 
 func (aeg *autoEventGenerator) RegisterAI(gameID int, stateID int32, AI CommonAI) {

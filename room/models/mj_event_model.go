@@ -164,14 +164,15 @@ func (model *MjEventModel) processEvents(ctx context.Context) {
 			}
 		case event := <-model.event:
 			{
-				mjContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext)
-				stateNumber := event.StateNumber
-				context := event.Context
 				playerMgr := player.GetPlayerMgr()
 				eventPlayer := playerMgr.GetPlayer(event.PlayerID)
 				if eventPlayer != nil {
 					eventPlayer.CountingDown = false
 				}
+
+				mjContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext)
+				stateNumber := event.StateNumber
+				context := event.Context
 				if needCompareStateNumber(&event) && stateNumber != mjContext.StateNumber {
 					continue
 				}

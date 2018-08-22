@@ -157,6 +157,12 @@ func (model *DDZEventModel) processEvents(ctx context.Context) {
 			}
 		case event := <-model.event:
 			{
+				playerMgr := player.GetPlayerMgr()
+				eventPlayer := playerMgr.GetPlayer(event.PlayerID)
+				if eventPlayer != nil {
+					eventPlayer.CountingDown = false
+				}
+
 				eventContext := model.getEventContext(event)
 				if model.processEvent(event.EventID, eventContext) {
 					return
