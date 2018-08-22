@@ -48,6 +48,19 @@ func getRedisUint64Val(redisName string, key string) (uint64, error) {
 	return 0, fmt.Errorf("redis 命令执行失败: %v", redisCmd.Err())
 }
 
+// getRedisVal 获取 redis 值
+func getRedisVal(redisName, key string) (string, error) {
+	redisCli, err := redisCliGetter(redisName, 0)
+	if err != nil {
+		return "", fmt.Errorf("获取 reids 客户端失败：%s", err.Error())
+	}
+	redisCmd := redisCli.Get(key)
+	if redisCmd.Err() != nil && redisCmd.Err() != redis.Nil {
+		return "", fmt.Errorf("redis 命令执行失败：%s", redisCmd.Err().Error())
+	}
+	return redisCmd.Val(), nil
+}
+
 func getRedisField(redisName string, key string, field ...string) ([]interface{}, error) {
 	redisCli, err := redisCliGetter(redisName, 0)
 	if err != nil {

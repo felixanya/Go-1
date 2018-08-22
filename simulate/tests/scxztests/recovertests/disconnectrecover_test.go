@@ -49,7 +49,8 @@ func Test_DisconnectRecover(t *testing.T) {
 	// assert.NotNil(t, client)
 	// player, err := utils.LoginUser(client, disconnectPlayer.Player.GetUsrName())
 
-	player, err := utils.LoginPlayer(disconnectPlayer.Player.GetAccountID(), "")
+	// player, err := utils.LoginPlayer(disconnectPlayer.Player.GetAccountID(), "")
+	player, err := utils.LoginPlayerByToken(disconnectPlayer.Player.GetID(), disconnectPlayer.Player.GetToken())
 
 	assert.Nil(t, err)
 	assert.NotNil(t, player)

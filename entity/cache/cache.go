@@ -11,10 +11,15 @@ const (
 	playerTokenKeyFmt = "playertoken:%d"
 
 	playerChargeKeyFmt = "playercharge:%d"
+
+	// playerWxInfoUpdateTimeKeyFmt 玩家上次更新微信信息的时间
+	playerWxInfoUpdateTimeKeyFmt = "playerwxupdatetime:%d"
 )
 
 // Player 字段
 const (
+	// AccountID 账号 ID
+	AccountID = "accountID"
 	// NickName ...昵称
 	NickName = "nickname"
 	// Avatar ...头像
@@ -33,6 +38,9 @@ const (
 	Name = "name"
 	// IDCard ... 身份证
 	IDCard = "idCard"
+
+	// Phone 手机号
+	Phone = "phone"
 
 	// GameState ...玩家游戏状态
 	GameState = "game_state"
@@ -105,6 +113,10 @@ func FmtGameReportKey(gameId int, level int) string {
 	return fmt.Sprintf("gamereport:%v-%v", gameId, level)
 }
 
+// FmtPlayerWxInfoUpdateTimeKey 返回玩家上次同步微信信息的时间
+func FmtPlayerWxInfoUpdateTimeKey(playerID uint64) string {
+	return fmt.Sprintf(playerWxInfoUpdateTimeKeyFmt, playerID)
+}
 func FmtGameReportKeyGame() string {
 	return fmt.Sprintf("gamereport:")
 }

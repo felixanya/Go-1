@@ -74,7 +74,7 @@ func (ls *LoginService) Login(ctx context.Context, request *login.LoginRequest) 
 
 	entry := logrus.WithFields(logrus.Fields{
 		"player_id": request.GetPlayerId(),
-		"token":     request.GetToken(),
+		"request":   request.String(),
 	})
 	entry.Debugln("收到登录请求")
 	response = &login.LoginResponse{
@@ -97,6 +97,7 @@ func (ls *LoginService) Login(ctx context.Context, request *login.LoginRequest) 
 		if accID == 0 {
 			accID = uint64(ls.idAllocNode.Generate())
 		}
+		entry.WithField("account_id", accID).Debugln("内部测试模式登录")
 	} else {
 		accID, err = ls.accountSysAuth(request)
 		if err != nil {
@@ -104,6 +105,7 @@ func (ls *LoginService) Login(ctx context.Context, request *login.LoginRequest) 
 			response.ErrCode = uint32(common.ErrCode_EC_FAIL)
 			return
 		}
+		entry.WithField("account_id", accID).Debugln("通过账号平台认证")
 	}
 	playerID, errCode := playerIDGetter(accID)
 	if errCode != int(common.ErrCode_EC_SUCCESS) {
@@ -149,6 +151,7 @@ func (ls *LoginService) accountSysAuth(request *login.LoginRequest) (uint64, err
 	}
 	loginResponse := loginResponse{}
 	if err := json.Unmarshal(respData, &loginResponse); err != nil {
+		logrus.WithError(err).Errorln("数据错误：", string(respData))
 		return 0, fmt.Errorf("回复数据序列化失败：%v", err)
 	}
 	if loginResponse.Code != 0 {
@@ -197,8 +200,9 @@ func authByToken(token string, playerID uint64) bool {
 
 func init() {
 	viper.SetDefault("auth_key", "some-secret-key")
-	viper.SetDefault("inner_auth", true) // 内部认证，不通过账号系统
+	viper.SetDefault("inner_auth", false) // 内部认证，不通过账号系统
 	viper.SetDefault("product_id", 9999)
+	viper.SetDefault("login_url", "http://192.168.7.26:18101/account/regiserHall")
 
 	idAllocNode, err := gutils.NewNode(viper.GetInt64("node"))
 	if err != nil {
