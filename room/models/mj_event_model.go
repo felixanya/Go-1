@@ -446,19 +446,9 @@ func needCompareStateNumber(event *desk.DeskEvent) bool {
 func (model *MjEventModel) genTimerEvent() []desk.DeskEvent {
 	// 先将 context 指针读出来拷贝， 后面的 context 修改都会分配一块新的内存
 	dContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext)
-
-	deskPlayers := GetModelManager().GetPlayerModel(model.GetDesk().GetUid()).GetDeskPlayers()
-	robotLvs := make(map[uint64]int, len(deskPlayers))
-	for _, deskPlayer := range deskPlayers {
-		robotLv := deskPlayer.GetRobotLv()
-		if robotLv != 0 {
-			robotLvs[deskPlayer.GetPlayerID()] = robotLv
-		}
-	}
 	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventGenerateParams{
 		Desk:      model.GetDesk(),
 		StartTime: dContext.StateTime,
-		RobotLv:   robotLvs,
 	})
 	return result.Events
 }

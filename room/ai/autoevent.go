@@ -23,7 +23,6 @@ var MjTickTime = time.Millisecond * 200
 type AutoEventGenerateParams struct {
 	Desk      *desk.Desk
 	StartTime time.Time
-	RobotLv   map[uint64]int
 }
 
 // AutoEventGenerateResult 自动事件生成结果
@@ -149,8 +148,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		playerMgr := playerpkg.GetPlayerMgr()
 		for _, player := range players {
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
-			lv, exist := params.RobotLv[player.GetPlayerId()]
-			isRobot := exist && lv != 0
+			isRobot := deskPlayer.GetRobotLv() != 0
 
 			var duration time.Duration
 			if isRobot {
@@ -161,7 +159,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 
 			if time.Now().Sub(startTime) > duration {
 				if isRobot {
-					aeg.handleDDZPlayerAI(&result, AI, player.GetPlayerId(), params.Desk, RobotAI, lv)
+					aeg.handleDDZPlayerAI(&result, AI, player.GetPlayerId(), params.Desk, RobotAI, deskPlayer.GetRobotLv())
 				} else if deskPlayer.IsTuoguan() {
 					aeg.handleDDZPlayerAI(&result, AI, player.GetPlayerId(), params.Desk, TuoGuangAI, 0)
 				}
@@ -176,8 +174,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		playerMgr := playerpkg.GetPlayerMgr()
 		for _, player := range players {
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
-			lv, exist := params.RobotLv[player.GetPlayerId()]
-			isRobot := exist && lv != 0
+			isRobot := deskPlayer.GetRobotLv() != 0
 			var duration time.Duration
 			if isRobot {
 				duration = 1 * time.Second
@@ -223,7 +220,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 					MajongContext: &mjContext,
 					PlayerID:      player.GetPlayerId(),
 					AIType:        aiType,
-					RobotLv:       lv,
+					RobotLv:       deskPlayer.GetRobotLv(),
 				})
 				if err == nil {
 					for _, aiEvent := range aiResult.Events {

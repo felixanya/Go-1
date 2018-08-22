@@ -476,23 +476,13 @@ func (model *DDZEventModel) checkGameOver(logEntry *logrus.Entry) bool {
 
 // genTimerEvent 生成计时事件
 func (model *DDZEventModel) genTimerEvent() []desk.DeskEvent {
-	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
 	dContext := model.GetDesk().GetConfig().Context.(*context2.DDZDeskContext)
 	ddzContext := &dContext.DDZContext
 
-	deskPlayers := playerModel.GetDeskPlayers()
-	robotLvs := make(map[uint64]int, len(deskPlayers))
-	for _, deskPlayer := range deskPlayers {
-		robotLv := deskPlayer.GetRobotLv()
-		if robotLv != 0 {
-			robotLvs[deskPlayer.GetPlayerID()] = robotLv
-		}
-	}
 	// 产生AI事件
 	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventGenerateParams{
 		Desk:      model.GetDesk(),
 		StartTime: ddzContext.GetStartTime(),
-		RobotLv:   robotLvs,
 	})
 	return result.Events
 }
