@@ -1,0 +1,11 @@
+log_level: debug
+log_dir: ./log
+log_prefix: stress
+log_stderr: true
+
+prometheus_addr: :8080
+
+rpc_addr: 127.0.0.1:8881
+rpc_port: 8881
+
+refresh_rate: 10

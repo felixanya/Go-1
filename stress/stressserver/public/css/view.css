@@ -1,0 +1,33 @@
+
+body {
+    font-family: Roboto,Helvetica,Arial,sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #d8d9da;
+    background-color: #171819;
+    width: 100%;
+    position: absolute;
+}
+a{
+    color: #e0e0e0 !important;
+}
+.display {
+    text-align: center;
+}
+.all {
+    text-align: center;
+    height:300px;
+}
+.details {
+    margin: 20px;
+    text-align: left;
+    width: 100%;
+}
+.details-left {
+    width: 50%;
+    float: left;
+}
+.details-right {
+    width: 50%;
+    float: left;
+}
