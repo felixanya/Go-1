@@ -9,14 +9,14 @@ import (
 	"steve/entity/poker"
 )
 
-// GetBoom 若有炸弹，返回炸弹;没有则返回false
-func GetBoom(handCards []Poker) (bool, []Poker) {
+// GetBomb 若有炸弹，返回炸弹;没有则返回false
+func GetBomb(handCards []Poker) (bool, []Poker) {
 	bomb := FindSecondaryCards(handCards, 4, 1)
 	return bomb != nil, bomb
 }
 
-// GetKingBoom 若有炸弹，返回炸弹;没有则返回false
-func GetKingBoom(handCards []Poker) (bool, []Poker) {
+// GetKingBomb 若有炸弹，返回炸弹;没有则返回false
+func GetKingBomb(handCards []Poker) (bool, []Poker) {
 	has := Contains(handCards, BlackJoker) && Contains(handCards, RedJoker)
 	return has, append([]Poker{BlackJoker}, RedJoker)
 }
