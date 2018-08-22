@@ -87,17 +87,17 @@ func HandleResetPasswordReq(playerID uint64, header *steve_proto_gaterpc.Header,
 		},
 	}
 
-	dbPlayer, err := dbPlayerGetter(playerID, "accountID")
-	if err != nil {
-		entry.WithError(err).Errorln("获取玩家信息失败")
-		return
-	}
+	// dbPlayer, err := dbPlayerGetter(playerID, "accountID")
+	// if err != nil {
+	// 	entry.WithError(err).Errorln("获取玩家信息失败")
+	// 	return
+	// }
 
 	url := viper.GetString("reset_password_url")
 	httpResponseData := normalHTTPResponse{}
-	err = requestJSONHTTP(url, map[string]interface{}{
-		"productid":     viper.GetInt("product_id"),
-		"guid":          dbPlayer.Accountid,
+	err := requestJSONHTTP(url, map[string]interface{}{
+		"productid": viper.GetInt("product_id"),
+		// "guid":          dbPlayer.Accountid,
 		"type":          1,
 		"cellphone_num": req.GetPhone(),
 		"dymc_code":     req.GetDymcCode(),

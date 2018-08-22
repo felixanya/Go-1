@@ -21,10 +21,9 @@ import (
 
 var useAccountSystem = false
 
-// sendDymcCode 发送手机验证码
-func sendDymcCode(player interfaces.ClientPlayer, phone uint64, sendCase hall.AuthCodeSendScene) error {
+func sendDymcCodeByClient(client interfaces.Client, phone uint64, sendCase hall.AuthCodeSendScene) error {
 	rsp := hall.AuthCodeRsp{}
-	err := player.GetClient().Request(utils.CreateMsgHead(msgid.MsgID_AUTH_CODE_REQ), &hall.AuthCodeReq{
+	err := client.Request(utils.CreateMsgHead(msgid.MsgID_AUTH_CODE_REQ), &hall.AuthCodeReq{
 		CellphoneNum: proto.Uint64(phone),
 		SendCase:     sendCase.Enum(),
 	}, time.Second*5, uint32(msgid.MsgID_AUTH_CODE_RSP), &rsp)
@@ -35,6 +34,11 @@ func sendDymcCode(player interfaces.ClientPlayer, phone uint64, sendCase hall.Au
 		return fmt.Errorf("发送失败:[%d] %s", rsp.GetErrorCode(), rsp.GetErrorMsg())
 	}
 	return nil
+}
+
+// sendDymcCode 发送手机验证码
+func sendDymcCode(player interfaces.ClientPlayer, phone uint64, sendCase hall.AuthCodeSendScene) error {
+	return sendDymcCodeByClient(player.GetClient(), phone, sendCase)
 }
 
 // Test_SendDymcCode 发送验证码
