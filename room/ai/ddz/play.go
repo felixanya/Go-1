@@ -1,7 +1,7 @@
 package ddz
 
 import (
-	"fmt"
+	"errors"
 	"steve/entity/poker/ddz"
 	"steve/room/ai"
 	. "steve/room/flows/ddzflow/ddz/states"
@@ -17,34 +17,19 @@ type playStateAI struct {
 // GenerateAIEvent 生成 出牌AI 事件
 // 无论是超时、托管还是机器人，胡过了自动胡，没胡过的其他操作都默认弃， 并且产生相应的事件
 func (playAI *playStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
-	logEntry := logrus.WithFields(logrus.Fields{
-		"func_name": "play.go:GenerateAIEvent()"})
-
-	// 产生的事件结果
-	result, err = ai.AIEventGenerateResult{
-		Events: []ai.AIEvent{},
-	}, nil
-
 	ddzContext := params.DDZContext
-
 	// 没到自己打牌
 	if ddzContext.GetCurrentPlayerId() != params.PlayerID {
-		return result, nil
+		return
+	}
+
+	if !IsValidPlayer(ddzContext, params.PlayerID) {
+		logrus.WithField("players", ddzContext.GetPlayers()).WithField("playerId", params.PlayerID).Errorln("斗地主无效玩家")
+		return result, errors.New("无效玩家")
 	}
 
 	// 当前玩家
-	var curPlayer *ddz.Player
-	for _, player := range ddzContext.GetPlayers() {
-		if player.GetPlayerId() == params.PlayerID {
-			curPlayer = player
-		}
-	}
-
-	// 无效玩家
-	if curPlayer == nil {
-		logEntry.Errorf("无效玩家%d", params.PlayerID)
-		return result, fmt.Errorf("无效玩家%d", params.PlayerID)
-	}
+	curPlayer := GetPlayerByID(ddzContext.GetPlayers(), params.PlayerID)
 
 	// 没有牌型时说明是主动打牌
 	if ddzContext.GetCurCardType() == poker.CardType_CT_NONE {
@@ -90,8 +75,8 @@ func (playAI *playStateAI) getPassivePlayCardEvent(ddzContext *ddz.DDZContext, p
 			}
 		}
 	}
-	logrus.Info("被动出牌：%s", biggerCards)
-	return play(player, ToInts(biggerCards))
+	logrus.WithField("handCards", handCards).WithField("biggerCards", biggerCards).Debugln("被动出牌")
+	return play(player, biggerCards)
 }
 
 // Play 生成出牌请求事件(主动出牌)
@@ -100,15 +85,16 @@ func (playAI *playStateAI) getActivePlayCardEvent(ddzContext *ddz.DDZContext, pl
 	handCards := ToDDZCards(player.GetHandCards())
 	// 按照排序权重进行排序
 	DDZPokerSort(handCards)
-	logrus.Info("主动出牌：%v", handCards[0])
-	return play(player, ToInts([]Poker{handCards[0]}))
+	outCard := handCards[0]
+	logrus.WithField("handCards", handCards).WithField("outCard", outCard).Debugln("主动出牌")
+	return play(player, []Poker{outCard})
 }
 
-func play(player *ddz.Player, cards []uint32) ai.AIEvent {
+func play(player *ddz.Player, cards []Poker) ai.AIEvent {
 	request := &ddz.PlayCardRequestEvent{
 		Head: &ddz.RequestEventHead{
 			PlayerId: player.GetPlayerId()},
-		Cards: cards,
+		Cards: ToInts(cards),
 	}
 	event := ai.AIEvent{
 		ID:      int32(ddz.EventID_event_chupai_request),

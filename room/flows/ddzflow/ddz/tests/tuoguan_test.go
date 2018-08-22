@@ -567,3 +567,12 @@ func Test_Tuoguan_Boom(t *testing.T) {
 	assert.Equal(t, int(0x38), int(outInts[2]))
 	assert.Equal(t, int(0x48), int(outInts[3]))
 }
+
+func Test_Tuoguan(t *testing.T) {
+	handCards := states.ToDDZCards([]uint32{0x22, 0x31, 0x4D, 0x4C, 0x3C, 0x1C, 0x48, 0x38, 0x17, 0x36, 0x35, 0x25, 0x34, 0x24, 0x43, 0x33, 0x13}) //♣2 ♥A ♠K ♠J ♥J ♦J ♠8 ♥8 ♦7 ♥6 ♥5 ♣5 ♥4 ♣4 ♠3 ♥3 ♦3
+	lastCards := states.ToDDZCards([]uint32{0x3B, 0x3A, 0x2A, 0x1A, 0x49, 0x39, 0x29, 0x15})                                                       //♣J ♥10 ♣10 ♦10 ♠9 ♥9 ♣9 ♦5
+
+	bigger, biggerCards := states.GetMinBiggerCards(handCards, lastCards)
+	assert.Equal(t, false, bigger)
+	assert.Equal(t, []states.Poker(nil), biggerCards)
+}
