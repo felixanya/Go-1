@@ -5,6 +5,7 @@ import (
 	"steve/external/hallclient"
 	user_pb "steve/server_pb/user"
 	"sync"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -45,6 +46,7 @@ func (pm *PlayerMgr) InitDeskData(players []uint64, maxOverTime int, robotLv []i
 		player.SetEcoin(uint64(player.GetCoin()))
 		player.SetMaxOverTime(maxOverTime)
 		player.SetRobotLv(robotLv[seat])
+		player.AddTime = 15 * time.Second
 		player.SetQuit(false)
 	}
 }

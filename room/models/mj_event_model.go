@@ -144,7 +144,7 @@ func (model *MjEventModel) processEvents(ctx context.Context) {
 	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
 	playerEnterChannel := playerModel.getEnterChannel()
 	playerLeaveChannel := playerModel.getLeaveChannel()
-	tick := time.NewTicker(time.Millisecond * 200)
+	tick := time.NewTicker(ai.MjTickTime)
 	defer tick.Stop()
 
 	for {
@@ -167,6 +167,11 @@ func (model *MjEventModel) processEvents(ctx context.Context) {
 				mjContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext)
 				stateNumber := event.StateNumber
 				context := event.Context
+				playerMgr := player.GetPlayerMgr()
+				eventPlayer := playerMgr.GetPlayer(event.PlayerID)
+				if eventPlayer != nil {
+					eventPlayer.CountingDown = false
+				}
 				if needCompareStateNumber(&event) && stateNumber != mjContext.StateNumber {
 					continue
 				}

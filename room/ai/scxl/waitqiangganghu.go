@@ -52,10 +52,10 @@ func (h *waitQiangganghuStateAI) GenerateAIEvent(params ai.AIEventGenerateParams
 	})
 	if canhu {
 		if gutils.IsHu(player) || gutils.IsTing(player) {
-			aiEvent = h.hu(player)
+			aiEvent = hu(player)
 			entry.Info("生成抢杠胡的自动事件")
 		} else {
-			aiEvent = h.qi(player)
+			aiEvent = qi(player)
 			entry.Info("生成弃的自动事件")
 		}
 	} else {
@@ -63,32 +63,6 @@ func (h *waitQiangganghuStateAI) GenerateAIEvent(params ai.AIEventGenerateParams
 	}
 	result.Events = append(result.Events, aiEvent)
 	return
-}
-
-func (h *waitQiangganghuStateAI) qi(player *majong.Player) ai.AIEvent {
-	eventContext := &majong.QiRequestEvent{
-		Head: &majong.RequestEventHead{
-			PlayerId: player.GetPlayerId(),
-		},
-	}
-
-	return ai.AIEvent{
-		ID:      int32(majong.EventID_event_qi_request),
-		Context: eventContext,
-	}
-}
-
-func (h *waitQiangganghuStateAI) hu(player *majong.Player) ai.AIEvent {
-	eventContext := &majong.HuRequestEvent{
-		Head: &majong.RequestEventHead{
-			PlayerId: player.GetPlayerId(),
-		},
-	}
-
-	return ai.AIEvent{
-		ID:      int32(majong.EventID_event_hu_request),
-		Context: eventContext,
-	}
 }
 
 func (h *waitQiangganghuStateAI) checkAIEvent(player *majong.Player, mjContext *majong.MajongContext, params ai.AIEventGenerateParams) error {

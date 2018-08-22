@@ -1,16 +1,23 @@
 package ai
 
 import (
+	"github.com/Sirupsen/logrus"
+	"github.com/golang/protobuf/proto"
+	"math"
+	"steve/client_pb/msgid"
 	"steve/client_pb/room"
 	"steve/gutils"
 	"steve/room/contexts"
 	"steve/room/desk"
 	"steve/room/fixed"
 	playerpkg "steve/room/player"
+	"steve/room/util"
 	"time"
 
 	"github.com/spf13/viper"
 )
+
+var MjTickTime = time.Millisecond * 200
 
 // AutoEventGenerateParams 生成自动事件的参数
 type AutoEventGenerateParams struct {
@@ -208,8 +215,22 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 				duration = 1 * time.Second
 			} else {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
+				if time.Now().Sub(startTime) >= duration && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
+					deskPlayer.CountingDown = true
+					msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
+					util.SendMessageToPlayer(player.GetPlayerId(), msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
+					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("msg", msg).Debugln("发送补时消息")
+				}
+				if deskPlayer.CountingDown {
+					deskPlayer.AddTime = deskPlayer.AddTime - MjTickTime
+					if deskPlayer.AddTime < 0 {
+						deskPlayer.AddTime = 0
+					}
+					//logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
+				}
 			}
-			if time.Now().Sub(startTime) >= duration {
+			if !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0 {
+				deskPlayer.CountingDown = false
 				var aiType AIType
 				var eventType int
 				if isRobot {
