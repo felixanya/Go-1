@@ -7,11 +7,14 @@ import (
 	"steve/entity/cache"
 	"steve/entity/db"
 	"steve/hall/data"
+	"steve/hall/logic"
 	"steve/server_pb/user"
+	"strconv"
 	"time"
 
 	"steve/datareport/fixed"
 	"steve/external/datareportclient"
+	"steve/external/idclient"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -44,6 +47,7 @@ func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.
 
 	var err2 error
 	playerID, err2 = createPlayer(accID)
+
 	if err2 != nil {
 		logrus.WithField("account_id", accID).Errorln(err2)
 		return
@@ -52,6 +56,7 @@ func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.
 	// 返回消息
 	rsp.PlayerId, rsp.ErrCode = playerID, int32(user.ErrCode_EC_SUCCESS)
 
+	logrus.Debugf("GetPlayerByAccount rsp: (%v)", rsp)
 	datareportclient.DataReport(fixed.LOG_TYPE_REG, 0, 0, 0, playerID, "1")
 
 	return
@@ -70,14 +75,14 @@ func (pds *PlayerDataService) GetPlayerInfo(ctx context.Context, req *user.GetPl
 	playerID := req.GetPlayerId()
 
 	// 逻辑处理
-	fields := []string{cache.NickName, cache.Gender, cache.Avatar, cache.ChannelID, cache.ProvinceID, cache.CityID}
+	fields := []string{cache.NickName, cache.ShowUID, cache.Gender, cache.Avatar, cache.ChannelID, cache.ProvinceID, cache.CityID}
 	player, err := data.GetPlayerInfo(playerID, fields...)
 
 	// 返回消息
 	if err == nil {
 		rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
 		rsp.PlayerId, rsp.Gender = playerID, uint32(player.Gender)
-		rsp.NickName, rsp.Avatar = player.Nickname, player.Avatar
+		rsp.NickName, rsp.ShowUid, rsp.Avatar = player.Nickname, uint64(player.Showuid), player.Avatar
 		rsp.ChannelId, rsp.ProvinceId, rsp.CityId = uint32(player.Channelid), uint32(player.Provinceid), uint32(player.Cityid)
 	}
 	logrus.Debugf("GetPlayerInfo rsp : (%v)", rsp)
@@ -323,31 +328,35 @@ func (pds *PlayerDataService) UpdatePlayerServerAddr(ctx context.Context, req *u
 
 // createPlayer 创建玩家
 func createPlayer(accID uint64) (uint64, error) {
-	showUID := data.AllocShowUID()
-	playerID := data.AllocPlayerID()
-
-	if playerID == 0 {
-		return 0, fmt.Errorf("分配玩家 ID 失败")
+	playerID, showUID, err := generateID(1)
+	if err != nil || playerID == 0 || showUID == 0 {
+		return playerID, fmt.Errorf("生成玩家playerId:(%d),showUID:(%d)失败: %v", playerID, showUID, err)
 	}
 
-	if has, err := data.ExistPlayerID(playerID); err != nil || has {
-		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
+	// 获取账号信息
+	accInfo, err := getAccountInfo(accID)
+	if err != nil {
+		return 0, fmt.Errorf("获取账号信息失败：%v", err)
 	}
+	province, _ := strconv.Atoi(accInfo.Province)
+	city, _ := strconv.Atoi(accInfo.City)
+	// 角色配置
+	roleConifg := logic.RoleConfig[0]
 
-	if err := data.InitPlayerData(db.TPlayer{
+	tpalyer := db.TPlayer{
 		Accountid:    int64(accID),
 		Playerid:     int64(playerID),
-		Showuid:      showUID,
+		Showuid:      int64(showUID),
 		Type:         1,
-		Channelid:    1,                                // TODO ，渠道 ID
-		Nickname:     fmt.Sprintf("player%d", showUID), // TODO,昵称
-		Gender:       2,
-		Avatar:       getRandomAvator(), // TODO , 头像
-		Provinceid:   1,                 // TODO， 省ID
-		Cityid:       1,                 // TODO 市ID
-		Name:         "",                // TODO: 真实姓名
-		Phone:        "",                // TODO: 电话
-		Idcard:       "",                // TODO 身份证
+		Channelid:    accInfo.Channel,
+		Nickname:     generateNickName(int64(showUID), &accInfo),
+		Gender:       generateGender(playerID, &accInfo),
+		Avatar:       generateAvartaURL(playerID, &accInfo),
+		Provinceid:   province,
+		Cityid:       city,
+		Name:         "",
+		Phone:        accInfo.Phone,
+		Idcard:       "",
 		Iswhitelist:  0,
 		Zipcode:      0,
 		Shippingaddr: "",
@@ -357,14 +366,14 @@ func createPlayer(accID uint64) (uint64, error) {
 		Createby:     "",
 		Updatetime:   time.Now(),
 		Updateby:     "",
-	}); err != nil {
-		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
 	}
-	if err := data.InitPlayerCoin(db.TPlayerCurrency{
+	data.RecordLastUpdateWxInfoTime(playerID)
+
+	tplayerCurrency := db.TPlayerCurrency{
 		Playerid:       int64(playerID),
-		Coins:          100000,
-		Ingots:         0,
-		Keycards:       0,
+		Coins:          roleConifg.GoldNum,
+		Ingots:         roleConifg.YbNum,
+		Keycards:       roleConifg.CardNum,
 		Obtainingots:   0,
 		Obtainkeycards: 0,
 		Costingots:     0,
@@ -374,25 +383,49 @@ func createPlayer(accID uint64) (uint64, error) {
 		Createby:       "",
 		Updatetime:     time.Now(),
 		Updateby:       "",
-	}); err != nil {
-		return playerID, fmt.Errorf("初始化玩家(%d)金币数据失败: %v", playerID, err)
 	}
+	tplayerProps := make([]db.TPlayerProps, 0)
+
+	for _, item := range roleConifg.ItemArr {
+		tplayerProps = append(tplayerProps, db.TPlayerProps{
+			Playerid:   int64(playerID),
+			Propid:     int64(item[0]),
+			Count:      int64(item[1]),
+			Createtime: time.Now(),
+			Createby:   "programmer",
+			Updatetime: time.Now(),
+			Updateby:   "",
+		})
+	}
+
+	if err := data.CreatePlayer(tpalyer, tplayerCurrency, tplayerProps); err != nil {
+		return 0, fmt.Errorf("初始化玩家(%d)数据失败: %v", playerID, err)
+	}
+
 	if err := data.InitPlayerState(int64(playerID)); err != nil {
 		return playerID, fmt.Errorf("初始化玩家(%d)状态失败: %v", playerID, err)
 	}
-
-	if err := data.InitPlayerProps(db.TPlayerProps{
-		Playerid:   int64(playerID),
-		Propid:     int64(1),
-		Count:      5,
-		Createtime: time.Now(),
-		Createby:   "programmer",
-		Updatetime: time.Now(),
-		Updateby:   "",
-	}); err != nil {
-		return playerID, fmt.Errorf("初始化玩家(%d)道具失败: %v", playerID, err)
-	}
 	return playerID, nil
+}
+
+// generateID 根据最大重试次数生成id
+func generateID(retry uint32) (uint64, uint64, error) {
+	count := uint32(0)
+	for {
+		playerID, showUID, err := idclient.NewPlayerShowId()
+		count++
+		if err != nil || playerID == 0 || showUID == 0 {
+			logrus.Errorf("生成玩家 ID 失败")
+		}
+		// 若playerId或playerID，showUID 已存在，重新获取
+		if has, err := data.ExistID(playerID, showUID); err != nil || has {
+			logrus.Errorf("初始化玩家数据playerId:(%d),showUID:(%d)失败,玩家已存在: %v", playerID, showUID, err)
+		}
+		if count == retry {
+			return playerID, showUID, err
+		}
+	}
+
 }
 
 func getRandomAvator() string {

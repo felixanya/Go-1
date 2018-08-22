@@ -5,6 +5,7 @@ import (
 	"steve/structs/proto/base"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 )
 
 type rpcServer struct {
@@ -34,6 +35,13 @@ func (e *rpcExchanger) Send(data []byte) error {
 	return e.e.Send(&base.ExchangeContext{
 		Data: data,
 	})
+}
+
+func (e *rpcExchanger) GetRemoteAddr() net.Addr {
+	if peer, ok := peer.FromContext(e.e.Context()); ok {
+		return peer.Addr
+	}
+	return nil
 }
 
 func (s *rpcServer) Exchange(e base.Exchanger_ExchangeServer) error {

@@ -3,9 +3,11 @@ package connection
 import (
 	"context"
 	"fmt"
+	"net"
 	"steve/external/hallclient"
 	"steve/gateway/config"
 	user_pb "steve/server_pb/user"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -15,23 +17,18 @@ const (
 	// 多长时间没有检测到心跳断开连接
 	heartBeatInterval time.Duration = time.Minute
 	// 多长时间没有认证断开连接
-	attachInterval time.Duration = time.Minute
+	attachInterval time.Duration = time.Minute * 10
 )
 
 // Connection 连接
 type Connection struct {
+	clientID uint64
+	connMgr  *ConnMgr
+	addr     net.Addr
+
 	playerID       uint64
-	clientID       uint64
 	heartBeatTimer *time.Timer
 	attachTimer    *time.Timer
-	connMgr        *ConnMgr
-}
-
-func newConnection(clientID uint64, connMgr *ConnMgr) *Connection {
-	return &Connection{
-		clientID: clientID,
-		connMgr:  connMgr,
-	}
 }
 
 func (c *Connection) run(ctx context.Context, finish func()) {
@@ -100,12 +97,19 @@ func (c *Connection) AttachPlayer(playerID uint64) bool {
 	c.playerID = playerID
 	c.attachTimer.Stop()
 
-	succ, err := hallclient.UpdatePlayeServerAddr(playerID, user_pb.ServerType_ST_GATE, c.getGatewayAddr())
-	if !succ || err != nil {
+	addr := c.addr.String()
+	splitIndex := strings.Index(addr, ":")
+	ip := addr
+	if splitIndex != -1 {
+		ip = addr[:splitIndex]
+	}
+	entry = entry.WithField("ip", ip)
+	if succ, err := hallclient.UpdatePlayerGateInfo(c.playerID, ip, c.getGatewayAddr()); !succ || err != nil {
 		entry.WithError(err).Errorln("更新玩家网关地址失败")
+	} else {
+		entry.Debugln("更新玩家网关地址")
 	}
 	c.connMgr.setPlayerConnectionID(c.playerID, c.clientID)
-	entry.Infoln("绑定成功")
 	return true
 }
 

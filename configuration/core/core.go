@@ -1,8 +1,10 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	commonconstant "steve/common/constant"
 	"steve/configuration/data"
 	"steve/entity/constant"
 	"steve/server_pb/config"
@@ -20,6 +22,9 @@ func (s *configService) Init(e *structs.Exposer, param ...string) error {
 	http.HandleFunc("/update", handleConfigUpdate)
 	if err := e.RPCServer.RegisterService(config.RegisterConfigServer, &configServer{}); err != nil {
 		return fmt.Errorf("服务注册失败：%v", err)
+	}
+	if err := e.WebHandleMgr.Register("update", handleConfigUpdatev2); err != nil {
+		return fmt.Errorf("注册配置更新处理器失败:%s", err.Error())
 	}
 	return nil
 }
@@ -75,4 +80,39 @@ func handleConfigUpdate(w http.ResponseWriter, request *http.Request) {
 	}
 	w.Write([]byte("更新成功"))
 	return
+}
+
+/* handleConfigUpdatev2 处理配置更新
+参数：
+requestData (json) :
+{
+	"key": "{some-key}",
+	"subkey": "{some-sub-key}",
+}
+
+responseData (json) : 空
+*/
+func handleConfigUpdatev2(requestData []byte) (code int, msg string, responseData []byte) {
+	entry := logrus.WithField("request_data", string(requestData))
+	request := struct {
+		Key    string `json:"key"`
+		Subkey string `json:"subkey"`
+	}{}
+
+	if err := json.Unmarshal(requestData, &request); err != nil {
+		entry.WithError(err).Infoln("反序列化失败")
+		return commonconstant.HTTPFailure, "参数错误", nil
+	}
+
+	if request.Key == "" {
+		entry.Infoln("key 为空")
+		return commonconstant.HTTPFailure, "参数错误", nil
+	}
+	if err := pubConfigUpdate(request.Key, request.Subkey); err != nil {
+		entry.WithError(err).Errorln("发布配置更新失败")
+		return commonconstant.HTTPFailure, "系统异常", nil
+	}
+
+	entry.Debugln("配置更新发布成功")
+	return commonconstant.HTTPOK, "成功", nil
 }

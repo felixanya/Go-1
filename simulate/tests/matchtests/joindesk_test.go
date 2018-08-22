@@ -9,12 +9,14 @@ import (
 	"steve/simulate/interfaces"
 	"steve/simulate/utils"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestApplyJoinDesk(t *testing.T) {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
+
 	createNtfExpectors := map[int]interfaces.MessageExpector{}
 	gameStartNtfExpectors := map[int]interfaces.MessageExpector{}
 	for i := 0; i < 4; i++ {
@@ -32,10 +34,12 @@ func TestApplyJoinDesk(t *testing.T) {
 		assert.Nil(t, err)
 		gameStartNtfExpectors[i] = gameStartNtfExpector
 
+		// 设置金币
+		cheater.SetPlayerCommonCoin(player.GetID())
+
 		_, err = utils.ApplyJoinDesk(player, common.GameId_GAMEID_XUELIU)
 		assert.Nil(t, err)
 	}
-
 	for _, e := range createNtfExpectors {
 		ntf := &room.RoomDeskCreatedNtf{}
 		assert.Nil(t, e.Recv(global.DefaultWaitMessageTime, ntf))
@@ -45,13 +49,15 @@ func TestApplyJoinDesk(t *testing.T) {
 		ntf := &room.RoomStartGameNtf{}
 		assert.Nil(t, e.Recv(global.DefaultWaitMessageTime, ntf))
 	}
-	time.Sleep(2 * time.Minute)
 }
 
 // TestNoMoneyMatch 测试金币数为0时参与匹配
 // 登录玩家，设置其金币数为0，发起匹配请求
 // 期望收到回复，匹配失败
 func TestNoMoneyMatch(t *testing.T) {
+	// 先清空所有的匹配
+	cheater.ClearAllMatch()
+
 	player, err := utils.LoginNewPlayer()
 	assert.Nil(t, err)
 	assert.NotNil(t, player)

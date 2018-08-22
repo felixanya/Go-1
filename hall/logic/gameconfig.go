@@ -17,6 +17,9 @@ var GameConf []entityConf.GameConfig
 // LevelConf 场次配置
 var LevelConf []entityConf.GameLevelConfig
 
+// RoleConfig 角色配置
+var RoleConfig []entityConf.RoleInitConfig
+
 // loadGameConfig load game config from configuration server
 func loadGameConfig(retry int) (gameConf []entityConf.GameConfig, err error) {
 	gameConfigJSON, err := configclient.GetConfigUntilSucc(constant.GameConfigKey.Key, constant.GameConfigKey.SubKey, retry, 5*time.Second)
@@ -40,7 +43,7 @@ func parseGameConfig(config string) (gameConf []entityConf.GameConfig, err error
 	if err := json.Unmarshal([]byte(config), &gameConf); err != nil {
 		return nil, fmt.Errorf("反序列化失败：%s", err.Error())
 	}
-	logrus.Debugf("解析游戏玩法配置解析成功: %v", gameConf)
+	logrus.Debugf("游戏玩法配置解析成功: %v", gameConf)
 	return
 }
 
@@ -49,7 +52,7 @@ func parseGameLevelConfig(config string) (gameConf []entityConf.GameLevelConfig,
 	if err := json.Unmarshal([]byte(config), &gameConf); err != nil {
 		return nil, fmt.Errorf("反序列化失败：%s", err.Error())
 	}
-	logrus.Debugf("解析游戏场次配置解析成功: %v", gameConf)
+	logrus.Debugf("游戏场次配置解析成功: %v", gameConf)
 	return
 }
 
@@ -66,5 +69,17 @@ func InitGameConfig() {
 	if err != nil {
 		logrus.WithError(err).Errorln("initGameConfig 获取游戏场次配置失败")
 	}
+	return
+}
+
+// InitRoleConfig 初始化角色配置
+func InitRoleConfig() {
+	var err error
+	RoleConfig, err = configclient.GetRoleInitConfigMap()
+	if err != nil {
+		logrus.Debugf("角色配置解析失败，RoleConfig:(%v)，error:(%s)", RoleConfig, err.Error())
+	}
+	logrus.Debugf("角色配置解析成功，RoleConfig:(%v)", RoleConfig)
+
 	return
 }

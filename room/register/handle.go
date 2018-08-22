@@ -109,7 +109,7 @@ func HandleCancelTuoGuanReq(playerID uint64, header *steve_proto_gaterpc.Header,
 	return
 }
 
-// HandleTuoGuanReq 处理取消托管请求
+// HandleTuoGuanReq 处理托管请求
 func HandleTuoGuanReq(playerID uint64, header *steve_proto_gaterpc.Header, req room.RoomTuoGuanReq) (ret []exchanger.ResponseMsg) {
 	ret = []exchanger.ResponseMsg{}
 
@@ -128,6 +128,36 @@ func HandleTuoGuanReq(playerID uint64, header *steve_proto_gaterpc.Header, req r
 		return
 	}
 	player.SetTuoguan(req.GetTuoguan(), true)
+	return
+}
+
+// HandleAutoHuReq 处理自动胡牌请求
+func HandleAutoHuReq(playerID uint64, header *steve_proto_gaterpc.Header, req room.RoomAutoHuReq) (ret []exchanger.ResponseMsg) {
+	ret = []exchanger.ResponseMsg{}
+
+	logEntry := logrus.WithFields(logrus.Fields{
+		"func_name": "HandleAutoHuReq",
+		"player_id": playerID,
+	})
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
+	if player == nil {
+		logEntry.Debugln("获取玩家失败")
+		return
+	}
+	desk := player.GetDesk()
+	if desk == nil {
+		logEntry.Debugln("玩家不在房间中")
+		return
+	}
+	player.SetAutoHu(req.GetEnable())
+
+	body := &room.RoomAutoHuRsp{
+		ErrCode: room.RoomError_SUCCESS.Enum(),
+	}
+	ret = []exchanger.ResponseMsg{{
+		MsgID: uint32(msgid.MsgID_ROOM_AUTOHU_RSP),
+		Body:  body,
+	}}
 	return
 }
 
@@ -192,12 +222,7 @@ func HandleUsePropReq(playerID uint64, header *steve_proto_gaterpc.Header, req r
 	}
 
 	propID := gutils.PropTypeClient2Server(req.GetPropId())
-	items, err := propsclient.GetUserProps(playerID, uint64(propID))
-
-	if err != nil {
-		//logEntry.WithError(err).Debugln("获取玩家道具信息失败")
-		//return
-	}
+	prop, err := propclient.GetPlayerOneProp(playerID, propID)
 
 	// 使用道具
 	if len(items) != 0 && items[0].PropsNum > 0 {

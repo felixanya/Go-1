@@ -43,28 +43,6 @@ CREATE TABLE `t_hall_info` (
   UNIQUE KEY `t_hall_info_1_UN` (`playerID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='大厅信息表';
 
--- ----------------------------
--- Table structure for t_mail
--- ----------------------------
-DROP TABLE IF EXISTS `t_mail`;
-CREATE TABLE `t_mail` (
-  `n_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '递增ID',
-  `n_title` varchar(150) DEFAULT NULL COMMENT '邮件标题',
-  `n_detail` text COMMENT '邮件内容',
-  `n_attach` varchar(256) DEFAULT NULL COMMENT '邮件附件：json格式 ',
-  `n_dest` text COMMENT '发送对象:json格式',
-  `n_state` int(11) DEFAULT NULL COMMENT '邮件状态：未发送=0＞审核中=1＞已审核=2＞发送中=3＞发送结束=4＞已拒绝=5＞已撤回=6＞已失效=7 ',
-  `n_starttime` datetime DEFAULT NULL COMMENT '发送开始时间: 2018-08-08 12:00:00',
-  `n_endtime` datetime DEFAULT NULL COMMENT '发送截至时间: 2018-08-18 12:00:00',
-  `n_deltime` datetime DEFAULT NULL COMMENT '邮件删除时间: 2018-09-18 12:00:00',
-  `n_createTime` datetime DEFAULT NULL COMMENT '创建时间: 2018-08-08 12:00:00',
-  `n_createBy` varchar(64) DEFAULT NULL COMMENT '创建人',
-  `n_updateTime` datetime DEFAULT NULL COMMENT '最后更新时间: 2018-08-08 12:00:00',
-  `n_updateBy` varchar(64) DEFAULT NULL COMMENT '最后更新人',
-  `n_isUseEndTime` tinyint(1) DEFAULT '1' COMMENT '是否启用截至时间',
-  `n_isUseDelTime` tinyint(1) DEFAULT '1' COMMENT '是否启用删除时间',
-  PRIMARY KEY (`n_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='系统消息表，邮件表';
 
 -- ----------------------------
 -- Table structure for t_player
@@ -175,5 +153,30 @@ CREATE TABLE `t_player_props` (
   `updateBy` varchar(100) DEFAULT NULL COMMENT '更新人',
   PRIMARY KEY (`playerID`,`propID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='玩家道具表';
+
+
+-- ----------------------------
+-- Table structure for t_show_id
+-- ----------------------------
+DROP TABLE IF EXISTS `t_show_id`;
+CREATE TABLE `t_show_id` (
+  `n_id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '递增ID',
+  `n_showid` bigint(20) NOT NULL COMMENT 'show id 值',
+  `n_isUse` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否被使用',
+  PRIMARY KEY (`n_id`),
+  UNIQUE KEY `t_show_id_UN_showid` (`n_showid`),
+  KEY `t_show_id_n_isUse_IDX` (`n_isUse`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='showid记录表';
+
+-- ----------------------------
+-- Table structure for t_player_id
+-- ----------------------------
+DROP TABLE IF EXISTS `t_player_id`;
+CREATE TABLE `t_player_id` (
+  `n_id` bigint(20) NOT NULL COMMENT '通用变量ID',
+  `n_value` bigint(20) DEFAULT '0' COMMENT '变量值',
+  `n_des` varchar(255) DEFAULT NULL COMMENT '变量描述',
+  PRIMARY KEY (`n_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='playerid表';
 
 SET FOREIGN_KEY_CHECKS = 1;

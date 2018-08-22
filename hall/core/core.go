@@ -38,6 +38,7 @@ func (c *hallCore) Init(e *structs.Exposer, param ...string) error {
 		entry.WithError(err).Error("初始化服务失败")
 		return err
 	}
+
 	entry.Debugf("server init succeed ...")
 
 	return nil

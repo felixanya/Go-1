@@ -73,7 +73,7 @@ func (dog *watchDogImpl) workOnExchanger(e exchanger) error {
 	dog.clientMap.Store(clientID, client)
 
 	if dog.connObserver != nil {
-		dog.connObserver.OnClientConnect(clientID)
+		dog.connObserver.OnClientConnect(clientID, e.GetRemoteAddr())
 	}
 	wg := new(sync.WaitGroup)
 	wg.Add(1)

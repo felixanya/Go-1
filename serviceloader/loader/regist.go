@@ -21,6 +21,7 @@ var consulAddress string
 
 // 创建时保存的服务Id
 var localSvrId string
+
 // 本地服务名
 var localSvrName string
 
@@ -63,7 +64,7 @@ func RegisterServer2(opt *Option) {
 		groupName:  opt.groupName,
 		tags:       tags,
 	})
-	pprof.Init(opt.rpcServerName, opt.pprofExposeType, opt.pprofHttpPort)
+	pprof.Init(opt.rpcServerName, opt.pprofExposeType, opt.pprofHttpPort, nil)
 }
 
 // RegisterServer 注册服务
@@ -175,10 +176,10 @@ func registerToConsul(logEntry *logrus.Entry, serverName string, addr string, po
 
 // consul 请求器接口
 type ConsulRequestImp struct {
-
 }
+
 // 判断当前是否是主节点,通过consul实现竞选主节点功能
-func (c *ConsulRequestImp)IsMasterNode() bool {
+func (c *ConsulRequestImp) IsMasterNode() bool {
 	masterId, err := c.GetMasterNodeId()
 	if err != nil {
 		return false
@@ -190,7 +191,7 @@ func (c *ConsulRequestImp)IsMasterNode() bool {
 }
 
 // 得到当前服务的主节点ID
-func (c  *ConsulRequestImp) GetMasterNodeId() (string, error) {
+func (c *ConsulRequestImp) GetMasterNodeId() (string, error) {
 	if len(consulAddress) == 0 {
 		return "", nil
 	}
@@ -207,14 +208,13 @@ func (c  *ConsulRequestImp) GetMasterNodeId() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("getMasterNodeId failed: ", err)
 	}
-	for _, svr := range  l {
+	for _, svr := range l {
 		if svr.Service == localSvrName {
 			return svr.ID, nil
 		}
 	}
 	return "", fmt.Errorf("getMasterNodeId no find master id...")
 }
-
 
 // getConsulAgent 获取 consul 代理
 func createConsulAgent(logEntry *logrus.Entry, consulAddr string) *api.Agent {
@@ -233,8 +233,6 @@ func createConsulAgent(logEntry *logrus.Entry, consulAddr string) *api.Agent {
 func DeleteMyConsulAgent() error {
 	return deleteConsulAgent(localSvrId)
 }
-
-
 
 // 从consul删除服务节点
 func deleteConsulAgent(sid string) error {

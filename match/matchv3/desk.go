@@ -38,13 +38,13 @@ func (pPlayer *matchPlayer) String() string {
 
 // matchDesk 匹配中的牌桌
 type matchDesk struct {
-	deskID          uint64        // 桌子唯一ID
-	gameID          uint32        // 游戏ID
-	levelID         uint32        // 场次ID
-	aveGold         int64         // 桌子的平均金币
-	needPlayerCount uint8         // 满桌需要的玩家数量
-	players         []matchPlayer // 桌子中的所有玩家
-	createTime      int64         // 桌子创建时间(单位：秒)
+	deskID          uint64                  // 桌子唯一ID
+	gameID          uint32                  // 游戏ID
+	levelID         uint32                  // 场次ID
+	aveGold         int64                   // 桌子的平均金币
+	needPlayerCount uint8                   // 满桌需要的玩家数量
+	players         map[uint64]*matchPlayer // 桌子中的所有玩家
+	createTime      int64                   // 桌子创建时间(单位：秒)
 }
 
 // 已成功的牌桌，用于计算玩家上局是否同桌
@@ -82,7 +82,7 @@ func createMatchDesk(deskID uint64, gameID uint32, levelID uint32, needPlayerCou
 		levelID:         levelID,
 		aveGold:         gold,
 		needPlayerCount: needPlayerCount,
-		players:         make([]matchPlayer, 0, needPlayerCount),
+		players:         make(map[uint64]*matchPlayer, needPlayerCount),
 		createTime:      time.Now().Unix(),
 	}
 }
@@ -100,9 +100,9 @@ func dealErrorDesk(pDesk *matchDesk) bool {
 	})
 
 	// 处理桌子内所有玩家
-	for i := 0; i < len(pDesk.players); i++ {
-		if !dealErrorPlayer(&pDesk.players[i]) {
-			logEntry.Errorf("处理错误桌子时，处理错误玩家失败，玩家ID:%v", pDesk.players[i].playerID)
+	for _, player := range pDesk.players {
+		if !dealErrorPlayer(player) {
+			logEntry.Errorf("处理错误桌子时，处理错误玩家失败，玩家ID:%v", player.playerID)
 		}
 	}
 

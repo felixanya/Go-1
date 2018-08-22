@@ -5,11 +5,14 @@ log_prefix: back
 log_stderr: true 
 
 
+#redis 配置
 redis_list:
   back:
-#redis 配置
     addr: 127.0.0.1:6379
     passwd:
+  player: 
+    addr: 127.0.0.1:6379
+    passwd:      
 
 # mysql 数据库列表, db用户名和密码中不能带@符号
 mysql_list:
@@ -32,3 +35,7 @@ mysql_list:
 nsqd_addr: 127.0.0.1:4150
 nsqlookupd_addrs: 
   - 127.0.0.1:4161
+
+
+# datereport
+date_addr:
