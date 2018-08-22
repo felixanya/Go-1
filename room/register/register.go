@@ -26,5 +26,8 @@ func RegisterHandlers(e exchanger.Exchanger) {
 	// registe(msgid.MsgID_ROOM_CHANGE_PLAYERS_REQ, deskapply.HandleRoomChangePlayerReq) // 换对手请求
 	registe(msgid.MsgID_ROOM_USE_PROP_REQ, HandleUsePropReq) // 使用道具请求
 	registe(msgid.MsgID_MATCH_CONTINUE_REQ, HandleContinueReq)
+	registe(msgid.MsgID_ROOM_PLAYER_GIVEUP_REQ, HandlePlayerGameGiveUp)                  // 游戏内认输请求
+	registe(msgid.MsgID_ROOM_BROKER_PLAYER_CONTINUE_REQ, HandleRoomBrokerPlayerContinue) // 破产玩家继续游戏请求
+
 	RegisterRoomReqHandlers(e)
 }

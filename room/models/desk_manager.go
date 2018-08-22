@@ -41,6 +41,7 @@ func GetDeskMgr() *DeskManager {
 	return deskMgr
 }
 
+// CreateDesk 创建桌子
 func (mgr *DeskManager) CreateDesk(ctx context.Context, req *roommgr.CreateDeskRequest) (rsp *roommgr.CreateDeskResponse, err error) {
 	entry := logrus.WithField("request", req.String())
 	players := req.GetPlayers()
