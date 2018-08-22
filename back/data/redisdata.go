@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Sirupsen/logrus"
+
 	"github.com/go-redis/redis"
 )
 
@@ -58,18 +60,25 @@ func GetPlayerMaxwinningstream(key string) (int, error) {
 
 // UpdatePlayerGameToredis 更新玩家胜率
 func UpdatePlayerGameToredis(tpg *db.TPlayerGame) error {
-	gameKey := cache.FmtPlayerGameInfoKey(uint64(tpg.Playerid), uint32(tpg.Gameid))
-	redisCli, err := RedisCliGetter(redisName, 0)
+	redisCli, err := RedisCliGetter(playerRedisName, 0)
 	if err != nil {
-		return err
+		return fmt.Errorf("获取 redis 客户端失败(%s)。", err.Error())
 	}
-	err = redisCli.HMSet(gameKey, map[string]interface{}{
+	playerGameKey := cache.FmtPlayerGameInfoKey(uint64(tpg.Playerid), uint32(tpg.Gameid))
+	logrus.Debugf("更新玩家胜率key:(%v),Maxwinningstream:(%v)", playerGameKey, tpg.Maxwinningstream)
+	kv := map[string]interface{}{
 		cache.WinningBurea:     tpg.Winningburea,
 		cache.WinningRate:      tpg.Winningrate,
 		cache.TotalBurea:       tpg.Totalbureau,
 		cache.MaxMultiple:      tpg.Maxmultiple,
 		cache.MaxWinningStream: tpg.Maxwinningstream,
-	}).Err()
+	}
+
+	status := redisCli.HMSet(playerGameKey, kv)
+	if status.Err() != nil {
+		return fmt.Errorf("设置失败(%v)", status.Err())
+	}
+	redisCli.Expire(playerGameKey, redisTimeOut)
 	return err
 }
 
