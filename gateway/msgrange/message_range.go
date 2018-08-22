@@ -52,7 +52,7 @@ var gServerMessageRange = map[string]messageRange{
 // gMsgsDontNeedLogin 无需登录的消息列表
 // TODO 从配置文件加载
 var gMsgsDontNeedLogin = []msgid.MsgID{
-	msgid.MsgID_RESET_PASSWORD_REQ, msgid.MsgID_AUTH_CODE_REQ,
+	msgid.MsgID_RESET_PASSWORD_REQ, msgid.MsgID_AUTH_CODE_REQ, msgid.MsgID_CHECK_AUTH_CODE_REQ,
 }
 
 // GetMessageServer 获取消息处理服务名字
