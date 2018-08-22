@@ -351,7 +351,7 @@ func createPlayer(accID uint64) (uint64, error) {
 		Showuid:      showUID,
 		Type:         1,
 		Channelid:    accInfo.Channel,
-		Nickname:     generateNickName(playerID, &accInfo),
+		Nickname:     generateNickName(showUID, &accInfo),
 		Gender:       generateGender(playerID, &accInfo),
 		Avatar:       generateAvartaURL(playerID, &accInfo),
 		Provinceid:   province,
