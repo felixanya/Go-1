@@ -1,7 +1,6 @@
 package handle
 
 import (
-	"encoding/json"
 	"fmt"
 	pb_common "steve/client_pb/common"
 	pb_hall "steve/client_pb/hall"
@@ -26,8 +25,7 @@ func (plh *GoldChanngleHandler) HandleMessage(message *nsq.Message) error {
 		"message":   message,
 	})
 	goldChangeNtf := gold.GoldChangeNtf{}
-	logrus.Debugf("body:(%v)", message.Body)
-	if err := json.Unmarshal(message.Body, &goldChangeNtf); err != nil {
+	if err := proto.Unmarshal(message.Body, &goldChangeNtf); err != nil {
 		return fmt.Errorf("消息反序列化失败：%v", err)
 	}
 	sendMoneyChangeNtf(goldChangeNtf)

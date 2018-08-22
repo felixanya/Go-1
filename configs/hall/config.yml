@@ -73,3 +73,6 @@ check_password_url: http://192.168.7.26:18101/account/checkPwd
 
 # 账号系统中本产品 ID 
 product_id: 9999
+
+# 内部认证，不通过账号系统
+inner_auth: true  

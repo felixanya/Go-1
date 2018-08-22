@@ -103,10 +103,6 @@ func TestGetPlayerIDByAccountID(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestExistPlayerID(t *testing.T) {
-	ExistPlayerID(uint64(2000))
-}
-
 // TestInitPlayerData 初始化玩家
 func TestInitPlayerData(t *testing.T) {
 	viper.SetDefault("node", 200)
@@ -169,7 +165,7 @@ func TestInitPlayerData(t *testing.T) {
 		Updatetime: time.Now(),
 		Updateby:   "",
 	}
-	err = CreatePlayer(tplayer, tplayerCurrency, tplayerProps)
+	err = CreatePlayer(tplayer, tplayerCurrency, []db.TPlayerProps{tplayerProps})
 	assert.Nil(t, err)
 
 	err = InitPlayerState(int64(playerID))
@@ -213,7 +209,7 @@ func TestGetPlayerInfo(t *testing.T) {
 
 // TestGetPlayerGameInfo 获取玩家游戏信息
 func TestGetPlayerGameInfo(t *testing.T) {
-	exists, playerGameInfo, err := GetPlayerGameInfo(2000, 1, []string{cache.WinningBurea, cache.WinningRate, cache.TotalBurea, cache.MaxMultiple, cache.MaxWinningStream}...)
+	exists, playerGameInfo, err := GetPlayerGameInfo(117023, 1, []string{cache.WinningBurea, cache.WinningRate, cache.TotalBurea, cache.MaxMultiple, cache.MaxWinningStream}...)
 
 	assert.Equal(t, exists, true)
 	assert.Nil(t, err)

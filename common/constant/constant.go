@@ -8,6 +8,10 @@ const (
 	GFGAMESETTLE GoldFuncType = 0
 	// GFGAMEPEIPAI 游戏配牌
 	GFGAMEPEIPAI GoldFuncType = 1
+	// ALMSFUNC 救济金
+	ALMSFUNC GoldFuncType = 10
+	// PACKSACKFUNC 背包
+	PACKSACKFUNC GoldFuncType = 11
 )
 
 // PropsFuncType 道具增减调用函数类型

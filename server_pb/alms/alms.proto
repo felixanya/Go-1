@@ -10,3 +10,20 @@ message AlmsConfig {
     int32   alms_count_donw     = 4;     // 救济倒计时，时间是秒
     int32   deposit_count_donw  = 5;     // 快充倒计时，时间是秒
 }
+
+//PacksackGetGoldReq 背包获取金币请求
+message PacksackGetGoldReq {
+     uint64 player_id = 1;                  // 玩家ID
+}
+
+//PacksackGetGoldRsp 背包获取金币响应
+message PacksackGetGoldRsp {
+     bool result         = 1;                  // 返回成功true or 失败false
+     int64 packsack_gold = 2;                  // 背包金币
+}
+
+// PacksackServer 背包服
+service PacksackServer {
+    // GetPacksackGold 获取背包金币
+    rpc GetPacksackGold(PacksackGetGoldReq) returns(PacksackGetGoldRsp);
+}

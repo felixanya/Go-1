@@ -180,3 +180,21 @@ CREATE TABLE `t_player_id` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='playerid表';
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+
+-- ----------------------------
+-- Table structure for t_player_packsack
+-- ----------------------------
+DROP TABLE IF EXISTS `t_player_packsack`;
+CREATE TABLE `t_player_packsack`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `playerID` bigint(20) NOT NULL COMMENT '玩家ID',
+  `gold` int(11) NULL DEFAULT NULL COMMENT '背包金币数',
+  `createTime` datetime(0) NULL DEFAULT NULL,
+  `createBy` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `updateTime` datetime(0) NULL DEFAULT NULL,
+  `updateBy` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 175 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;

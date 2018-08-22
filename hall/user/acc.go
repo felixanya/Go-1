@@ -46,6 +46,10 @@ type accountInfo struct {
 // getAccountInfo 通过账号系统获取账号信息
 func getAccountInfo(accID uint64) (accountInfo, error) {
 	accountInfo := accountInfo{}
+	if viper.GetBool("inner_auth") {
+		logrus.WithField("acc_id", accID).Infoln("不通过账号系统获取账号信息")
+		return accountInfo, nil
+	}
 	// 获取账号信息的 URL
 	url := viper.GetString("account_info_url")
 	// 参数

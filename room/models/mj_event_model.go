@@ -231,6 +231,8 @@ func (model *MjEventModel) recoverGameForPlayer(playerID uint64) {
 	}
 	rsp, err := proto.Marshal(&room.RoomResumeGameRsp{
 		ResumeRes: room.RoomError_SUCCESS.Enum(),
+		GameId:    proto.Uint32(uint32(model.GetDesk().GetGameId())),
+		LevelId:   proto.Uint32(uint32(model.GetDesk().GetLevel())),
 		GameInfo:  &gameDeskInfo,
 	})
 	logEntry.WithField("desk_info", gameDeskInfo).Infoln("恢复数据")

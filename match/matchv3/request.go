@@ -2,6 +2,7 @@ package matchv3
 
 import (
 	"context"
+	"fmt"
 	"steve/client_pb/match"
 	"steve/client_pb/msgid"
 	"steve/external/gateclient"
@@ -149,13 +150,23 @@ func translateToDeskPlayer(player *matchPlayer) *match.DeskPlayerInfo {
 		return nil
 	}
 
+	playerName := playerInfo.GetNickName()
+	playerGender := playerInfo.GetGender()
+	playerAvatar := playerInfo.GetAvatar()
+
+	// 机器人暂时临时写入,因为hall服没有机器人的信息,以后需更改
+	if player.robotLv != 0 {
+		playerName = fmt.Sprintf("robot_%v", player.playerID)
+	}
+
 	deskPlayer := match.DeskPlayerInfo{
 		PlayerId: &player.playerID,
-		Name:     proto.String(playerInfo.GetNickName()),
+		Name:     proto.String(playerName),
 		Coin:     &player.gold,
 		Seat:     &player.seat,
-		Gender:   proto.Uint32(playerInfo.GetGender()),
-		Avatar:   proto.String(playerInfo.GetAvatar()),
+		Gender:   proto.Uint32(playerGender),
+		Avatar:   proto.String(playerAvatar),
+		ShowUid:  proto.Int64(0),
 	}
 
 	return &deskPlayer

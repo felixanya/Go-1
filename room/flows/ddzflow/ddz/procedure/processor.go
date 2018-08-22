@@ -97,5 +97,6 @@ func TranslateDDZPlayerToRoomPlayer(ddzPlayer ddz.Player, seat uint32) room.Room
 		Coin:     proto.Uint64(coin),
 		Seat:     proto.Uint32(seat),
 		// Location: TODO 没地方拿
+		ShowUid: proto.Int64(0), // todo
 	}
 }

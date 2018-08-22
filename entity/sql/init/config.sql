@@ -168,47 +168,70 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     'prop', 
     'interactive',
     '[
-            {
-                "propID": 1,
-                "name": "rose",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 2,
-                "name": "beer",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 3,
-                "name": "bomb",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 4,
-                "name": "grabChicken",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-100,
-                "attrLimit":10000
-            },
-            {
-                "propID": 5,
-                "name": "eggGun",
-                "attrType": 1,
-                "attrID":1,
-                "attrValue":-10000,
-                "attrLimit":500000
-            }
-    ]
+		{
+			"propID": 1,
+			"name": "rose",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"rose_sm"
+		},
+		{
+			"propID": 2,
+			"name": "beer",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"beer_sm"
+		},
+		{
+			"propID": 3,
+			"name": "bomb",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"bomb_sm"
+		},
+		{
+			"propID": 4,
+			"name": "grabChicken",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-100,
+			"attrLimit":10000,
+			"describe":"grabChicken_sm"
+		},
+		{
+			"propID": 5,
+			"name": "eggGun",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-10000,
+			"attrLimit":500000,
+			"describe":"eggGun_sm"
+		},
+		{
+			"propID": 6,
+			"name": "voucher",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-10000,
+			"attrLimit":500000,
+			"describe":"voucher_sm"
+		},
+		{
+			"propID": 7,
+			"name": "game",
+			"attrType": 1,
+			"attrID":1,
+			"attrValue":-10000,
+			"attrLimit":500000,
+			"describe":"game_sm"
+		}
+     ]
     '
 ); 
 
@@ -812,3 +835,9 @@ VALUES
     "ybNum":0,
     "item":"1|1;2|1;3|5"}
 ]');
+
+
+-- /*救济金配置*/
+INSERT INTO `t_common_config` (`key`, `subkey`, `value`)
+VALUES
+  ( 'game', 'alms', '[{"almsCountDown":10,"depositCountDown":10,"getNorm":2000,"getTimes":3,"getNumber":2000,"version":1}]');
