@@ -41,6 +41,12 @@ func (h *zixunStateAI) generateRobot(player *majong.Player, mjContext *majong.Ma
 		logEntry.Infoln("中级AI自摸胡牌")
 		return
 	}
+	if len(zxRecord.EnableChupaiCards) == 1 {
+		card := gutils.Uint32ToServerCard(zxRecord.EnableChupaiCards[0])
+		aiEvent = chupai(player, &card)
+		logEntry.WithField("outCard", card).Infoln("中级AI只能出当前牌")
+		return
+	}
 	if len(zxRecord.EnableBugangCards) > 0 {
 		buGangCard := global.ToMJCard(int(zxRecord.EnableBugangCards[0]))
 		aiEvent = gang(player, &buGangCard)
