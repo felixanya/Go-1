@@ -6,6 +6,8 @@ import (
 	"math"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/entity/majong"
+	"steve/entity/poker/ddz"
 	"steve/gutils"
 	"steve/room/contexts"
 	"steve/room/desk"
@@ -49,18 +51,16 @@ func GetAtEvent() DeskAutoEventGenerator {
 	return generator
 }
 
-func (aeg *autoEventGenerator) handleDDZPlayerAI(result *AutoEventGenerateResult, AI CommonAI,
-	playerID uint64, deskObj *desk.Desk, aiType AIType, robotLv int) {
-
-	gameContext := deskObj.GetConfig().Context.(*contexts.DDZDeskContext)
-	ddzContext := &gameContext.DDZContext
+func (aeg *autoEventGenerator) handlePlayerAI(result *AutoEventGenerateResult, AI CommonAI,
+	playerID uint64, deskObj *desk.Desk, aiType AIType, robotLv int, ddzContext *ddz.DDZContext, mjContext *majong.MajongContext) {
 
 	// 由该AI产生具体的AI事件
 	aiResult, err := AI.GenerateAIEvent(AIEventGenerateParams{
-		DDZContext: ddzContext,
-		PlayerID:   playerID,
-		AIType:     aiType,
-		RobotLv:    robotLv,
+		MajongContext: mjContext,
+		DDZContext:    ddzContext,
+		PlayerID:      playerID,
+		AIType:        aiType,
+		RobotLv:       robotLv,
 	})
 
 	var eventType int
@@ -98,11 +98,13 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 
 	// 当前状态ID
 	var state int32
+	var ddzContext ddz.DDZContext
+	var mjContext majong.MajongContext
 	if gameID == int(room.GameId_GAMEID_DOUDIZHU) {
-		ddzContext := _gameContext.(*contexts.DDZDeskContext).DDZContext
+		ddzContext = _gameContext.(*contexts.DDZDeskContext).DDZContext
 		state = int32(ddzContext.GetCurState())
 	} else {
-		mjContext := _gameContext.(*contexts.MajongDeskContext).MjContext
+		mjContext = _gameContext.(*contexts.MajongDeskContext).MjContext
 		state = int32(mjContext.GetCurState())
 	}
 
@@ -115,18 +117,18 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 
 	startTime := params.StartTime
 	playerMgr := playerpkg.GetPlayerMgr()
+	var aiType AIType
+	var duration time.Duration
 	if gameID == int(room.GameId_GAMEID_DOUDIZHU) {
-		gameContext := params.Desk.GetConfig().Context.(*contexts.DDZDeskContext)
-		ddzContext := gameContext.DDZContext
-
 		// 超时事件优先处理
-		duration := time.Second * time.Duration(ddzContext.Duration)
+		duration = time.Second * time.Duration(ddzContext.Duration)
 		countDownPlayers := ddzContext.CountDownPlayers
 		if duration != 0 {
 			for _, playerId := range countDownPlayers {
 				deskPlayer := playerMgr.GetPlayer(playerId)
 				if AddTimeCountDown(deskPlayer, startTime, duration) {
-					aeg.handleDDZPlayerAI(&result, AI, playerId, params.Desk, OverTimeAI, 0)
+					deskPlayer.CountingDown = false
+					aeg.handlePlayerAI(&result, AI, playerId, params.Desk, OverTimeAI, 0, &ddzContext, nil)
 				}
 			}
 		}
@@ -141,69 +143,49 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
 			isRobot := deskPlayer.GetRobotLv() != 0
 
-			var duration time.Duration
 			if isRobot {
 				duration = 1 * time.Second
+				aiType = RobotAI
 			} else if deskPlayer.IsTuoguan() {
 				duration = 2 * time.Second
+				aiType = TuoGuangAI
 			}
 
-			if time.Now().Sub(startTime) > duration {
-				if isRobot {
-					aeg.handleDDZPlayerAI(&result, AI, player.GetPlayerId(), params.Desk, RobotAI, deskPlayer.GetRobotLv())
-				} else if deskPlayer.IsTuoguan() {
-					aeg.handleDDZPlayerAI(&result, AI, player.GetPlayerId(), params.Desk, TuoGuangAI, 0)
-				}
+			if time.Now().Sub(startTime) > duration && aiType != 0 {
+				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, aiType, deskPlayer.GetRobotLv(), &ddzContext, nil)
 			}
 		}
 	} else {
-		gameContext := params.Desk.GetConfig().Context.(*contexts.MajongDeskContext)
-		mjContext := gameContext.MjContext
-
 		players := mjContext.GetPlayers()
+		duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
+
 		for _, player := range players {
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
+
+			if AddTimeCountDown(deskPlayer, startTime, duration) {
+				deskPlayer.CountingDown = false
+				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, OverTimeAI, 0, nil, &mjContext)
+			}
+			if len(result.Events) > 0 {
+				return
+			}
+
 			isRobot := deskPlayer.GetRobotLv() != 0
-			var duration time.Duration
 			if isRobot {
 				duration = 1 * time.Second
+				aiType = RobotAI
 			} else if gutils.IsHu(player) {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.HuStateTimeOut))
+				aiType = TuoGuangAI
 			} else if gutils.IsTing(player) {
 				duration = time.Second * time.Duration(viper.GetInt(fixed.TingStateTimeOut))
+				aiType = TuoGuangAI
 			} else if deskPlayer.IsTuoguan() {
 				duration = 2 * time.Second
-			} else {
-				duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
-				AddTimeCountDown(deskPlayer, startTime, duration)
+				aiType = TuoGuangAI
 			}
-			if !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0 {
-				deskPlayer.CountingDown = false
-				var aiType AIType
-				var eventType int
-				if isRobot {
-					aiType = RobotAI
-					eventType = fixed.RobotEvent
-				} else if gutils.IsTing(player) || gutils.IsHu(player) || deskPlayer.IsTuoguan() {
-					aiType = TuoGuangAI
-					eventType = fixed.TuoGuanEvent
-				} else {
-					aiType = OverTimeAI
-					eventType = fixed.OverTimeEvent
-				}
-
-				aiResult, err := AI.GenerateAIEvent(AIEventGenerateParams{
-					MajongContext: &mjContext,
-					PlayerID:      player.GetPlayerId(),
-					AIType:        aiType,
-					RobotLv:       deskPlayer.GetRobotLv(),
-				})
-				if err == nil {
-					for _, aiEvent := range aiResult.Events {
-						event := desk.DeskEvent{EventID: int(aiEvent.ID), EventType: eventType, Context: aiEvent.Context, PlayerID: player.GetPlayerId(), StateNumber: gameContext.StateNumber, Desk: params.Desk}
-						result.Events = append(result.Events, event)
-					}
-				}
+			if time.Now().Sub(startTime) >= duration && aiType != 0 {
+				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, aiType, 0, nil, &mjContext)
 			}
 		}
 	}
@@ -211,7 +193,8 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 }
 
 func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duration time.Duration) bool {
-	if time.Now().Sub(startTime) >= duration && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
+	overTime := time.Now().Sub(startTime) >= duration
+	if overTime && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
 		deskPlayer.CountingDown = true
 		msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
 		util.SendMessageToPlayer(deskPlayer.GetPlayerID(), msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
@@ -225,7 +208,7 @@ func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duratio
 		}
 		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
 	}
-	return !deskPlayer.CountingDown && time.Now().Sub(startTime) >= duration || deskPlayer.CountingDown && deskPlayer.AddTime <= 0
+	return !deskPlayer.CountingDown && overTime || deskPlayer.CountingDown && deskPlayer.AddTime <= 0
 }
 
 func (aeg *autoEventGenerator) RegisterAI(gameID int, stateID int32, AI CommonAI) {
