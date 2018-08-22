@@ -26,7 +26,7 @@ func DefaultRobot() *Robotservice {
 
 //GetLeisureRobotInfoByInfo 获取空闲机器人信息
 func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *robot.GetLeisureRobotInfoReq) (*robot.GetLeisureRobotInfoRsp, error) {
-	logrus.Debugln("GetLeisureRobotInfoByInfo req", *request)
+	logrus.Debugln(fmt.Sprintf("GetLeisureRobotInfoByInfo req(%v)", *request))
 	rsp := &robot.GetLeisureRobotInfoRsp{
 		RobotPlayerId: 0,
 		Coin:          0,
@@ -56,7 +56,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 			if 50 > winRateRange.High || 50 < winRateRange.Low {
 				return false
 			}
-			logrus.Debugf("playerID(%d) gameID(%d) 不存在 ，默认胜率50", playerID, gameID)
+			logrus.Debugln(fmt.Sprintf("playerID(%d) gameID(%d) 不存在 ，默认胜率50", playerID, gameID))
 		}
 		gold := robotPlayer.Gold
 		// 找到适合的
@@ -84,7 +84,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 		i := 0 //防止死循环
 		for {
 			if len(notInitRobotMap) == 0 || i >= l {
-				logrus.Debugf("从未初始化中，找不到适合的机器人 notInitRobotMaplen(%d)", len(notInitRobotMap))
+				logrus.Debugln(fmt.Sprintf("从未初始化中，找不到适合的机器人 notInitRobotMaplen(%d)", len(notInitRobotMap)))
 				break
 			}
 			i++
@@ -93,7 +93,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 				// 从金币服获取
 				gold, err := goldclient.GetGold(uint64(playerID), int16(gold.GoldType_GOLD_COIN))
 				if err != nil {
-					logrus.WithError(err).Errorf("获取金币失败 playerID(%v)", playerID)
+					logrus.WithError(err).Errorln(fmt.Sprintf("获取金币失败 playerID(%v)", playerID))
 					continue
 				}
 				robotPlayer.Gold = gold
@@ -109,11 +109,11 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 			}
 			hallrsp, err := hallclient.InitRobotPlayerState(suitRobot)
 			if err != nil || hallrsp.GetErrCode() != int32(user.ErrCode_EC_SUCCESS) {
-				logrus.WithError(err).Errorf("hall-初始化机器人失败 %d", hallrsp.GetErrCode())
+				logrus.WithError(err).Errorln(fmt.Sprintf("hall-初始化机器人失败 %d", hallrsp.GetErrCode()))
 				continue
 			}
 			if len(hallrsp.GetRobotState()) == 0 {
-				logrus.Warningf("hall-初始化机器人失败 hall get robotSate len %d", len(hallrsp.GetRobotState()))
+				logrus.Warningln(fmt.Sprintf("hall-初始化机器人失败 hall get robotSate len %d", len(hallrsp.GetRobotState())))
 				continue
 			}
 			playerID, robotInfo := data.ToInitRobotMapReturnLeisure(hallrsp.GetRobotState()) // 初始化
@@ -136,7 +136,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 
 //SetRobotPlayerState 设置机器人玩家状态  先判断是否是机器人，是机器人，在判断是否是空闲状态
 func (r *Robotservice) SetRobotPlayerState(ctx context.Context, request *robot.SetRobotPlayerStateReq) (*robot.SetRobotPlayerStateRsp, error) {
-	logrus.Debugln("SetRobotPlayerState req", *request)
+	logrus.Debugln(fmt.Sprintf("SetRobotPlayerState req(%v)", *request))
 	rsp := &robot.SetRobotPlayerStateRsp{
 		Result:  true,
 		ErrCode: robot.ErrCode_EC_SUCCESS,
@@ -164,7 +164,7 @@ func (r *Robotservice) SetRobotPlayerState(ctx context.Context, request *robot.S
 
 // UpdataRobotGameWinRate 更新胜率
 func (r *Robotservice) UpdataRobotGameWinRate(ctx context.Context, request *robot.UpdataRobotGameWinRateReq) (*robot.UpdataRobotGameWinRateRsp, error) {
-	logrus.Debugln("UpdataRobotGameWinRate req", *request)
+	logrus.Debugln(fmt.Sprintf("UpdataRobotGameWinRate req(%v)", *request))
 	rsp := &robot.UpdataRobotGameWinRateRsp{
 		Result:  true,
 		ErrCode: robot.ErrCode_EC_SUCCESS,
@@ -174,7 +174,7 @@ func (r *Robotservice) UpdataRobotGameWinRate(ctx context.Context, request *robo
 	newWinRate := request.GetNewWinRate()
 
 	if playerID < 0 {
-		logrus.Warningln("Robot Player ID cannot be less than 0:%d", playerID)
+		logrus.Warningln(fmt.Sprintf("Robot Player ID cannot be less than 0:%d", playerID))
 		rsp.ErrCode = robot.ErrCode_EC_Args
 		return rsp, nil
 	}
@@ -207,4 +207,32 @@ func (r *Robotservice) IsRobotPlayer(ctx context.Context, request *robot.IsRobot
 		return rsp, err
 	}
 	return rsp, err
+}
+
+//UpdataRobotGold 更新机器人金币
+func (r *Robotservice) UpdataRobotGold(ctx context.Context, request *robot.UpdataRobotGoldReq) (*robot.UpdataRobotGoldRsp, error) {
+	logrus.Debugln(fmt.Sprintf("UpdataRobotGold req(%v)", *request))
+	rsp := &robot.UpdataRobotGoldRsp{
+		Result:  true,
+		ErrCode: robot.ErrCode_EC_SUCCESS,
+	}
+	playerID := request.GetRobotPlayerId()
+	gold := request.GetGold()
+	if playerID < 0 {
+		logrus.Warningln(fmt.Sprintf("Robot Player ID cannot be less than 0:%d", playerID))
+		rsp.ErrCode = robot.ErrCode_EC_Args
+		return rsp, nil
+	}
+	oldGold, err := data.UpdataRobotGold(playerID, gold)
+	if err != nil {
+		rsp.ErrCode = robot.ErrCode_EC_FAIL
+		logrus.WithError(err).Debugln("更新机器人金币失败")
+		return rsp, err
+	}
+	logrus.WithFields(logrus.Fields{
+		"RobotPlayerId": playerID,
+		"oldGold":       oldGold,
+		"gold":          gold,
+	}).Debugln("更新机器人金币成功")
+	return rsp, nil
 }
