@@ -21,6 +21,8 @@ It has these top-level messages:
 	UpdataRobotGameWinRateRsp
 	IsRobotPlayerReq
 	IsRobotPlayerRsp
+	UpdataRobotGoldReq
+	UpdataRobotGoldRsp
 */
 package robot
 

@@ -56,4 +56,9 @@ func Test_GiveUp(t *testing.T) {
 	// 2号玩家发送认输请求
 	err = utils.SendGiveUpReq(bankerSeat, deskData)
 
+	//  2号玩家收到认输响应
+	player := utils.GetDeskPlayerBySeat(bankerSeat, deskData)
+	expector2 := player.Expectors[msgid.MsgID_ROOM_PLAYER_GIVEUP_RSP]
+	ntf2 := &room.RoomGiveUpRsp{}
+	assert.Nil(t, expector2.Recv(global.DefaultWaitMessageTime, ntf2))
 }

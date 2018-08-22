@@ -78,9 +78,22 @@ message IsRobotPlayerRsp {
     bool result = 1;              //  是机器人true ,不 false
 }
 
+//UpdataRobotGoldReq 更新机器人金币請求
+message UpdataRobotGoldReq {
+    uint64 robot_player_id     = 1;  // 机器人玩家id
+    int64  gold                = 2;  // 金币
+}
+
+//UpdataRobotGoldRsp 更新机器人金币响应
+message UpdataRobotGoldRsp {
+    bool result = 1;                // 成功 true ,失敗 false
+    ErrCode err_code = 2;           // 错误信息
+}
+
 service RobotService {
      rpc GetLeisureRobotInfoByInfo(GetLeisureRobotInfoReq) returns (GetLeisureRobotInfoRsp) {}
      rpc SetRobotPlayerState(SetRobotPlayerStateReq) returns (SetRobotPlayerStateRsp) {}
      rpc UpdataRobotGameWinRate(UpdataRobotGameWinRateReq) returns (UpdataRobotGameWinRateRsp) {}
      rpc IsRobotPlayer(IsRobotPlayerReq) returns (IsRobotPlayerRsp) {}
+     rpc UpdataRobotGold(UpdataRobotGoldReq) returns (UpdataRobotGoldRsp) {}
 }
