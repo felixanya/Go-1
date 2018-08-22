@@ -84,7 +84,9 @@ func HandleResumeGameReq(playerID uint64, header *steve_proto_gaterpc.Header, re
 		entry.Debugln("没有对应的牌桌")
 		return noGamePlaying()
 	}
+	entry.Debugln("处理恢复牌局请求开始")
 	modelmanager.GetModelManager().GetPlayerModel(desk.GetUid()).PlayerEnter(player)
+	entry.Debugln("处理恢复牌局请求完成")
 	return
 }
 

@@ -264,6 +264,7 @@ func (model *MjEventModel) setMjPlayerQuitDesk(playerID uint64, isQuit bool) {
 
 // handlePlayerEnter 处理玩家进入牌桌
 func (model *MjEventModel) handlePlayerEnter(enterInfo playerIDWithChannel) {
+	logrus.WithField("player_id", enterInfo.playerID).Debugf("玩家进入牌桌: %#v", enterInfo)
 	model.setMjPlayerQuitDesk(enterInfo.playerID, false)
 	modelMgr := GetModelManager()
 	modelMgr.GetPlayerModel(model.GetDesk().GetUid()).handlePlayerEnter(enterInfo.playerID)
