@@ -225,6 +225,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 					deskPlayer.AddTime = deskPlayer.AddTime - MjTickTime
 					if deskPlayer.AddTime < 0 {
 						deskPlayer.AddTime = 0
+						deskPlayer.SetTuoguan(true, true)
 					}
 					logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
 				}
