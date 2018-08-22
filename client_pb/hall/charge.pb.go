@@ -28,7 +28,6 @@ It has these top-level messages:
 	HallRealNameRsp
 	HallGetPlayerGameInfoReq
 	HallGetPlayerGameInfoRsp
-	MoneyChangeNtf
 	CheckPasswordReq
 	CheckPasswordRsp
 	ChangePasswordReq
