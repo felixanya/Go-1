@@ -1,10 +1,11 @@
 package states
 
 import (
+	"steve/back/logic"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
 	"steve/common/constant"
-
+	"steve/entity/gamelog"
 	"steve/entity/poker/ddz"
 	"steve/external/goldclient"
 	"steve/room/flows/ddzflow/machine"
@@ -103,10 +104,13 @@ func (s *settleState) settle(m machine.Machine) {
 		billPlayer.Base = proto.Int32(int32(base))
 		billPlayer.Multiple = &mul
 		settleScore := settleScores[playerId]
+		var amount int64
 		if isWin {
-			goldclient.AddGold(playerId, int16(server_gold.GoldType_GOLD_COIN), int64(settleScore), int32(constant.GFGAMESETTLE), 0, 0, 0) //赢钱
+			amount = int64(settleScore)
+			goldclient.AddGold(playerId, int16(server_gold.GoldType_GOLD_COIN), amount, int32(constant.GFGAMESETTLE), 0, 0, 0) //赢钱
 		} else {
-			goldclient.AddGold(playerId, int16(server_gold.GoldType_GOLD_COIN), int64(-settleScore), int32(constant.GFGAMESETTLE), 0, 0, 0) //输钱
+			amount = int64(-settleScore)
+			goldclient.AddGold(playerId, int16(server_gold.GoldType_GOLD_COIN), amount, int32(constant.GFGAMESETTLE), 0, 0, 0) //输钱
 		}
 		billPlayer.Score = proto.Int64(int64(settleScore))
 		gold, err := goldclient.GetGold(playerId, int16(server_gold.GoldType_GOLD_COIN))
@@ -118,6 +122,14 @@ func (s *settleState) settle(m machine.Machine) {
 		billPlayer.OutCards = player.OutCards
 		billPlayer.HandCards = player.HandCards
 		billPlayers = append(billPlayers, &billPlayer)
+
+		gameDetail := gamelog.TGameDetail{
+			Playerid: playerId,
+			Gameid:   int(context.GetGameId()),
+			Amount:   amount,
+			MaxTimes: uint32(mul),
+		}
+		logic.UpdatePlayerGameInfo(gameDetail)
 	}
 
 	antiSpring := !context.Spring && context.AntiSpring
