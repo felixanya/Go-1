@@ -168,7 +168,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, OverTimeAI, 0, nil, &mjContext)
 			}
 			if len(result.Events) > 0 {
-				return
+				continue
 			}
 
 			isRobot := deskPlayer.GetRobotLv() != 0
@@ -195,7 +195,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 
 func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duration time.Duration) bool {
 	overTime := time.Now().Sub(startTime) >= duration
-	if overTime && !deskPlayer.CountingDown && deskPlayer.AddTime >= 0 {
+	if overTime && !deskPlayer.CountingDown && deskPlayer.AddTime > 0 {
 		deskPlayer.CountingDown = true
 		msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
 		util.SendMessageToPlayer(deskPlayer.GetPlayerID(), msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
@@ -203,12 +203,14 @@ func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duratio
 	}
 	if deskPlayer.CountingDown {
 		deskPlayer.AddTime = deskPlayer.AddTime - TickTime
-		if deskPlayer.AddTime < 0 {
+		if deskPlayer.AddTime <= 0 {
 			deskPlayer.AddTime = 0
 			deskPlayer.SetTuoguan(true, true)
-			logrus.WithField("playerId", deskPlayer.PlayerID).Debugln("玩家托管")
 		}
 		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
+	}
+	if deskPlayer.AddTime <= 0 && overTime {
+		deskPlayer.SetTuoguan(true, true)
 	}
 	return !deskPlayer.CountingDown && overTime || deskPlayer.CountingDown && deskPlayer.AddTime <= 0
 }
@@ -246,11 +248,11 @@ func GetActionPlayers(ctx *majong.MajongContext) []uint64 {
 		{
 			actionPlayers = append(actionPlayers, gutils.GetZixunPlayer(ctx))
 		}
-	case majong.StateID_state_chupaiwenxun:
-	case majong.StateID_state_waitqiangganghu:
+	case majong.StateID_state_chupaiwenxun, majong.StateID_state_waitqiangganghu:
 		{
+
 			for _, player := range players {
-				if !player.GetHasSelected() {
+				if !player.GetHasSelected() && len(player.GetPossibleActions()) > 0 {
 					actionPlayers = append(actionPlayers, player.GetPlayerId())
 				}
 			}
