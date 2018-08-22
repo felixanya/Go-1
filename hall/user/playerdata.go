@@ -371,9 +371,9 @@ func createPlayer(accID uint64) (uint64, error) {
 
 	tplayerCurrency := db.TPlayerCurrency{
 		Playerid:       int64(playerID),
-		Coins:          roleConifg.GoldNum,
-		Ingots:         roleConifg.YbNum,
-		Keycards:       roleConifg.CardNum,
+		Coins:          100000,
+		Ingots:         roleConifg.Ingots,
+		Keycards:       roleConifg.KeyCards,
 		Obtainingots:   0,
 		Obtainkeycards: 0,
 		Costingots:     0,

@@ -212,24 +212,6 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
 			"attrValue":-10000,
 			"attrLimit":500000,
 			"describe":"eggGun_sm"
-		},
-		{
-			"propID": 6,
-			"name": "voucher",
-			"attrType": 1,
-			"attrID":1,
-			"attrValue":-10000,
-			"attrLimit":500000,
-			"describe":"voucher_sm"
-		},
-		{
-			"propID": 7,
-			"name": "game",
-			"attrType": 1,
-			"attrID":1,
-			"attrValue":-10000,
-			"attrLimit":500000,
-			"describe":"game_sm"
 		}
      ]
     '
@@ -831,8 +813,8 @@ VALUES
     "produceId":0, 
     "coins":100000,
     "keyCards":10,
-    "ingots":0,
-    "items":"1|1;2|1;3|5"} 
+    "ingots":0, 
+    "item":"1|1;2|1;3|5"} 
 ]');
 
 

@@ -30,6 +30,7 @@ func GetRoleInitConfigMap() (roleConf []entityConf.RoleConfig, err error) {
 		logrus.WithError(err).Errorln("获取角色初始属性配置失败")
 		return nil, err
 	}
+
 	if err := json.Unmarshal([]byte(roleConfStr), &roleConf); err != nil {
 		logrus.WithError(err).Errorf("游戏级别配置数据反序列化失败：%s", err.Error())
 		return nil, err

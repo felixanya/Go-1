@@ -11,13 +11,16 @@ type RoleConfig struct {
 	Coins     int    `json:"coins"`
 	KeyCards  int    `json:"keyCards"`
 	Ingots    int    `json:"ingots"`
-	Items     string `json:"items"`
+	Items     string `json:"item"`
 	ItemArr   [][]int
 }
 
 // InitItem 初始化item
 func (config *RoleConfig) InitItem() {
 	idAndNum := strings.Split(config.Items, ";")
+	if len(idAndNum) == 0 {
+		return
+	}
 	config.ItemArr = make([][]int, len(idAndNum))
 	for index, val := range idAndNum {
 		iN := strings.Split(val, "|")
