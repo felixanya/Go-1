@@ -43,9 +43,10 @@ func Test_DisconnectRecover(t *testing.T) {
 	ntf2 := &room.RoomChupaiWenxunNtf{}
 	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, ntf2))
 
-	accountID := disconnectPlayer.Player.GetAccountID()
-	accountName := utils.GenerateAccountName(accountID)
-	player, err := utils.LoginPlayer(accountID, accountName)
+	// accountID := disconnectPlayer.Player.GetAccountID()
+	// accountName := utils.GenerateAccountName(accountID)
+	// player, err := utils.LoginPlayer(accountID, accountName)
+	player, err := utils.LoginPlayerByToken(disconnectPlayer.Player.GetID(), disconnectPlayer.Player.GetToken())
 	assert.Nil(t, err)
 	assert.NotNil(t, player)
 	client := player.GetClient()
