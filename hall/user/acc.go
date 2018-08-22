@@ -83,11 +83,11 @@ func getAccountInfo(accID uint64) (accountInfo, error) {
 // generateNickName 根据账号系统返回的账号数据生成玩家昵称
 // 微信账号或者手机账号使用账号昵称作为玩家昵称
 // 其他账号生成 游客+playerID 作为玩家昵称
-func generateNickName(playerID uint64, accInfo *accountInfo) string {
+func generateNickName(showUID int64, accInfo *accountInfo) string {
 	if accInfo.Phone != "" || accInfo.ThirdType == 1 {
 		return accInfo.NickName
 	}
-	return fmt.Sprintf("游客%d", playerID)
+	return fmt.Sprintf("游客%d", showUID)
 }
 
 // generateAvartaURL 生成用户头像
@@ -107,7 +107,7 @@ func generateGender(playerID uint64, accInfo *accountInfo) int {
 	if accInfo.Phone != "" || accInfo.ThirdType == 1 {
 		return accInfo.Sex
 	}
-	return 1
+	return 2
 }
 
 // wxAccountInfo 微信账号信息
