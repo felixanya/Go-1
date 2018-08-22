@@ -805,10 +805,9 @@ INSERT INTO `t_common_config` (`key`, `subkey`, `value`)
 VALUES
   ( 'role', 'init', '[ 
     { 
-    "gameId":1,
-    "channel":1,
-    "goldNum":100000,
-    "cardNum":10,
-    "ybNum":0,
-    "item":"1|1;2|1;3|5"}
+    "produceId":0, 
+    "coins":100000,
+    "keyCards":10,
+    "ingots":0,
+    "items":"1|1;2|1;3|5"} 
 ]');

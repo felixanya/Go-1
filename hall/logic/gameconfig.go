@@ -18,7 +18,7 @@ var GameConf []entityConf.GameConfig
 var LevelConf []entityConf.GameLevelConfig
 
 // RoleConfig 角色配置
-var RoleConfig []entityConf.RoleInitConfig
+var RoleConfig map[uint64]entityConf.RoleConfig
 
 // loadGameConfig load game config from configuration server
 func loadGameConfig(retry int) (gameConf []entityConf.GameConfig, err error) {
@@ -74,12 +74,16 @@ func InitGameConfig() {
 
 // InitRoleConfig 初始化角色配置
 func InitRoleConfig() {
-	var err error
-	RoleConfig, err = configclient.GetRoleInitConfigMap()
+	roleConfigList, err := configclient.GetRoleInitConfigMap()
 	if err != nil {
-		logrus.Debugf("角色配置解析失败，RoleConfig:(%v)，error:(%s)", RoleConfig, err.Error())
+		logrus.Debugf("角色配置解析失败，roleConfig:(%v)，error:(%s)", roleConfigList, err.Error())
+	}
+	RoleConfig = make(map[uint64]entityConf.RoleConfig, len(roleConfigList))
+	for i := 0; i < len(roleConfigList); i++ {
+		roleConfig := roleConfigList[i]
+		produceID := uint64(roleConfig.ProduceID)
+		RoleConfig[produceID] = roleConfig
 	}
 	logrus.Debugf("角色配置解析成功，RoleConfig:(%v)", RoleConfig)
-
 	return
 }
