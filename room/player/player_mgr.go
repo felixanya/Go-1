@@ -45,6 +45,7 @@ func (pm *PlayerMgr) InitDeskData(players []uint64, robotLv []int) {
 		player.SetSeat(uint32(seat))
 		player.SetEcoin(uint64(player.GetCoin()))
 		player.SetRobotLv(robotLv[seat])
+		player.SetTuoguan(false, false)
 		player.AddTime = 15 * time.Second
 		player.SetQuit(false)
 	}
