@@ -89,10 +89,10 @@ func (o *observer) responseLocalMessage(clientID uint64, reqHeader *base.Header,
 
 func (o *observer) response(clientID uint64, reqHeader *base.Header, rspMsgID uint32, body []byte) {
 	entry := logrus.WithFields(logrus.Fields{
-		"func_name":    "receiver.response",
 		"rsp_msg_id":   msgid.MsgID(rspMsgID),
 		"req_send_seq": reqHeader.GetSendSeq(),
 		"client_id":    clientID,
+		"req_msg_id":   msgid.MsgID(reqHeader.GetMsgId()),
 	})
 
 	header := &base.Header{
@@ -102,6 +102,8 @@ func (o *observer) response(clientID uint64, reqHeader *base.Header, rspMsgID ui
 	dog := watchdog.Get()
 	if err := dog.SendPackage(clientID, header, body); err != nil {
 		entry.WithError(err).Errorln("发送消息失败")
+	} else {
+		entry.Debugln("回复消息")
 	}
 }
 
@@ -178,16 +180,16 @@ func (o *observer) callRemoteHandler(clientID uint64, playerID uint64, reqHeader
 	}
 	cc, err := router.GetConnection(serverName, playerID, reqHeader.GetRoutine())
 	if err != nil {
-		logrus.WithError(err).Warningf("获取服务连接失败:svr=%s, uid=%d,msgid=%d,rt=%d", serverName, playerID,msgID,reqHeader.GetRoutine())
+		logrus.WithError(err).Warningf("获取服务连接失败:svr=%s, uid=%d,msgid=%d,rt=%d", serverName, playerID, msgID, reqHeader.GetRoutine())
 		return
 	}
-	logrus.Debugf("req recv msg:svr=%s,uid=%d,msgid=%d,rt=%d+++", serverName, playerID,msgID,reqHeader.GetRoutine())
+	logrus.Debugf("req recv msg:svr=%s,uid=%d,msgid=%d,rt=%d+++", serverName, playerID, msgID, reqHeader.GetRoutine())
 	responses, err := o.handle(cc, clientID, playerID, msgID, body)
 	if err != nil {
-		entry.WithError(err).Errorf("rsp recv msg err:svr=%s, uid=%d,msgid=%d,rt=%d", serverName, playerID,msgID,reqHeader.GetRoutine())
+		entry.WithError(err).Errorf("rsp recv msg err:svr=%s, uid=%d,msgid=%d,rt=%d", serverName, playerID, msgID, reqHeader.GetRoutine())
 		return
 	}
-	logrus.Debugf("rsp recv msg:svr=%s,uid=%d,msgid=%d,rt=%d---", serverName, playerID,msgID,reqHeader.GetRoutine())
+	logrus.Debugf("rsp recv msg:svr=%s,uid=%d,msgid=%d,rt=%d---", serverName, playerID, msgID, reqHeader.GetRoutine())
 	o.responseRPCMessage(clientID, reqHeader, responses)
 }
 
