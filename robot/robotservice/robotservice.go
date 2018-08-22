@@ -88,7 +88,7 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 				break
 			}
 			i++
-			suitRobot := make([]uint64, 0, 10)
+			suitRobot := make([]uint64, 0, 5)
 			for playerID, robotPlayer := range notInitRobotMap {
 				// 从金币服获取
 				gold, err := goldclient.GetGold(uint64(playerID), int16(gold.GoldType_GOLD_COIN))
@@ -100,12 +100,12 @@ func (r *Robotservice) GetLeisureRobotInfoByInfo(ctx context.Context, request *r
 				if checkFunc(playerID, robotPlayer) {
 					suitRobot = append(suitRobot, uint64(playerID))
 				}
-				if len(suitRobot) > 10 {
+				if len(suitRobot) > 5 {
 					break
 				}
 			}
 			if len(suitRobot) == 0 { // 没有适合的机器人
-				continue
+				break
 			}
 			hallrsp, err := hallclient.InitRobotPlayerState(suitRobot)
 			if err != nil || hallrsp.GetErrCode() != int32(user.ErrCode_EC_SUCCESS) {

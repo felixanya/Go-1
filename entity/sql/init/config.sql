@@ -834,3 +834,9 @@ VALUES
     "ingots":0,
     "items":"1|1;2|1;3|5"} 
 ]');
+
+
+-- /*救济金配置*/
+INSERT INTO `t_common_config` (`key`, `subkey`, `value`)
+VALUES
+  ( 'game', 'alms', '[{"almsCountDown":10,"depositCountDown":10,"getNorm":2000,"getTimes":3,"getNumber":2000,"version":1}]');
