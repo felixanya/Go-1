@@ -3,7 +3,8 @@ package states
 import (
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
-	"steve/entity/constant"
+	"steve/common/constant"
+
 	"steve/entity/poker/ddz"
 	"steve/external/goldclient"
 	"steve/room/flows/ddzflow/machine"

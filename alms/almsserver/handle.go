@@ -6,6 +6,8 @@ import (
 	"steve/alms/packsack/packsack_prop"
 	client_alms "steve/client_pb/alms"
 	"steve/client_pb/msgid"
+	"steve/common/constant"
+
 	"steve/external/goldclient"
 	"steve/server_pb/gold"
 	"steve/structs/exchanger"
@@ -16,14 +18,14 @@ import (
 )
 
 // HandlePacksackInfo 获取背包信息
-func HandlePacksackInfo(playerID uint64, header *steve_proto_gaterpc.Header, req client_alms.PlayerPacksackInfoRep) (rspMsg []exchanger.ResponseMsg) {
+func HandlePacksackInfo(playerID uint64, header *steve_proto_gaterpc.Header, req client_alms.PacksackInfoRep) (rspMsg []exchanger.ResponseMsg) {
 	entry := logrus.WithFields(logrus.Fields{
 		"func_name": "HandlePacksackInfo",
 		"request":   req,
 		"playerID":  playerID,
 	})
 	// 返回消息
-	response := &client_alms.PlayerPacksackInfoRsp{}
+	response := &client_alms.PacksackInfoRsp{}
 	rspMsg = []exchanger.ResponseMsg{
 		exchanger.ResponseMsg{
 			MsgID: uint32(msgid.MsgID_PACKSACK_INFO_RSP),
@@ -53,12 +55,15 @@ func HandlePacksackInfo(playerID uint64, header *steve_proto_gaterpc.Header, req
 	}
 	response.PacksackGold = proto.Int64(gold)
 	response.PropInfo = ntfPropInfos
-	entry.Debugln("获取背包信息成功")
+	entry.WithFields(logrus.Fields{
+		"PacksackGold": *response.PacksackGold,
+	}).Debugln("获取背包信息成功")
 	return
 }
 
 const (
-	procedurefee = 0.05 // 手续费
+	procedurefee = 0.05  // 手续费
+	restrict     = 30000 // 存入和存出限制
 )
 
 // HandlePackSackGold 处理背包金币请求
@@ -77,7 +82,8 @@ func HandlePackSackGold(playerID uint64, header *steve_proto_gaterpc.Header, req
 		},
 	}
 	changeGold := req.GetChangeGold() //变化的背包金币
-	if changeGold == 0 {              // 不能为0
+	response.ChangeGold = proto.Int64(changeGold)
+	if changeGold == 0 { // 不能为0
 		entry.Debugln("changeGold eq 0")
 		return
 	}
@@ -106,7 +112,7 @@ func HandlePackSackGold(playerID uint64, header *steve_proto_gaterpc.Header, req
 			return
 		}
 	}
-	if bjGold%30000 != 0 {
+	if bjGold%restrict != 0 {
 		entry.Debugln(fmt.Sprintf("存入存出必须是3万的整数倍 changeGold(%d)", changeGold))
 		return
 	}
@@ -128,8 +134,7 @@ func HandlePackSackGold(playerID uint64, header *steve_proto_gaterpc.Header, req
 
 	// 从金币服获取
 	// 更改玩家身上的金币 TODO almsFuncID 渠道ID
-	almsFuncID := int32(11)
-	gold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), -newchangeGold, almsFuncID, 0, 0, 0)
+	gold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), -newchangeGold, int32(constant.PACKSACKFUNC), 0, 0, 0)
 	if err != nil {
 		entry.WithError(err).Debugln("金币服修改金币失败")
 		return

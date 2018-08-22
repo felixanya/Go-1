@@ -9,11 +9,6 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-const (
-	defaultRestrict     = 30000 // 存入和存出限制
-	defaultProcedureFee = 0.05  // 手续费
-)
-
 var goldMgr GoldMgr
 
 //GetGoldMgr 获取金币管理

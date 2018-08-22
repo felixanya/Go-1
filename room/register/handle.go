@@ -5,17 +5,18 @@ import (
 	"steve/client_pb/match"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/common/constant"
 	propclient "steve/common/data/prop"
-	"steve/entity/constant"
 	"steve/entity/majong"
 	"steve/external/goldclient"
 	"steve/external/propsclient"
+	"steve/gold/define"
 	"steve/gutils"
 	"steve/room/contexts"
 	"steve/room/majong/utils"
 	"steve/room/models"
 	modelmanager "steve/room/models"
-	room_player "steve/room/player"
+	player2 "steve/room/player"
 	"steve/room/util"
 	"steve/server_pb/gold"
 	"steve/structs/exchanger"
@@ -27,7 +28,7 @@ import (
 
 // HandleRoomChatReq 处理玩家聊天请求
 func HandleRoomChatReq(playerID uint64, header *steve_proto_gaterpc.Header, req room.RoomDeskChatReq) (ret []exchanger.ResponseMsg) {
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		return
 	}
@@ -42,7 +43,7 @@ func HandleRoomDeskQuitReq(playerID uint64, header *steve_proto_gaterpc.Header, 
 		UserData: proto.Uint32(req.GetUserData()),
 		ErrCode:  room.RoomError_FAILED.Enum(),
 	}
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		util.SendMessageToPlayer(playerID, msgid.MsgID_ROOM_DESK_QUIT_RSP, &response)
 		return
@@ -73,7 +74,7 @@ func noGamePlaying() []exchanger.ResponseMsg {
 // HandleResumeGameReq 恢复对局请求
 func HandleResumeGameReq(playerID uint64, header *steve_proto_gaterpc.Header, req room.RoomResumeGameReq) (ret []exchanger.ResponseMsg) {
 	entry := logrus.WithField("player_id", playerID)
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		entry.Debugln("玩家不存在")
 		return noGamePlaying()
@@ -95,7 +96,7 @@ func HandleCancelTuoGuanReq(playerID uint64, header *steve_proto_gaterpc.Header,
 		"func_name": "HandleCancelTuoGuanReq",
 		"player_id": playerID,
 	})
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		logEntry.Debugln("获取玩家失败")
 		return
@@ -117,7 +118,7 @@ func HandleTuoGuanReq(playerID uint64, header *steve_proto_gaterpc.Header, req r
 		"func_name": "HandleTuoGuanReq",
 		"player_id": playerID,
 	})
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		logEntry.Debugln("获取玩家失败")
 		return
@@ -174,7 +175,7 @@ func HandleContinueReq(playerID uint64, header *steve_proto_gaterpc.Header, req 
 		Body:  response,
 	}}
 
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		entry.Debugln("获取玩家失败")
 		return
@@ -210,7 +211,7 @@ func HandleUsePropReq(playerID uint64, header *steve_proto_gaterpc.Header, req r
 		},
 	}
 
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		logEntry.Debugln("获取玩家失败")
 		return
@@ -225,7 +226,7 @@ func HandleUsePropReq(playerID uint64, header *steve_proto_gaterpc.Header, req r
 	prop, err := propclient.GetPlayerOneProp(playerID, propID)
 
 	// 使用道具
-	if len(items) != 0 && items[0].PropsNum > 0 {
+	if prop.Count > 0 {
 		propsList := map[uint64]int64{
 			uint64(propID): -1,
 		}
@@ -286,7 +287,7 @@ func HandlePlayerGameGiveUp(playerID uint64, header *steve_proto_gaterpc.Header,
 			Body:  &rsp,
 		},
 	}
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		logEntry.Debugln("获取玩家失败")
 		return
@@ -344,7 +345,7 @@ func HandleRoomBrokerPlayerContinue(playerID uint64, header *steve_proto_gaterpc
 			Body:  &rsp,
 		},
 	}
-	player := room_player.GetPlayerMgr().GetPlayer(playerID)
+	player := player2.GetPlayerMgr().GetPlayer(playerID)
 	if player == nil {
 		logEntry.Debugln("获取玩家失败")
 		return
@@ -356,7 +357,7 @@ func HandleRoomBrokerPlayerContinue(playerID uint64, header *steve_proto_gaterpc
 	}
 
 	// 获取游戏金币
-	gold, err := goldclient.GetGold(playerID, constant.GOLD_COIN)
+	gold, err := goldclient.GetGold(playerID, define.GOLD_COIN)
 
 	if err != nil {
 		logEntry.Debugln("获取玩家playerId:(%d)金币错误，error:(%v)", playerID, err.Error())

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"steve/entity/db"
 	"steve/structs"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/go-xorm/xorm"
@@ -13,6 +14,8 @@ const (
 	// MysqlPlayerdbName 数据库名
 	MysqlPlayerdbName = "player"
 	hallInfoTableName = "t_hall_info" // 大厅信息表
+
+	packsackServer = "packsack"
 )
 
 //MysqlEnginefunc 单元测试需要
@@ -47,6 +50,9 @@ func getMysqlPlayerGotTimesByPlayerID(playerID uint64) (int, error) {
 		hi := &db.THallInfo{}
 		hi.Playerid = int64(playerID)
 		hi.Almsgottimes = 0
+		hi.Createtime = time.Now()
+		hi.Createby = packsackServer
+		hi.Updatetime = time.Now()
 		_, err := engine.Table(hallInfoTableName).Insert(hi)
 		logrus.WithError(err).Debugln("插入新的数据 t_hal playerID:", playerID)
 		return 0, err
@@ -62,6 +68,8 @@ func updateMysqlPlayerGotTimesByPlayerID(playerID uint64, gotTimes int) error {
 	}
 	hi := &db.THallInfo{
 		Almsgottimes: gotTimes,
+		Updatetime:   time.Now(),
+		Updateby:     packsackServer,
 	}
 	session := engine.Table(hallInfoTableName).Select("almsGotTimes").Where(fmt.Sprintf("playerID=%v", playerID))
 	num, err := session.Update(hi)

@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"
+	"steve/common/constant"
 	"steve/common/mjoption"
-	"steve/entity/constant"
+
 	"steve/entity/gamelog"
 	majongpb "steve/entity/majong"
 	"steve/external/goldclient"

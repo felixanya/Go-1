@@ -20,11 +20,11 @@ func Test_Get_Packsack_Info(t *testing.T) {
 
 	player.AddExpectors(msgid.MsgID_PACKSACK_INFO_RSP)
 	client := player.GetClient()
-	req := &alms.PlayerPacksackInfoRep{}
+	req := &alms.PacksackInfoRep{}
 	client.SendPackage(utils.CreateMsgHead(msgid.MsgID_PACKSACK_INFO_REQ), req)
 
 	expector := player.GetExpector(msgid.MsgID_PACKSACK_INFO_RSP)
-	rsq := &alms.PlayerPacksackInfoRsp{}
+	rsq := &alms.PacksackInfoRsp{}
 	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, rsq))
 	fmt.Println(rsq.GetPacksackGold())
 	for _, r := range rsq.GetPropInfo() {

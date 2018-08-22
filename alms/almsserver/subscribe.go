@@ -36,7 +36,7 @@ func (plh *playerLoginHandler) HandleMessage(message *nsq.Message) error {
 		return fmt.Errorf("消息反序列化失败：%v", err)
 	}
 	if err := getPlayerAlmsConfigInfo(loginPb.PlayerId); err != nil {
-		logrus.WithError(err).Panicln("发送玩家登陆订阅救济金配置失败")
+		logrus.WithError(err).Warningln("发送玩家登陆订阅救济金配置失败")
 	}
 	return nil
 }
@@ -84,7 +84,7 @@ func getPlayerAlmsConfigInfo(playerID uint64) error {
 		Version:          proto.Int32(int32(ac.Version)),          // 版本
 		GameLevelIsOpen:  gamelis,
 	}
-	ntf := &client_alms.AlmsConfigNtf{
+	ntf := &client_alms.AlmsLoginGoldConfigNtf{
 		AlmsConfig:     almsConfig,
 		PlayerGotTimes: proto.Int32(int32(ac.PlayerGotTimes)), // 玩家已经领取的数量
 	}

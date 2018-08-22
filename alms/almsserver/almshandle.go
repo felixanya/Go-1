@@ -6,6 +6,7 @@ import (
 	"steve/alms/packsack/packsack_gold"
 	client_alms "steve/client_pb/alms"
 	"steve/client_pb/msgid"
+	"steve/common/constant"
 	"steve/external/configclient"
 	"steve/external/goldclient"
 	"steve/server_pb/gold"
@@ -20,6 +21,7 @@ import (
 func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req client_alms.AlmsGetGoldReq) (rspMsg []exchanger.ResponseMsg) {
 	entry := logrus.WithFields(logrus.Fields{
 		"func_name": "HandleGetAlmsReq",
+		"playerID":  playerID,
 		"request":   req,
 	})
 	// 返回消息
@@ -48,7 +50,7 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	// 获取配置用于验证
 	ac, err := data.GetAlmsConfigByPlayerID(playerID)
 	if err != nil {
-		entry.WithError(err).Errorf("根据玩家ID获取救济金配置失败 playerID(%v)", playerID)
+		entry.WithError(err).Errorln(fmt.Sprintf("根据玩家ID获取救济金配置失败 playerID(%d)", playerID))
 		response.Result = proto.Bool(false)
 		return
 	}
@@ -68,7 +70,7 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 
 	//是否还有领取次数
 	if ac.PlayerGotTimes >= 3 {
-		entry.Errorf("领取次数已满 times(%v) ", ac.PlayerGotTimes)
+		entry.Debugln(fmt.Sprintf("领取次数已满 times(%v) ", ac.PlayerGotTimes))
 		response.Result = proto.Bool(false)
 		return
 	}
@@ -90,7 +92,7 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	//从金币服获取玩家身上金币，
 	playerGold, err := goldclient.GetGold(playerID, int16(gold.GoldType_GOLD_COIN))
 	if err != nil {
-		entry.WithError(err).Errorf(" playerID(%v) - 从金币服获取玩家身上金币失败", playerID)
+		entry.WithError(err).Debugln(fmt.Sprintf("playerID(%d) - 从金币服获取玩家身上金币失败", playerID))
 		response.Result = proto.Bool(false)
 		return
 	}
@@ -142,28 +144,29 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 
 	// 只有登录中才判断是否救济金达标
 	if reqType == client_alms.AlmsReqType_LOGIN && playerGold > ac.GetNorm {
-		entry.Debugf("玩家身上的金币没有达到救济线  playerGold：", playerGold)
+		entry.Debugln(fmt.Sprintf("玩家身上的金币没有达到救济线  playerGold(%d) - GetNorm(%d)", playerGold, ac.GetNorm))
 		response.Result = proto.Bool(false)
 		return
 	}
 
 	//验证通过，玩家领取次数加1
 	if err := data.UpdatePlayerGotTimesByPlayerID(playerID, ac.PlayerGotTimes+1); err != nil {
-		entry.WithError(err).Errorf(" playerID(%d) times(%d)- 更改玩家救济金领取次数失败", playerID, ac.PlayerGotTimes)
+		entry.WithError(err).Debugf(fmt.Sprintf(" playerID(%d) times(%d)- 更改玩家救济金领取次数失败", playerID, ac.PlayerGotTimes))
 		response.Result = proto.Bool(false)
 		return
 	}
 	// 更改玩家身上的金币 TODO almsFuncID 渠道ID
-	almsFuncID := int32(10)
-	almschannl := int64(10)
-	changeGold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), ac.GetNumber, almsFuncID, almschannl, 0, 0)
+	almschannl := int64(0)
+	changeGold, err := goldclient.AddGold(playerID, int16(gold.GoldType_GOLD_COIN), ac.GetNumber, int32(constant.ALMSFUNC), almschannl, 0, 0)
 	if err != nil || changeGold != playerGold+ac.GetNumber {
-		entry.WithError(err).Errorf(" playerID(%v) - 设置玩家身上金币失败 changeGold(%v) , needGold(%v)", playerID, changeGold, playerGold+ac.GetNumber)
+		entry.WithError(err).Debugln(fmt.Sprintf("playerID(%d) - 设置玩家身上金币失败 changeGold(%d) , needGold(%d)", playerID, changeGold, (playerGold + ac.GetNumber)))
 		response.Result = proto.Bool(false)
 		return
 	}
 	response.PlayerAlmsTimes = proto.Int32(int32(ac.PlayerGotTimes + 1)) // 玩家已经领取的次数
 	response.ChangeGold = proto.Int64(changeGold)
-	entry.WithFields(logrus.Fields{"playerID": playerID, "oldGold": playerGold, "newGold": changeGold}).Infoln("申请救济成功")
+	entry.WithFields(logrus.Fields{"PlayerAlmsTimes": *response.PlayerAlmsTimes,
+		"GetNumber": ac.GetNumber, "GetNorm": ac.GetNorm,
+		"oldGold": playerGold, "newGold": changeGold}).Debugln("申请救济成功")
 	return
 }

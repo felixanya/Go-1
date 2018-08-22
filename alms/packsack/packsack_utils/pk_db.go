@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"steve/entity/db"
 	"steve/structs"
+	"time"
 
 	"github.com/go-xorm/xorm"
 )
@@ -11,6 +12,7 @@ import (
 const (
 	dbName      = "player"
 	pktableName = "t_player_packsack"
+	almsServer  = "alms"
 )
 
 //Mydb 单元测试需要
@@ -35,8 +37,11 @@ func initTPacksack(uid uint64) error {
 		return err
 	}
 	tp := &db.TPlayerPacksack{
-		Playerid: int64(uid),
-		Gold:     0,
+		Playerid:   int64(uid),
+		Gold:       0,
+		Createtime: time.Now(),
+		Createby:   almsServer,
+		Updatetime: time.Now(),
 	}
 	num, err := engine.Table(pktableName).Insert(tp)
 	if err != nil {
@@ -74,7 +79,9 @@ func SaveGoldToDB(uid uint64, changeValue int64) error {
 		return err
 	}
 	tpk := &db.TPlayerPacksack{
-		Gold: int(changeValue),
+		Gold:       int(changeValue),
+		Updatetime: time.Now(),
+		Updateby:   almsServer,
 	}
 	session := engine.Table(pktableName).Where(fmt.Sprintf("playerID=%d", uid))
 	sum, err := session.Update(tpk)
