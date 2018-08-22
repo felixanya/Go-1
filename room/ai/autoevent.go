@@ -159,10 +159,11 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 		players := mjContext.GetPlayers()
 		duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
 
+		actionPlayers := GetActionPlayers(&mjContext)
 		for _, player := range players {
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
 
-			if AddTimeCountDown(deskPlayer, startTime, duration) {
+			if ContainsUint64(actionPlayers, player.GetPlayerId()) && AddTimeCountDown(deskPlayer, startTime, duration) {
 				deskPlayer.CountingDown = false
 				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, OverTimeAI, 0, nil, &mjContext)
 			}
@@ -205,6 +206,7 @@ func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duratio
 		if deskPlayer.AddTime < 0 {
 			deskPlayer.AddTime = 0
 			deskPlayer.SetTuoguan(true, true)
+			logrus.WithField("playerId", deskPlayer.PlayerID).Debugln("玩家托管")
 		}
 		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
 	}
@@ -217,4 +219,51 @@ func (aeg *autoEventGenerator) RegisterAI(gameID int, stateID int32, AI CommonAI
 		aeg.commonAIs[gameID] = make(map[int32]CommonAI)
 	}
 	aeg.commonAIs[gameID][stateID] = AI
+}
+
+func GetActionPlayers(ctx *majong.MajongContext) []uint64 {
+	players := ctx.GetPlayers()
+	actionPlayers := make([]uint64, 0, 4)
+
+	switch ctx.GetCurState() {
+	case majong.StateID_state_dingque:
+		{
+			for _, player := range players {
+				if !player.GetHasDingque() {
+					actionPlayers = append(actionPlayers, player.GetPlayerId())
+				}
+			}
+		}
+	case majong.StateID_state_huansanzhang:
+		{
+			for _, player := range players {
+				if !player.GetHuansanzhangSure() {
+					actionPlayers = append(actionPlayers, player.GetPlayerId())
+				}
+			}
+		}
+	case majong.StateID_state_zixun:
+		{
+			actionPlayers = append(actionPlayers, gutils.GetZixunPlayer(ctx))
+		}
+	case majong.StateID_state_chupaiwenxun:
+	case majong.StateID_state_waitqiangganghu:
+		{
+			for _, player := range players {
+				if !player.GetHasSelected() {
+					actionPlayers = append(actionPlayers, player.GetPlayerId())
+				}
+			}
+		}
+	}
+	return actionPlayers
+}
+
+func ContainsUint64(players []uint64, inPlayer uint64) bool {
+	for _, player := range players {
+		if player == inPlayer {
+			return true
+		}
+	}
+	return false
 }
