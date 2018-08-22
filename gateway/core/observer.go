@@ -177,14 +177,16 @@ func (o *observer) callRemoteHandler(clientID uint64, playerID uint64, reqHeader
 	}
 	cc, err := router.GetConnection(serverName, playerID, reqHeader.GetRoutine())
 	if err != nil {
-		entry.WithError(err).Warningln("获取服务连接失败")
+		logrus.WithError(err).Warningf("获取服务连接失败:svr=%s, uid=%d,msgid=%d,rt=%d", serverName, playerID,msgID,reqHeader.GetRoutine())
 		return
 	}
+	logrus.Debugf("req recv msg:svr=%s,uid=%d,msgid=%d,rt=%d+++", serverName, playerID,msgID,reqHeader.GetRoutine())
 	responses, err := o.handle(cc, clientID, playerID, msgID, body)
 	if err != nil {
-		entry.WithError(err).Errorln("处理消息失败")
+		entry.WithError(err).Errorf("rsp recv msg err:svr=%s, uid=%d,msgid=%d,rt=%d", serverName, playerID,msgID,reqHeader.GetRoutine())
 		return
 	}
+	logrus.Debugf("rsp recv msg:svr=%s,uid=%d,msgid=%d,rt=%d---", serverName, playerID,msgID,reqHeader.GetRoutine())
 	o.responseRPCMessage(clientID, reqHeader, responses)
 }
 
