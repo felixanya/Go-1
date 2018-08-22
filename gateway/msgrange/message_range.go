@@ -2,6 +2,8 @@ package msgrange
 
 import (
 	"fmt"
+	"sort"
+	"steve/client_pb/msgid"
 	"steve/structs/common"
 )
 
@@ -10,6 +12,8 @@ type messageRange struct {
 	maxMsgID uint32
 }
 
+// gServerMessageRange 消息区间
+// TODO 从配置文件加载
 var gServerMessageRange = map[string]messageRange{
 	common.RoomServiceName: {
 		minMsgID: 0x10000,
@@ -45,6 +49,12 @@ var gServerMessageRange = map[string]messageRange{
 	},
 }
 
+// gMsgsDontNeedLogin 无需登录的消息列表
+// TODO 从配置文件加载
+var gMsgsDontNeedLogin = []msgid.MsgID{
+	msgid.MsgID_RESET_PASSWORD_REQ, msgid.MsgID_AUTH_CODE_REQ, msgid.MsgID_CHECK_AUTH_CODE_REQ,
+}
+
 // GetMessageServer 获取消息处理服务名字
 // 返回值为空表示无对应的服务
 func GetMessageServer(msgID uint32) string {
@@ -54,6 +64,14 @@ func GetMessageServer(msgID uint32) string {
 		}
 	}
 	return ""
+}
+
+// IsMessageNeedLogin 消息转发是否需要先登录
+func IsMessageNeedLogin(msgID msgid.MsgID) bool {
+	index := sort.Search(len(gMsgsDontNeedLogin), func(i int) bool {
+		return gMsgsDontNeedLogin[i] >= msgID
+	})
+	return !(index < len(gMsgsDontNeedLogin) && gMsgsDontNeedLogin[index] == msgID)
 }
 
 // 校验消息 ID 段是否有重复
@@ -76,4 +94,5 @@ func checkOverlap() {
 
 func init() {
 	checkOverlap()
+	sort.Slice(gMsgsDontNeedLogin, func(i, j int) bool { return gMsgsDontNeedLogin[i] < gMsgsDontNeedLogin[j] })
 }

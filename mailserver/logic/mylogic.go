@@ -11,6 +11,7 @@ import (
 	"steve/mailserver/define"
 	"steve/structs"
 	"time"
+	"sort"
 )
 
 /*
@@ -42,6 +43,21 @@ var provSendList map[int64][]*define.MailInfo
 var cityAdList map[int64]*define.ADJson    // 城市级别的AD列表
 var provAdList map[int64]*define.ADJson    // 省份级别的AD列表
 var channelAdList map[int64]*define.ADJson // 渠道级别的AD列表
+
+//定义interface{},并实现sort.Interface接口的三个方法
+type mailSlice  []*define.MailInfo
+
+func (c mailSlice) Len() int {
+	return len(c)
+}
+func (c mailSlice) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+func (c mailSlice) Less(i, j int) bool {
+	return c[i].StartTime > c[j].StartTime
+
+}
+
 
 func Init() error {
 	testADJson()
@@ -151,7 +167,9 @@ func GetGetUnReadSum(uid uint64) (int32, error) {
 	return sum, nil
 }
 
-// 获取邮件消息列表
+
+
+	// 获取邮件消息列表
 func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 	// 获取玩家渠道ID
 	channel, prov, _, ok := getUserInfo(uid)
@@ -215,6 +233,7 @@ func GetMailList(uid uint64) ([]*mailserver.MailTitle, error) {
 		titleList = append(titleList, title)
 	}
 
+
 	return titleList, nil
 }
 
@@ -228,6 +247,11 @@ func GetMailDetail(uid uint64, mailId uint64) (*mailserver.MailDetail, error) {
 	if mail.State != define.StateSended && mail.State != define.StateSending {
 		return nil, errors.New("指定邮件状态错误")
 	}
+	isHaveAttach := int32(0)
+	if len(mail.AttachGoods) > 0 {
+		isHaveAttach = 1
+	}
+
 	// 从DB获取玩家的已读邮件列表
 	one, _ := data.GetTheMailFromDB(uid, mailId)
 
@@ -235,13 +259,32 @@ func GetMailDetail(uid uint64, mailId uint64) (*mailserver.MailDetail, error) {
 		return nil, errors.New("邮件已被用户删除")
 	}
 
+	isRead := int32(1)
+
 	if one == nil {
 		// 设置邮件=已读
-		data.SetEmailReadTagFromDB(uid, mailId, true, mail.DelTime)
+		if isHaveAttach == 0 {
+			isRead = 1
+			data.SetEmailReadTagFromDB(uid, mailId, true, mail.DelTime, 1)
+
+		} else {
+			isRead = 0
+			data.SetEmailReadTagFromDB(uid, mailId, true, mail.DelTime, 0)
+		}
 	} else {
-		if !one.IsRead {
-			// 设置邮件=已读
-			data.SetEmailReadTagFromDB(uid, mailId, false, mail.DelTime)
+		if one.IsGetAttach {
+			isRead = 1
+			if !one.IsRead {
+				// 设置邮件=已读
+				data.SetEmailReadTagFromDB(uid, mailId, false, mail.DelTime, 1)
+
+			}
+		} else {
+			isRead = 0
+			if one.IsRead {
+				// 设置邮件=已读
+				data.SetEmailReadTagFromDB(uid, mailId, false, mail.DelTime, 0)
+			}
 		}
 	}
 
@@ -281,13 +324,10 @@ func GetMailDetail(uid uint64, mailId uint64) (*mailserver.MailDetail, error) {
 		break
 	}
 
-	isRead := int32(1)
+
 	detail.IsRead = &isRead
 
-	isHaveAttach := int32(0)
-	if len(mail.AttachGoods) > 0 {
-		isHaveAttach = 1
-	}
+
 	if one != nil && one.IsGetAttach {
 		isHaveAttach = 2
 	}
@@ -316,11 +356,11 @@ func SetReadTag(uid uint64, mailId uint64) error {
 
 	if one == nil {
 		// 设置邮件=已读
-		data.SetEmailReadTagFromDB(uid, mailId, true, mail.DelTime)
+		data.SetEmailReadTagFromDB(uid, mailId, true, mail.DelTime, 1)
 	} else {
 		if !one.IsRead {
 			// 设置邮件=已读
-			data.SetEmailReadTagFromDB(uid, mailId, false, mail.DelTime)
+			data.SetEmailReadTagFromDB(uid, mailId, false, mail.DelTime, 1)
 		}
 	}
 
@@ -340,31 +380,44 @@ func DelMail(uid uint64, mailId uint64) error {
 		return errors.New("邮件已被用户删除")
 	}
 
-	if one == nil {
+	if one != nil {
+		if one.IsDel {
+			return errors.New("邮件已被用户删除")
+		}
+
+		if len(mail.AttachGoods) > 0 {
+			if !one.IsGetAttach {
+				return errors.New("附件未领取,无法删除")
+			}
+		}
+	} else {
 		// 设置邮件为删除状态
 		return data.DelEmailFromDB(uid, mailId, true, mail.DelTime)
 	}
+
 	return data.DelEmailFromDB(uid, mailId, false, mail.DelTime)
 
 }
 
 // 领取附件奖励请求
-func AwardAttach(uid uint64, mailId uint64) ([]*mailserver.Goods, error) {
+func AwardAttach(uid uint64, mailId uint64) (*mailserver.Goods, error) {
 
+	mail, ok := mailList[mailId]
+	if !ok {
+		return nil, errors.New("指定邮件不存在")
+	}
+	if len(mail.AttachGoods) == 0 {
+		return nil, errors.New("此邮件无附件")
+	}
 	// 从DB获取玩家的已读邮件列表
 	one, _ := data.GetTheMailFromDB(uid, mailId)
-	if one != nil && one.IsDel {
-		return nil, errors.New("邮件已被用户删除")
-	}
 
 	if one == nil {
-		return nil, errors.New("邮件不存在")
+		return nil, errors.New("玩家邮件不存在")
 	}
-
-	if !one.IsRead {
-		return nil, errors.New("必须先读邮件, 才能领取附件")
+	if one.IsDel {
+		return nil, errors.New("邮件已被玩家删除")
 	}
-
 	// 如果已领取，直接返回
 	if one.IsGetAttach {
 		return nil, errors.New("邮件已领取")
@@ -375,7 +428,14 @@ func AwardAttach(uid uint64, mailId uint64) ([]*mailserver.Goods, error) {
 	// 标记为已领取
 	data.SetAttachGettedDB(uid, mailId)
 
-	return nil, nil
+	attach := &mailserver.Goods{}
+	attach.GoodsId = &mail.AttachGoods[0].GoodsId
+	attach.GoodsNum = &mail.AttachGoods[0].GoodsNum
+
+	gType := mailserver.GoodsType_GOODSTYPE_PROPS
+	attach.GoodsType = &gType
+
+	return attach, nil
 }
 
 // 启动邮件列表变化检测协程
@@ -552,7 +612,7 @@ func checkMailStatus(mailList map[uint64]*define.MailInfo) error {
 	// 更新发送列表provSendList
 	if bUpdate {
 		// 将发送中和发送截至的加入到指定列表中
-		myList := make(map[int64][]*define.MailInfo)
+		myList := make(map[int64]mailSlice)
 		for _, mail := range mailList {
 			if mail.State == define.StateSending || mail.State == define.StateSended {
 
@@ -562,7 +622,16 @@ func checkMailStatus(mailList map[uint64]*define.MailInfo) error {
 				}
 			}
 		}
-		provSendList = myList
+
+		// 排序邮件列表
+		myListSort := make(map[int64][]*define.MailInfo)
+
+		for k, slic := range myList {
+			sort.Sort(slic)
+			myListSort[k] = slic
+		}
+
+		provSendList = myListSort
 	}
 
 	return nil

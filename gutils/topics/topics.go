@@ -20,4 +20,9 @@ const (
 	// 目前订阅者：
 	//
 	BroadcastMsg string = "broadcast_msg"
+
+	// GoldChangeNtf 玩家金币数变化
+	// 目前订阅者：
+	//
+	GoldChangeNtf string = "gold_change"
 )

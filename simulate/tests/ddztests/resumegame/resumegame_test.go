@@ -48,9 +48,10 @@ func TestPlaycard1(t *testing.T) {
 	time.Sleep(time.Millisecond * 200) // 等200毫秒，确保连接断开
 
 	// 重新登录
-	accountID := lordPlayer.Player.GetAccountID()
-	accountName := utils.GenerateAccountName(accountID)
-	player, err := utils.LoginPlayer(accountID, accountName)
+	// accountID := lordPlayer.Player.GetAccountID()
+	// accountName := utils.GenerateAccountName(accountID)
+	// player, err := utils.LoginPlayer(accountID, accountName)
+	player, err := utils.LoginPlayerByToken(lordPlayer.Player.GetID(), lordPlayer.Player.GetToken())
 	assert.Nil(t, err)
 	assert.NotNil(t, player)
 	client := player.GetClient()
