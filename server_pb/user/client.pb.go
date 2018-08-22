@@ -28,8 +28,9 @@ It has these top-level messages:
 	UpdatePlayerStateReq
 	UpdatePlayerServerAddrReq
 	UpdatePlayerRsp
-	GetGameListInfoReq
-	GetGameListInfoRsp
+	InitRobotPlayerStateReq
+	InitRobotPlayerStateRsp
+	RobotState
 */
 package user
 

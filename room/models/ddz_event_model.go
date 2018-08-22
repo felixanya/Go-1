@@ -337,26 +337,33 @@ func (model *DDZEventModel) dealResumeRequest(playerID uint64, ddzContext *ddz.D
 		totalGrab = 1
 	}
 
-	resumeMsg := &room.DDZResumeGameRsp{
-		Result: &room.Result{ErrCode: proto.Uint32(0), ErrDesc: proto.String("")},
-		GameInfo: &room.DDZDeskInfo{
-			Players: playersInfo, // 每个人的信息
-			Stage: &room.NextStage{
-				Stage: &curStage,
-				Time:  proto.Uint32(leftTimeInt32),
-			},
-			CurPlayerId:  proto.Uint64(ddzContext.GetCurrentPlayerId()), // 当前操作的玩家
-			Dipai:        ddzContext.GetDipai(),
-			TotalGrab:    &totalGrab,
-			TotalDouble:  proto.Uint32(ddzContext.GetTotalDouble()),
-			TotalBomb:    proto.Uint32(ddzContext.GetTotalBomb()),
-			CurCardType:  &curCardType,
-			CurCardPivot: proto.Uint32(ddzContext.GetCardTypePivot()),
-			CurOutCards:  ddzContext.CurOutCards,
+	// 斗地主游戏信息
+	ddzInfo := room.DDZDeskInfo{
+		Players: playersInfo, // 每个人的信息
+		Stage: &room.NextStage{
+			Stage: &curStage,
+			Time:  proto.Uint32(leftTimeInt32),
 		},
+		CurPlayerId:  proto.Uint64(ddzContext.GetCurrentPlayerId()), // 当前操作的玩家
+		Dipai:        ddzContext.GetDipai(),
+		TotalGrab:    &totalGrab,
+		TotalDouble:  proto.Uint32(ddzContext.GetTotalDouble()),
+		TotalBomb:    proto.Uint32(ddzContext.GetTotalBomb()),
+		CurCardType:  &curCardType,
+		CurCardPivot: proto.Uint32(ddzContext.GetCardTypePivot()),
+		CurOutCards:  ddzContext.CurOutCards,
 	}
+
+	// 恢复信息
+	resumeMsg := &room.RoomResumeGameRsp{
+		ResumeRes: room.RoomError_SUCCESS.Enum(),
+		GameId:    proto.Uint32(uint32(model.GetDesk().GetGameId())),
+		LevelId:   proto.Uint32(uint32(model.GetDesk().GetLevel())),
+		DdzInfo:   &ddzInfo,
+	}
+
 	messageModel := GetModelManager().GetMessageModel(model.GetDesk().GetUid())
-	messageModel.BroadCastDeskMessage([]uint64{reqPlayerID}, msgid.MsgID_ROOM_DDZ_RESUME_RSP, resumeMsg, false)
+	messageModel.BroadCastDeskMessage([]uint64{reqPlayerID}, msgid.MsgID_ROOM_RESUME_GAME_RSP, resumeMsg, false)
 	logrus.WithField("resumeMsg", resumeMsg).WithField("playerId", reqPlayerID).Infoln("斗地主发送恢复对局消息")
 
 	return nil

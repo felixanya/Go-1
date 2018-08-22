@@ -247,6 +247,8 @@ type playerLoginHandler struct {
 
 func (plh *playerLoginHandler) HandleMessage(message *nsq.Message) error {
 
+	logrus.Debugln("匹配服开始处理玩家的登陆")
+
 	// 参数检测
 	if message == nil {
 		logrus.Errorf("match服处理玩家登陆,HandleMessage(),参数错误,message == nil")
