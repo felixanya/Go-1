@@ -47,6 +47,7 @@ func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.
 
 	var err2 error
 	playerID, err2 = createPlayer(accID)
+
 	if err2 != nil {
 		logrus.WithField("account_id", accID).Errorln(err2)
 		return
@@ -55,6 +56,7 @@ func (pds *PlayerDataService) GetPlayerByAccount(ctx context.Context, req *user.
 	// 返回消息
 	rsp.PlayerId, rsp.ErrCode = playerID, int32(user.ErrCode_EC_SUCCESS)
 
+	logrus.Debugf("GetPlayerByAccount rsp: (%v)", rsp)
 	datareportclient.DataReport(fixed.LOG_TYPE_REG, 0, 0, 0, playerID, "1")
 
 	return
@@ -73,14 +75,14 @@ func (pds *PlayerDataService) GetPlayerInfo(ctx context.Context, req *user.GetPl
 	playerID := req.GetPlayerId()
 
 	// 逻辑处理
-	fields := []string{cache.NickName, cache.Gender, cache.Avatar, cache.ChannelID, cache.ProvinceID, cache.CityID}
+	fields := []string{cache.NickName, cache.ShowUID, cache.Gender, cache.Avatar, cache.ChannelID, cache.ProvinceID, cache.CityID}
 	player, err := data.GetPlayerInfo(playerID, fields...)
 
 	// 返回消息
 	if err == nil {
 		rsp.ErrCode = int32(user.ErrCode_EC_SUCCESS)
 		rsp.PlayerId, rsp.Gender = playerID, uint32(player.Gender)
-		rsp.NickName, rsp.Avatar = player.Nickname, player.Avatar
+		rsp.NickName, rsp.ShowUid, rsp.Avatar = player.Nickname, uint64(player.Showuid), player.Avatar
 		rsp.ChannelId, rsp.ProvinceId, rsp.CityId = uint32(player.Channelid), uint32(player.Provinceid), uint32(player.Cityid)
 	}
 	logrus.Debugf("GetPlayerInfo rsp : (%v)", rsp)

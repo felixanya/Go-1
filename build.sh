@@ -52,6 +52,7 @@ cp web/config.yml configs/web/config.yml
 
 go build -o bin/mailserver/mailserver.so -o mailserver/mailserver.so -buildmode=plugin steve/mailserver  
 cp mailserver/config.yml configs/mailserver/config.yml  
+
 ./simulate/packtests.sh 
 
 

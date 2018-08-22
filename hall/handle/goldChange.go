@@ -14,16 +14,19 @@ import (
 	nsq "github.com/nsqio/go-nsq"
 )
 
+// GoldChanngleHandler 金币变化通知处理器
 type GoldChanngleHandler struct {
 }
 
+// HandleMessage 订阅金币变化通知
 func (plh *GoldChanngleHandler) HandleMessage(message *nsq.Message) error {
 	entry := logrus.WithFields(logrus.Fields{
 		"func_name": "HandleMessage",
 		"desc":      "处理玩家金币变化通知",
 		"message":   message,
 	})
-	goldChangeNtf := &gold.GoldChangeNtf{}
+	goldChangeNtf := gold.GoldChangeNtf{}
+	logrus.Debugf("body:(%v)", message.Body)
 	if err := json.Unmarshal(message.Body, &goldChangeNtf); err != nil {
 		return fmt.Errorf("消息反序列化失败：%v", err)
 	}
@@ -33,7 +36,7 @@ func (plh *GoldChanngleHandler) HandleMessage(message *nsq.Message) error {
 }
 
 // sendMoneyChangeNtf 通知客户端金币变化
-func sendMoneyChangeNtf(ntf *gold.GoldChangeNtf) {
+func sendMoneyChangeNtf(ntf gold.GoldChangeNtf) {
 	// 玩家ID
 	playerID := ntf.GetUid()
 	// 玩家当前金币数

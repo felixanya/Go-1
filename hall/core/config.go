@@ -7,7 +7,6 @@ import (
 	"steve/hall/logic"
 	"steve/structs"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
 )
 
@@ -37,7 +36,7 @@ func InitServer() error {
 	// 订阅
 	exposer := structs.GetGlobalExposer()
 	if err := exposer.Subscriber.Subscribe(topics.GoldChangeNtf, "gold", &handle.GoldChanngleHandler{}); err != nil {
-		logrus.WithError(err).Panicln("订阅单局玩家金币变化通知消息失败")
+		return fmt.Errorf("订阅单局玩家金币变化通知消息失败(%s)", err.Error())
 	}
 	return nil
 }
