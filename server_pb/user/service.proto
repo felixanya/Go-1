@@ -64,6 +64,7 @@ message GetPlayerInfoRsp {
     uint32 channel_id = 6;        // 渠道 ID
     uint32 province_id = 7;       // 省份 ID
     uint32 city_id = 8;           // 城市 ID
+    uint64 show_uid = 9;         // 显示 ID
 }
 
 // UpdatePlayerInfoReq 修改玩家信息

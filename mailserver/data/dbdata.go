@@ -191,7 +191,7 @@ func SetAttachGettedDB(uid uint64, mailId uint64)  error {
 	sql := ""
 
 
-	sql = fmt.Sprintf("update  t_player_mail set n_isGetAttach=1  where n_playerid='%d' and n_mailID ='%d' ;", uid, mailId)
+	sql = fmt.Sprintf("update  t_player_mail set n_isGetAttach=1,n_isRead=1  where n_playerid='%d' and n_mailID ='%d' ;", uid, mailId)
 
 	res, err := engine.Exec(sql)
 	if err != nil {
@@ -218,7 +218,7 @@ func SetAttachGettedDB(uid uint64, mailId uint64)  error {
 
 
 // 设置邮件为已读
-func SetEmailReadTagFromDB(uid uint64, mailId uint64, bInsert bool,delTime string)  error {
+func SetEmailReadTagFromDB(uid uint64, mailId uint64, bInsert bool,delTime string, isRead int8)  error {
 
 	exposer := structs.GetGlobalExposer()
 	engine, err := exposer.MysqlEngineMgr.GetEngine(dbName)
@@ -230,12 +230,12 @@ func SetEmailReadTagFromDB(uid uint64, mailId uint64, bInsert bool,delTime strin
 
 	if !bInsert {
 		// 修改记录
-		sql = fmt.Sprintf("update t_player_mail set n_isRead=1 where n_playerid='%d' and n_mailID ='%d';",
+		sql = fmt.Sprintf("update t_player_mail set n_isRead=%d where n_playerid='%d' and n_mailID ='%d';",isRead,
 			 uid, mailId)
 	} else {
 		// 插入记录
 		sql = fmt.Sprintf("insert into t_player_mail (n_playerid, n_mailID, n_isRead, n_isGetAttach, n_isDel,n_deleteTime) values('%d','%d','%d','%d','%d','%s');",
-			uid, mailId, 1, 0, 0,delTime)
+			uid, mailId, isRead, 0, 0,delTime)
 	}
 
 	res, err := engine.Exec(sql)
@@ -249,7 +249,12 @@ func SetEmailReadTagFromDB(uid uint64, mailId uint64, bInsert bool,delTime strin
 	info.PlayerId = uid
 	info.IsDel = false
 	info.IsGetAttach = false
-	info.IsRead = true
+	if isRead == 1{
+		info.IsRead = true
+	} else {
+		info.IsRead = false
+	}
+
 	SaveTheMailToRedis(uid, info)
 
 	if aff, err := res.RowsAffected(); aff == 0 {
@@ -372,6 +377,7 @@ func GetUserMailFromDB(uid uint64) (map[uint64]*define.PlayerMail, error) {
 
 	return list, nil
 }
+
 
 // 从DB加载邮件列表
 func LoadMailListFromDB() (map[uint64]*define.MailInfo, error) {

@@ -155,6 +155,15 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     }'
 );
 
+/*绑定手机奖励*/
+INSERT `t_common_config`(`key`, `subkey`, `value`) values (
+    'bindphone',
+    'reward',
+    '{
+    "type": 2,
+    "num": 5 
+    }'
+);
 INSERT `t_common_config`(`key`, `subkey`, `value`) values ( 
     'prop', 
     'interactive',
@@ -717,6 +726,7 @@ VALUES
             {
                 "ad_id":1,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"1"
@@ -724,6 +734,7 @@ VALUES
             {
                 "ad_id":2,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"2"
@@ -731,6 +742,7 @@ VALUES
             {
                 "ad_id":3,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"3"
@@ -738,6 +750,7 @@ VALUES
             {
                 "ad_id":4,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"4"
@@ -754,6 +767,7 @@ VALUES
             {
                 "ad_id":1,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"1"
@@ -761,6 +775,7 @@ VALUES
             {
                 "ad_id":2,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"2"
@@ -768,6 +783,7 @@ VALUES
             {
                 "ad_id":3,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"3"
@@ -775,6 +791,7 @@ VALUES
             {
                 "ad_id":4,
                 "ad_tick":5,
+                "go_type":0,
                 "pic_url":"http:/www.qq.com/pic123.jpg",
                 "go_url":"http:/www.qq.com",
                 "ad_param":"4"

@@ -34,6 +34,11 @@ func GetGatewayServerAddr() string {
 	return *gatewayServerAddr
 }
 
+// SetGatewayServerAddr 设置网关服地址
+func SetGatewayServerAddr(addr string) {
+	*gatewayServerAddr = addr
+}
+
 // GetPeipaiURL 获取配牌 URL
 func GetPeipaiURL() string {
 	return *peiPaiURL

@@ -95,6 +95,11 @@ func (gm *MsgMgr) GetHorseRace(uid uint64) ([]string, int32, int32, error) {
 		if ok {
 			return str, tick, sleep, nil
 		}
+		// 再读取默认的跑马灯
+		str, tick, sleep, ok = gm.getLevelHorseRace(0, gm.provList)
+		if ok {
+			return str, tick, sleep, nil
+		}
 	}
 
 	return nil, 0, 0, nil

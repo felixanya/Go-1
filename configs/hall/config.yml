@@ -46,3 +46,30 @@ node: 1
 
 # 实名认证奖励金豆数
 real_name_reward: 5000
+
+# 获取账号信息 url
+account_info_url: http://192.168.7.26:18101/account/getByGuid
+
+# 发送验证码 url 
+send_code_url: http://192.168.7.26:18101/account/sendCode
+
+# 校验验证码 url 
+check_code_url: http://192.168.7.26:18101/account/checkCode
+
+# 绑定手机 url
+bind_phone_url: http://192.168.7.26:18101/account/bindPhone
+
+# 修改手机 url 
+change_phone_url: http://192.168.7.26:18101/account/resetPhone
+
+# 修改密码 url
+change_password_url: http://192.168.7.26:18101/account/resetPwd
+
+# 重置密码 url 
+reset_password_url: http://192.168.7.26:18101/account/resetPwd
+
+# 校验密码 url 
+check_password_url: http://192.168.7.26:18101/account/checkPwd
+
+# 账号系统中本产品 ID 
+product_id: 9999
