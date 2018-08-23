@@ -97,6 +97,13 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 		return
 	}
 
+	// 除了游戏中才判断是否救济金达标
+	if reqType != client_alms.AlmsReqType_INGAME && playerGold > ac.GetNorm {
+		entry.Debugln(fmt.Sprintf("玩家身上的金币没有达到救济线  playerGold(%d) - GetNorm(%d) reqType(%v)", playerGold, ac.GetNorm, reqType))
+		response.Result = proto.Bool(false)
+		return
+	}
+
 	gameID := int(req.GetGameId())
 	levelID := int(req.GetLevelId())
 	// 选场判断游戏场次ID是否开启救济
@@ -119,7 +126,7 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 				}
 				// 如果玩家身上的金币已经够了，不应该发救济金
 				if int64(gameLeveConfigMap.LowScores) <= playerGold {
-					logrus.Debugln(fmt.Sprintf("玩家身上的金币，足够改场次的下限 playerGold(%d) -- gameLeveConfigMap(%v)", playerGold, gameLeveConfigMap))
+					logrus.Debugln(fmt.Sprintf("玩家身上的金币，足够该场次的下限 playerGold(%d) -- gameLeveConfigMap(%v)", playerGold, gameLeveConfigMap))
 					response.Result = proto.Bool(false)
 					return
 				}
@@ -138,13 +145,6 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	// 游戏中,玩家破产才领
 	if reqType == client_alms.AlmsReqType_INGAME && playerGold != 0 {
 		entry.Debugln(fmt.Sprintf("玩家金币不为0,没有破产 gold(%d)", playerGold))
-		response.Result = proto.Bool(false)
-		return
-	}
-
-	// 只有登录中才判断是否救济金达标
-	if reqType == client_alms.AlmsReqType_LOGIN && playerGold > ac.GetNorm {
-		entry.Debugln(fmt.Sprintf("玩家身上的金币没有达到救济线  playerGold(%d) - GetNorm(%d)", playerGold, ac.GetNorm))
 		response.Result = proto.Bool(false)
 		return
 	}
