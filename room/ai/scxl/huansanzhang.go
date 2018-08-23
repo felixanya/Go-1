@@ -15,8 +15,8 @@ type huansanzhangStateAI struct {
 
 // GenerateAIEvent 生成 换三张AI 事件
 // 无论是超时、托管还是机器人，若已存在换三张的牌，则直接换该三张牌，否则取花色最少的三张手牌换三张， 并且产生相应的事件
-func (h *huansanzhangStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
-	result, err = ai.AIEventGenerateResult{
+func (h *huansanzhangStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResult, err error) {
+	result, err = ai.AIResult{
 		Events: []ai.AIEvent{},
 	}, nil
 

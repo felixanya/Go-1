@@ -59,7 +59,7 @@ func (model *MjEventModel) StartProcessEvents() {
 		continueModel.ContinueDesk(mjContext.GetFixNextBankerSeat(), int(mjContext.GetNextBankerSeat()), statistics)
 	}()
 
-	event := desk.DeskEvent{EventID: int(server_pb.EventID_event_start_game), EventType: fixed.NormalEvent, Desk: model.GetDesk(),
+	event := desk.DeskEvent{EventID: int(server_pb.EventID_event_start_game), EventType: fixed.NormalEvent,
 		StateNumber: model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).StateNumber,
 	}
 	logrus.Debugf("mjContext----------------------(%v)", model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).MjContext.BaseCoin)
@@ -99,7 +99,7 @@ func (model *MjEventModel) pushAutoEvent(autoEvent *server_pb.AutoEvent, stateNu
 		return
 	}
 
-	event := desk.DeskEvent{EventID: int(autoEvent.EventId), EventType: fixed.NormalEvent, Context: autoEvent.EventContext, StateNumber: stateNumber, Desk: model.GetDesk()}
+	event := desk.DeskEvent{EventID: int(autoEvent.EventId), EventType: fixed.NormalEvent, Context: autoEvent.EventContext, StateNumber: stateNumber}
 	model.PushEvent(event)
 }
 
@@ -119,7 +119,7 @@ func (model *MjEventModel) PushRequest(playerID uint64, head *steve_proto_gaterp
 		logEntry.WithError(err).Errorln("消息转事件失败")
 		return
 	}
-	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent, Desk: model.GetDesk(),
+	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent,
 		StateNumber: model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).StateNumber,
 		Context:     eventContext,
 		PlayerID:    playerID,
@@ -428,7 +428,7 @@ func needCompareStateNumber(event *desk.DeskEvent) bool {
 func (model *MjEventModel) genTimerEvent() []desk.DeskEvent {
 	// 先将 context 指针读出来拷贝， 后面的 context 修改都会分配一块新的内存
 	dContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext)
-	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventGenerateParams{
+	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventParams{
 		Desk:      model.GetDesk(),
 		StartTime: dContext.StateTime,
 	})

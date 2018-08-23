@@ -30,14 +30,8 @@ const (
 	RobotAI
 )
 
-// PlayerAIInfo 玩家 AI 信息
-type PlayerAIInfo struct {
-	AIType  AIType // AI 类型
-	RobotLv int    // 机器人级别
-}
-
-// AIEventGenerateParams 生成 AI 事件需要的参数
-type AIEventGenerateParams struct {
+// AIParams 生成 AI 事件需要的参数
+type AIParams struct {
 	MajongContext *majong.MajongContext
 	DDZContext    *ddz.DDZContext
 	PlayerID      uint64
@@ -51,11 +45,11 @@ type AIEvent struct {
 	Context interface{}
 }
 
-// AIEventGenerateResult AI 事件生成结果
-type AIEventGenerateResult struct {
+// AIResult AI 事件生成结果
+type AIResult struct {
 	Events []AIEvent
 }
 
 type CommonAI interface {
-	GenerateAIEvent(params AIEventGenerateParams) (AIEventGenerateResult, error)
+	GenerateAIEvent(params AIParams) (AIResult, error)
 }

@@ -16,8 +16,8 @@ type chupaiWenxunStateAI struct {
 
 // GenerateAIEvent 生成 出牌问询AI 事件
 // 无论是超时、托管还是机器人，胡过了自动胡，没胡过的其他操作都默认弃， 并且产生相应的事件
-func (h *chupaiWenxunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
-	result, err = ai.AIEventGenerateResult{
+func (h *chupaiWenxunStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResult, err error) {
+	result, err = ai.AIResult{
 		Events: []ai.AIEvent{},
 	}, nil
 
@@ -128,7 +128,7 @@ func (h *chupaiWenxunStateAI) chupaiWenxun(player *majong.Player) ai.AIEvent {
 	return qi(player)
 }
 
-func (h *chupaiWenxunStateAI) checkAIEvent(player *majong.Player, mjContext *majong.MajongContext, params ai.AIEventGenerateParams) error {
+func (h *chupaiWenxunStateAI) checkAIEvent(player *majong.Player, mjContext *majong.MajongContext, params ai.AIParams) error {
 	err := fmt.Errorf("不生成自动事件")
 	if player.GetHasSelected() {
 		return err

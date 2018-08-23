@@ -34,7 +34,7 @@ type zixunStateAI struct {
 //				之前没有胡过,自动事件:
 // 								1,出摸到的那张牌
 //								2,如果是庄家首次出牌,出最右侧的牌
-func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
+func (h *zixunStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResult, err error) {
 	mjContext := params.MajongContext
 	player := gutils.GetMajongPlayer(params.PlayerID, mjContext)
 	if h.checkAIEvent(player, mjContext, params) != nil {
@@ -71,7 +71,7 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 		aiEvent = h.generateRobot(player, mjContext)
 	}
 
-	result, err = ai.AIEventGenerateResult{
+	result, err = ai.AIResult{
 		Events: []ai.AIEvent{},
 	}, nil
 
@@ -79,7 +79,7 @@ func (h *zixunStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result 
 	return
 }
 
-func (h *zixunStateAI) checkAIEvent(player *majong.Player, mjContext *majong.MajongContext, params ai.AIEventGenerateParams) error {
+func (h *zixunStateAI) checkAIEvent(player *majong.Player, mjContext *majong.MajongContext, params ai.AIParams) error {
 
 	if mjContext.GetCurState() != majong.StateID_state_zixun {
 		return fmt.Errorf("当前不是自询状态")

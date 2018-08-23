@@ -14,8 +14,8 @@ type dingqueStateAI struct {
 
 // GenerateAIEvent 生成 AI 事件
 // 无论是超时、托管还是机器人，都选最少的牌作为定缺牌， 并且产生相应的事件
-func (h *dingqueStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
-	result, err = ai.AIEventGenerateResult{
+func (h *dingqueStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResult, err error) {
+	result, err = ai.AIResult{
 		Events: []ai.AIEvent{},
 	}, nil
 

@@ -16,7 +16,7 @@ type playStateAI struct {
 
 // GenerateAIEvent 生成 出牌AI 事件
 // 无论是超时、托管还是机器人，胡过了自动胡，没胡过的其他操作都默认弃， 并且产生相应的事件
-func (playAI *playStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
+func (playAI *playStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResult, err error) {
 	ddzContext := params.DDZContext
 	// 没到自己打牌
 	if ddzContext.GetCurrentPlayerId() != params.PlayerID {

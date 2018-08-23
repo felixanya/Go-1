@@ -75,7 +75,7 @@ func (model *DDZEventModel) StartProcessEvents() {
 		continueModel := GetContinueModel(model.GetDesk().GetUid())
 		continueModel.ContinueDesk(false, 0, statistics)
 	}()
-	event := desk.DeskEvent{EventID: int(ddz.EventID_event_start_game), EventType: fixed.NormalEvent, Desk: model.GetDesk()}
+	event := desk.DeskEvent{EventID: int(ddz.EventID_event_start_game), EventType: fixed.NormalEvent}
 	model.PushEvent(event)
 }
 
@@ -119,7 +119,7 @@ func (model *DDZEventModel) PushRequest(playerID uint64, head *steve_proto_gater
 		entry.Warningln("没有对应事件")
 		return
 	}
-	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent, Context: eventData, PlayerID: playerID, Desk: model.GetDesk()}
+	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent, Context: eventData, PlayerID: playerID}
 	model.PushEvent(event)
 }
 
@@ -444,7 +444,7 @@ func (model *DDZEventModel) processEvent(eventID int, eventContext interface{}) 
 		go func() {
 			timer := time.NewTimer(result.AutoEventDuration)
 			<-timer.C
-			model.PushEvent(desk.DeskEvent{EventID: result.AutoEventID, EventType: fixed.NormalEvent, Context: result.AutoEventContext, Desk: model.GetDesk()})
+			model.PushEvent(desk.DeskEvent{EventID: result.AutoEventID, EventType: fixed.NormalEvent, Context: result.AutoEventContext})
 		}()
 	}
 	return model.checkGameOver(entry)
@@ -470,7 +470,7 @@ func (model *DDZEventModel) genTimerEvent() []desk.DeskEvent {
 	ddzContext := &dContext.DDZContext
 
 	// 产生AI事件
-	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventGenerateParams{
+	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventParams{
 		Desk:      model.GetDesk(),
 		StartTime: ddzContext.GetStartTime(),
 	})
