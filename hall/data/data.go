@@ -22,7 +22,7 @@ var idAllocObject *gutils.Node
 var showUID = "max_show_uid"
 
 // redis 过期时间
-var redisTimeOut = time.Hour * 24
+var redisTimeOut = time.Minute * 10
 
 // 玩家基本信息列表
 var playerInfoList = map[int32]string{
