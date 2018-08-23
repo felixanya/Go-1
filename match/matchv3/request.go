@@ -153,6 +153,7 @@ func translateToDeskPlayer(player *matchPlayer) *match.DeskPlayerInfo {
 	playerName := playerInfo.GetNickName()
 	playerGender := playerInfo.GetGender()
 	playerAvatar := playerInfo.GetAvatar()
+	playerShowuid := playerInfo.GetShowUid()
 
 	// 机器人暂时临时写入,因为hall服没有机器人的信息,以后需更改
 	if player.robotLv != 0 {
@@ -166,7 +167,7 @@ func translateToDeskPlayer(player *matchPlayer) *match.DeskPlayerInfo {
 		Seat:     &player.seat,
 		Gender:   proto.Uint32(playerGender),
 		Avatar:   proto.String(playerAvatar),
-		ShowUid:  proto.Int64(0),
+		ShowUid:  proto.Int64(int64(playerShowuid)),
 	}
 
 	return &deskPlayer

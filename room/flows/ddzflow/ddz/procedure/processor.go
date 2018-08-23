@@ -3,6 +3,7 @@ package procedure
 import (
 	"steve/client_pb/room"
 	"steve/entity/poker/ddz"
+	"steve/external/hallclient"
 	"steve/room/flows/ddzflow/ddz/ddzmachine"
 	"steve/room/flows/ddzflow/ddz/states"
 	"steve/room/flows/ddzflow/machine"
@@ -91,13 +92,30 @@ func TranslateDDZPlayerToRoomPlayer(ddzPlayer ddz.Player, seat uint32) room.Room
 		coin = roomPlayer.GetCoin()
 	}
 
+	var name string = "player" // 名字
+	var gender uint32 = 0      // 性别
+	var avatar string = ""     // 头像
+	var showUid int64 = 0      // 显示ID
+
+	// 从hall服获取玩家信息
+	playerInfoRsp, err := hallclient.GetPlayerInfo(playerID)
+	if err != nil || playerInfoRsp == nil {
+		logrus.WithError(err).Errorln("TranslateDDZPlayerToRoomPlayer() 从hall服获取玩家游戏信息失败")
+	}
+	name = playerInfoRsp.GetNickName()
+	gender = playerInfoRsp.GetGender()
+	avatar = playerInfoRsp.GetAvatar()
+	showUid = int64(playerInfoRsp.GetShowUid())
+
 	return room.RoomPlayerInfo{
 		PlayerId: proto.Uint64(playerID),
-		Name:     proto.String("player" + string(playerID)),
+		Name:     proto.String(name),
 		Coin:     proto.Uint64(coin),
 		Seat:     proto.Uint32(seat),
 		// Location: TODO 没地方拿
-		ShowUid: proto.Int64(0), // todo
+		ShowUid: proto.Int64(showUid),
 		Quited:  proto.Bool(roomPlayer.IsQuit()),
+		Gender:  proto.Uint32(gender),
+		Avatar:  proto.String(avatar),
 	}
 }
