@@ -158,19 +158,22 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 	} else {
 		players := mjContext.GetPlayers()
 		duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
-
 		actionPlayers := GetActionPlayers(&mjContext)
+		for _, playerId := range actionPlayers {
+			deskPlayer := playerMgr.GetPlayer(playerId)
+			if AddTimeCountDown(deskPlayer, startTime, duration) {
+				aeg.handlePlayerAI(&result, AI, playerId, params.Desk, OverTimeAI, 0, nil, &mjContext)
+			}
+		}
+
+		if len(result.Events) > 0 {
+			return
+		}
+
 		for _, player := range players {
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
-
-			if ContainsUint64(actionPlayers, player.GetPlayerId()) && AddTimeCountDown(deskPlayer, startTime, duration) {
-				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, OverTimeAI, 0, nil, &mjContext)
-			}
-			if len(result.Events) > 0 {
-				continue
-			}
-
 			isRobot := deskPlayer.GetRobotLv() != 0
+
 			if isRobot {
 				duration = 1 * time.Second
 				aiType = RobotAI
@@ -184,6 +187,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 				duration = 2 * time.Second
 				aiType = TuoGuangAI
 			}
+
 			if time.Now().Sub(startTime) >= duration && aiType != 0 {
 				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, aiType, deskPlayer.GetRobotLv(), nil, &mjContext)
 			}
@@ -258,13 +262,4 @@ func GetActionPlayers(ctx *majong.MajongContext) []uint64 {
 		}
 	}
 	return actionPlayers
-}
-
-func ContainsUint64(players []uint64, inPlayer uint64) bool {
-	for _, player := range players {
-		if player == inPlayer {
-			return true
-		}
-	}
-	return false
 }
