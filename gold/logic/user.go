@@ -64,11 +64,11 @@ func (ug *userGold) CheckSeq(seq string) bool {
 
 // 对指定货币加金币
 func (ug *userGold) Add(goldType int16, value int64) (int64, error) {
-	if goldType < 0 || goldType > 1000 {
-		return 0, define.ErrGoldType
-	}
 
 	// 可能需要判断加减金币后，金币值变成负值！
+	if ug.goldList[goldType] + value < 0 {
+		return ug.goldList[goldType] , define.ErrNoEnough
+	}
 
 	ug.goldList[goldType] += value
 

@@ -18,6 +18,7 @@ var (
 	ErrNoUser   = fmt.Errorf("no user")
 	ErrLoadDB   = fmt.Errorf("load from db failed")
 	ErrSeqNo    = fmt.Errorf("seq is same")
+	ErrNoEnough    = fmt.Errorf("gold no enough")
 )
 
 // 货币类型

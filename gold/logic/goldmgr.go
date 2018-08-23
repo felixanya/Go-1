@@ -216,7 +216,7 @@ func (gm *GoldMgr) AddGold(uid uint64, goldType int16, value int64, seq string, 
 		plog.Status = 2
 		// 插入金币交易记录到DB
 		data.InsertGoldLog(plog)
-		return 0, err
+		return after, err
 	}
 	plog.AfterBalance = after
 
