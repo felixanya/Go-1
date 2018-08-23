@@ -141,6 +141,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 			isRobot := deskPlayer.GetRobotLv() != 0
 
 			aiType := OverTimeAI
+			duration := time.Second * time.Duration(ddzContext.Duration)
 			if isRobot {
 				duration = 1 * time.Second
 				aiType = RobotAI
@@ -185,6 +186,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 			isRobot := deskPlayer.GetRobotLv() != 0
 
 			aiType := OverTimeAI
+			duration := time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
 			if isRobot {
 				duration = 1 * time.Second
 				aiType = RobotAI
