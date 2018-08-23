@@ -52,7 +52,9 @@ func GetAtEvent() DeskAutoEventGenerator {
 }
 
 func (aeg *autoEventGenerator) handlePlayerAI(result *AutoEventResult, AI CommonAI, params AIParams) {
-	// 由该AI产生具体的AI事件
+	if params.RobotLv == 0 {
+		logrus.WithField("params", params).Debugln("处理自动事件")
+	}
 	aiResult, err := AI.GenerateAIEvent(params)
 
 	var eventType int
@@ -109,7 +111,6 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 
 	startTime := params.StartTime
 	playerMgr := playerpkg.GetPlayerMgr()
-	var aiType AIType
 	var duration time.Duration
 	if gameID == int(room.GameId_GAMEID_DOUDIZHU) {
 		// 超时事件优先处理
@@ -123,7 +124,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 						MajongContext: &mjContext,
 						DDZContext:    &ddzContext,
 						PlayerID:      playerId,
-						AIType:        aiType,
+						AIType:        OverTimeAI,
 						RobotLv:       deskPlayer.GetRobotLv(),
 					})
 				}
@@ -140,6 +141,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
 			isRobot := deskPlayer.GetRobotLv() != 0
 
+			aiType := OverTimeAI
 			if isRobot {
 				duration = 1 * time.Second
 				aiType = RobotAI
@@ -148,7 +150,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 				aiType = TuoGuangAI
 			}
 
-			if time.Now().Sub(startTime) > duration && aiType != 0 {
+			if time.Now().Sub(startTime) > duration && aiType != OverTimeAI {
 				aeg.handlePlayerAI(&result, AI, AIParams{
 					MajongContext: &mjContext,
 					DDZContext:    &ddzContext,
@@ -168,7 +170,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 					MajongContext: &mjContext,
 					DDZContext:    &ddzContext,
 					PlayerID:      playerId,
-					AIType:        aiType,
+					AIType:        OverTimeAI,
 					RobotLv:       deskPlayer.GetRobotLv(),
 				})
 			}
@@ -183,6 +185,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
 			isRobot := deskPlayer.GetRobotLv() != 0
 
+			aiType := OverTimeAI
 			if isRobot {
 				duration = 1 * time.Second
 				aiType = RobotAI
@@ -197,7 +200,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 				aiType = TuoGuangAI
 			}
 
-			if time.Now().Sub(startTime) >= duration && aiType != 0 {
+			if time.Now().Sub(startTime) >= duration && aiType != OverTimeAI {
 				aeg.handlePlayerAI(&result, AI, AIParams{
 					MajongContext: &mjContext,
 					DDZContext:    &ddzContext,
@@ -213,7 +216,8 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 
 func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duration time.Duration) bool {
 	overTime := time.Now().Sub(startTime) >= duration
-	if overTime && !deskPlayer.CountingDown && deskPlayer.AddTime > 0 {
+	addTimeOver := deskPlayer.AddTime <= 0
+	if overTime && !deskPlayer.CountingDown && !addTimeOver {
 		deskPlayer.CountingDown = true
 		msg := room.RoomCountDownNtf{CountDown: proto.Uint32(0), AddCountDown: proto.Uint32(uint32(math.Round(deskPlayer.AddTime.Seconds())))}
 		util.SendMessageToPlayer(deskPlayer.GetPlayerID(), msgid.MsgID_ROOM_COUNT_DOWN_NTF, &msg)
@@ -224,13 +228,16 @@ func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duratio
 		if deskPlayer.AddTime <= 0 {
 			deskPlayer.AddTime = 0
 			deskPlayer.CountingDown = false
-			deskPlayer.SetTuoguan(true, true)
+			addTimeOver = true
+			logrus.WithField("playerId", deskPlayer.PlayerID).Debugln("玩家补时用尽")
 		}
-		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).WithField("duration", duration).Debugln("玩家补时")
-	} else if deskPlayer.AddTime <= 0 && overTime {
+	}
+
+	if addTimeOver && overTime {
 		deskPlayer.SetTuoguan(true, true)
 	}
-	return !deskPlayer.CountingDown && overTime || deskPlayer.CountingDown && deskPlayer.AddTime <= 0
+
+	return !deskPlayer.CountingDown && overTime || deskPlayer.CountingDown && addTimeOver
 }
 
 func (aeg *autoEventGenerator) RegisterAI(gameID int, stateID int32, AI CommonAI) {
