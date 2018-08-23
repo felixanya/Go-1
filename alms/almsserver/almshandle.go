@@ -97,9 +97,9 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 		return
 	}
 
-	// 除了游戏中才判断是否救济金达标
-	if reqType != client_alms.AlmsReqType_INGAME && playerGold > ac.GetNorm {
-		entry.Debugln(fmt.Sprintf("玩家身上的金币没有达到救济线  playerGold(%d) - GetNorm(%d) reqType(%v)", playerGold, ac.GetNorm, reqType))
+	// 除了游戏中才判断是否救济金达标，必须低于救济线
+	if reqType != client_alms.AlmsReqType_INGAME && playerGold >= ac.GetNorm {
+		entry.Debugln(fmt.Sprintf("玩家身上的金币没有达到救济线以内  playerGold(%d) - GetNorm(%d) reqType(%v)", playerGold, ac.GetNorm, reqType))
 		response.Result = proto.Bool(false)
 		return
 	}
