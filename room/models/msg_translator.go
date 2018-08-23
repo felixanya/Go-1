@@ -141,5 +141,6 @@ func translateToRoomPlayer(player *player.Player) room.RoomPlayerInfo {
 		Seat:     proto.Uint32(uint32(player.GetSeat())),
 		// Location: TODO 没地方拿
 		ShowUid: proto.Int64(0),
+		Quited:  proto.Bool(player.IsQuit()),
 	}
 }
