@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var TickTime = time.Millisecond * 1000
+var TickTime = time.Millisecond * 200
 
 // AutoEventParams 生成自动事件的参数
 type AutoEventParams struct {
@@ -111,10 +111,9 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 
 	startTime := params.StartTime
 	playerMgr := playerpkg.GetPlayerMgr()
-	var duration time.Duration
 	if gameID == int(room.GameId_GAMEID_DOUDIZHU) {
 		// 超时事件优先处理
-		duration = time.Second * time.Duration(ddzContext.Duration)
+		duration := time.Second * time.Duration(ddzContext.Duration)
 		countDownPlayers := ddzContext.CountDownPlayers
 		if duration != 0 {
 			for _, playerId := range countDownPlayers {
@@ -161,7 +160,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventParams) (result AutoE
 			}
 		}
 	} else {
-		duration = time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
+		duration := time.Second * time.Duration(viper.GetInt(fixed.XingPaiTimeOut))
 		actionPlayers := GetActionPlayers(&mjContext)
 		for _, playerId := range actionPlayers {
 			deskPlayer := playerMgr.GetPlayer(playerId)
