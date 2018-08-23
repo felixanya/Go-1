@@ -6,6 +6,7 @@ package majong
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -86,6 +87,19 @@ var HuType_value = map[string]int32{
 
 // 玩家行牌状态
 type XingPaiState int32
+
+func (xp XingPaiState) String() string {
+	switch xp {
+	case XingPaiState_normal:
+		return "Normal"
+	case XingPaiState_give_up:
+		return "GiveUp"
+	case XingPaiState_hu:
+		return "Hu"
+	default:
+		return "Unknow XingPaiState:" + strconv.Itoa(int(xp))
+	}
+}
 
 const (
 	XingPaiState_normal  XingPaiState = 0

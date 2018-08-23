@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var TickTime = time.Millisecond * 200
+var TickTime = time.Millisecond * 1000
 
 // AutoEventGenerateParams 生成自动事件的参数
 type AutoEventGenerateParams struct {
@@ -53,6 +53,7 @@ func GetAtEvent() DeskAutoEventGenerator {
 
 func (aeg *autoEventGenerator) handlePlayerAI(result *AutoEventGenerateResult, AI CommonAI,
 	playerID uint64, deskObj *desk.Desk, aiType AIType, robotLv int, ddzContext *ddz.DDZContext, mjContext *majong.MajongContext) {
+	logrus.WithField("aiType", aiType).WithField("playerId", playerID).WithField("robotlv", robotLv).Debugln("处理自动事件")
 
 	// 由该AI产生具体的AI事件
 	aiResult, err := AI.GenerateAIEvent(AIEventGenerateParams{
@@ -127,7 +128,6 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 			for _, playerId := range countDownPlayers {
 				deskPlayer := playerMgr.GetPlayer(playerId)
 				if AddTimeCountDown(deskPlayer, startTime, duration) {
-					deskPlayer.CountingDown = false
 					aeg.handlePlayerAI(&result, AI, playerId, params.Desk, OverTimeAI, 0, &ddzContext, nil)
 				}
 			}
@@ -164,7 +164,6 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 			deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
 
 			if ContainsUint64(actionPlayers, player.GetPlayerId()) && AddTimeCountDown(deskPlayer, startTime, duration) {
-				deskPlayer.CountingDown = false
 				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, OverTimeAI, 0, nil, &mjContext)
 			}
 			if len(result.Events) > 0 {
@@ -186,7 +185,7 @@ func (aeg *autoEventGenerator) GenerateV2(params *AutoEventGenerateParams) (resu
 				aiType = TuoGuangAI
 			}
 			if time.Now().Sub(startTime) >= duration && aiType != 0 {
-				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, aiType, 0, nil, &mjContext)
+				aeg.handlePlayerAI(&result, AI, player.GetPlayerId(), params.Desk, aiType, deskPlayer.GetRobotLv(), nil, &mjContext)
 			}
 		}
 	}
@@ -205,11 +204,11 @@ func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duratio
 		deskPlayer.AddTime = deskPlayer.AddTime - TickTime
 		if deskPlayer.AddTime <= 0 {
 			deskPlayer.AddTime = 0
+			deskPlayer.CountingDown = false
 			deskPlayer.SetTuoguan(true, true)
 		}
-		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).Debugln("玩家补时")
-	}
-	if deskPlayer.AddTime <= 0 && overTime {
+		logrus.WithField("playerId", deskPlayer.PlayerID).WithField("addTime", deskPlayer.AddTime).WithField("duration", duration).Debugln("玩家补时")
+	} else if deskPlayer.AddTime <= 0 && overTime {
 		deskPlayer.SetTuoguan(true, true)
 	}
 	return !deskPlayer.CountingDown && overTime || deskPlayer.CountingDown && deskPlayer.AddTime <= 0

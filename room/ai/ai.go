@@ -8,6 +8,19 @@ import (
 // AIType AI 类型
 type AIType int
 
+func (ai AIType) String() string {
+	switch ai {
+	case OverTimeAI:
+		return "OverTime"
+	case TuoGuangAI:
+		return "TuoGuan"
+	case RobotAI:
+		return "Robot"
+	default:
+		return "Unknow AI"
+	}
+}
+
 const (
 	// OverTimeAI 超时 AI
 	OverTimeAI AIType = iota
