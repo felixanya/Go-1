@@ -24,12 +24,13 @@ func ParseToGameLevelConfigMap(jsonStr string) (conf []entityConf.GameLevelConfi
 }
 
 // GetRoleInitConfigMap 获取角色初始配置
-func GetRoleInitConfigMap() (roleConf []entityConf.RoleInitConfig, err error) {
+func GetRoleInitConfigMap() (roleConf []entityConf.RoleConfig, err error) {
 	roleConfStr, err := GetConfigUntilSucc("role", "init", reTryCount, reTryTime)
 	if err != nil {
 		logrus.WithError(err).Errorln("获取角色初始属性配置失败")
 		return nil, err
 	}
+
 	if err := json.Unmarshal([]byte(roleConfStr), &roleConf); err != nil {
 		logrus.WithError(err).Errorf("游戏级别配置数据反序列化失败：%s", err.Error())
 		return nil, err
@@ -55,15 +56,15 @@ func GetAlmsConfigMap() (conf []entityConf.AlmsConfig, err error) {
 }
 
 // GetGameConfig 获取游戏配置信息
-func GetGameConfig(gameId int) (gameConf entityConf.GameConfig, err error) {
+func GetGameConfig(gameID int) (gameConf entityConf.GameConfig, err error) {
 	gameConfigMap, err := GetGameConfigMap()
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏级别配置失败！！")
 		return
 	}
-	gameConf, exists := gameConfigMap[gameId]
+	gameConf, exists := gameConfigMap[gameID]
 	if !exists {
-		logrus.WithField("gameConfigMap", gameConfigMap).WithField("gameId", gameId).Errorln("找不到游戏配置")
+		logrus.WithField("gameConfigMap", gameConfigMap).WithField("gameId", gameID).Errorln("找不到游戏配置")
 		return
 	}
 	return
@@ -101,20 +102,20 @@ func GetGameConfigMap() (gameConfMap map[int]entityConf.GameConfig, err error) {
 }
 
 // GetGameLevelConfig 获取游戏级别配置信息
-func GetGameLevelConfig(gameId int, levelId int) (levelConf entityConf.GameLevelConfig, err error) {
+func GetGameLevelConfig(gameID int, levelID int) (levelConf entityConf.GameLevelConfig, err error) {
 	gameLevelMap, err := GetGameLevelConfigMap()
 	if err != nil {
 		logrus.WithError(err).Errorln("获取游戏级别配置失败！！")
 		return
 	}
-	levelMap, exists := gameLevelMap[gameId]
+	levelMap, exists := gameLevelMap[gameID]
 	if !exists {
-		logrus.WithField("gameLevelMap", gameLevelMap).WithField("gameId", gameId).Errorln("找不到游戏配置")
+		logrus.WithField("gameLevelMap", gameLevelMap).WithField("gameId", gameID).Errorln("找不到游戏配置")
 		return
 	}
-	levelConf, exists = levelMap[levelId]
+	levelConf, exists = levelMap[levelID]
 	if !exists {
-		logrus.WithField("gameLevelMap", gameLevelMap).WithField("gameId", gameId).WithField("levelId", levelId).Errorln("找不到游戏场次")
+		logrus.WithField("gameLevelMap", gameLevelMap).WithField("gameId", gameID).WithField("levelId", levelID).Errorln("找不到游戏场次")
 		return
 	}
 	return

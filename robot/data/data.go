@@ -159,3 +159,17 @@ func GetMysqlRobotFieldValuedAll(currRobotMap map[uint64]*RobotInfo) error {
 	}
 	return nil
 }
+
+// UpdataRobotGold 更新机器人金币
+func UpdataRobotGold(playerID uint64, gold int64) (int64, error) {
+	robotInfo, err := GetRobotInfoByPlayerID(playerID)
+	if err != nil {
+		return 0, err
+	}
+	if robotInfo == nil {
+		return 0, fmt.Errorf("robotInfo eq nil playerID(%d)", playerID)
+	}
+	oldGold := robotInfo.Gold
+	robotInfo.Gold = gold
+	return oldGold, nil
+}

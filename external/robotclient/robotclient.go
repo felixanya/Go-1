@@ -148,6 +148,32 @@ func IsRobotPlayer(playerID uint64) (bool, error) {
 	return rsp.GetResult(), nil
 }
 
+// UpdataRobotGold 更新机器人金币
+// param:  playerID,gold
+// return: 更新结果，错误信息
+func UpdataRobotGold(playerID uint64, gold int64) (bool, error) {
+	// 得到服务连接
+	con, err := getRobotServer()
+	if err != nil || con == nil {
+		return false, errors.New("no connection")
+	}
+	// 新建Client
+	client := robot.NewRobotServiceClient(con)
+	// 调用RPC方法
+	rsp, err := client.UpdataRobotGold(context.Background(), &robot.UpdataRobotGoldReq{
+		RobotPlayerId: playerID,
+		Gold:          gold,
+	})
+	// 检测返回值
+	if err != nil {
+		return false, err
+	}
+	if rsp.ErrCode != robot.ErrCode_EC_SUCCESS {
+		return false, errors.New("update player gold failed")
+	}
+	return rsp.Result, nil
+}
+
 func getRobotServer() (*grpc.ClientConn, error) {
 	e := structs.GetGlobalExposer()
 	con, err := e.RPCClient.GetConnectByServerName(common.RobotServiceName)

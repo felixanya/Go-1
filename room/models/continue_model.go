@@ -3,8 +3,10 @@ package models
 import (
 	client_match_pb "steve/client_pb/match"
 	"steve/client_pb/msgid"
+	"steve/client_pb/room"
 	"steve/external/goldclient"
 	"steve/external/hallclient"
+	"steve/gutils"
 	"steve/room/desk"
 	"steve/room/fixed"
 	playerpkg "steve/room/player"
@@ -65,7 +67,9 @@ func (model *ContinueModel) startContinue() {
 func (model *ContinueModel) runv2() {
 	model.continueTime = time.Now()
 	ticker := time.NewTicker(time.Second * 1)
-	quitChannel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid()).getLeaveChannel()
+	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
+	quitChannel := playerModel.getLeaveChannel()
+	enterChannel := playerModel.getEnterChannel()
 forstart:
 	for {
 		select {
@@ -81,6 +85,20 @@ forstart:
 			{
 				model.handleCancelRequest(quitInfo.playerID)
 				quitInfo.finishChannel <- nil
+				break forstart
+			}
+		case enterInfo := <-enterChannel:
+			{
+				playerID := enterInfo.playerID
+				player := playerpkg.GetPlayerMgr().GetPlayer(playerID)
+				if player != nil {
+					player.SetQuit(true)
+				}
+				gutils.SendMessage(playerID, msgid.MsgID_ROOM_RESUME_GAME_RSP, &room.RoomResumeGameRsp{
+					ResumeRes: room.RoomError_DESK_NO_GAME_PLAYING.Enum(),
+				})
+				model.handleCancelRequest(playerID)
+				enterInfo.finishChannel <- nil
 				break forstart
 			}
 		case <-ticker.C:

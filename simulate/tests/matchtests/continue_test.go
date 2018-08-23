@@ -212,3 +212,23 @@ func Test_ContinueQuit(t *testing.T) {
 		assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, nil))
 	}
 }
+
+// Test_ContinueEnter 等待续局状态下请求恢复牌局。牌局解散，并且回复不在游戏中
+func Test_ContinueEnter(t *testing.T) {
+	players := startAndFinishGame(t)
+
+	for i := 1; i < len(players); i++ {
+		players[i].AddExpectors(msgid.MsgID_MATCH_CONTINUE_DESK_DIMISS_NTF)
+	}
+
+	players[0].AddExpectors(msgid.MsgID_ROOM_RESUME_GAME_RSP)
+	players[0].GetClient().SendPackage(utils.CreateMsgHead(msgid.MsgID_ROOM_RESUME_GAME_REQ), &room.RoomResumeGameReq{})
+	for i := 1; i < len(players); i++ {
+		expector := players[i].GetExpector(msgid.MsgID_MATCH_CONTINUE_DESK_DIMISS_NTF)
+		assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, nil))
+	}
+	resumeExpector := players[0].GetExpector(msgid.MsgID_ROOM_RESUME_GAME_RSP)
+	resumeRsp := room.RoomResumeGameRsp{}
+	assert.Nil(t, resumeExpector.Recv(global.DefaultWaitMessageTime, &resumeRsp))
+	assert.Equal(t, resumeRsp.GetResumeRes(), room.RoomError_DESK_NO_GAME_PLAYING)
+}
