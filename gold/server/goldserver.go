@@ -13,6 +13,7 @@ import (
 	"steve/server_pb/gold"
 
 	"github.com/Sirupsen/logrus"
+	"steve/gold/define"
 )
 
 // GoldService 实现 gold.GoldServer
@@ -22,14 +23,14 @@ var _ gold.GoldServer = new(GoldServer)
 
 // 获取玩家金币
 func (gs *GoldServer) GetGold(ctx context.Context, request *gold.GetGoldReq) (response *gold.GetGoldRsp, err error) {
-	logrus.Debugln("GetGold req", *request)
+	logrus.Debugln("GetGold req: ", *request)
 	response = &gold.GetGoldRsp{}
 	response.ErrCode = gold.ResultStat_FAILED
 
 	// 参数检查
 	if request.GetItem() == nil {
 		response.ErrCode = gold.ResultStat_ERR_ARG
-		logrus.Errorln("GetGold resp", *response)
+		logrus.Errorln("GetGold err: ", *response)
 		return response, nil
 	}
 
@@ -40,7 +41,7 @@ func (gs *GoldServer) GetGold(ctx context.Context, request *gold.GetGoldReq) (re
 	// 逻辑代码返回错误
 	if err != nil {
 		response.ErrCode = gold.ResultStat_FAILED
-		logrus.WithError(err).Errorln("GetGold resp", *response)
+		logrus.WithError(err).Errorln("GetGold err: ", *response)
 		return response, nil
 	}
 	// 设置返回值
@@ -48,13 +49,13 @@ func (gs *GoldServer) GetGold(ctx context.Context, request *gold.GetGoldReq) (re
 	response.Item = item
 
 	response.ErrCode = gold.ResultStat_SUCCEED
-	logrus.Debugln("GetGold resp", *response)
+	logrus.Debugln("GetGold resp: ", *response)
 	return response, nil
 }
 
 // 加玩家金币
 func (gs *GoldServer) AddGold(ctx context.Context, request *gold.AddGoldReq) (response *gold.AddGoldRsp, err error) {
-	logrus.Debugln("AddGold req", *request)
+	logrus.Debugln("AddGold req: ", *request)
 
 	response = &gold.AddGoldRsp{}
 	response.ErrCode = gold.ResultStat_FAILED
@@ -62,7 +63,7 @@ func (gs *GoldServer) AddGold(ctx context.Context, request *gold.AddGoldReq) (re
 	// 参数检查
 	if request.GetItem() == nil {
 		response.ErrCode = gold.ResultStat_ERR_ARG
-		logrus.Errorln("AddGold resp", *response)
+		logrus.Errorln("AddGold err: ", *response)
 		return response, nil
 	}
 
@@ -73,14 +74,19 @@ func (gs *GoldServer) AddGold(ctx context.Context, request *gold.AddGoldReq) (re
 
 	// 逻辑代码返回错误
 	if err != nil {
-		response.ErrCode = gold.ResultStat_FAILED
-		logrus.Errorln("AddGold resp", *response)
+		if err == define.ErrNoEnough {
+			response.ErrCode = gold.ResultStat_ERR_NO_GOLD
+		} else {
+			response.ErrCode = gold.ResultStat_FAILED
+		}
+		response.CurValue = after
+		logrus.Errorln("AddGold  err: ", *response)
 		return response, nil
 	}
 	// 设置返回值
 	response.CurValue = after
 
 	response.ErrCode = gold.ResultStat_SUCCEED
-	logrus.Debugln("AddGold resp", *response)
+	logrus.Debugln("AddGold resp: ", *response)
 	return response, nil
 }
