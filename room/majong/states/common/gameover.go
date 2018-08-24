@@ -99,7 +99,7 @@ func (s *GameOverState) doRoundSettle(flow interfaces.MajongFlow) {
 		if isNoTingPlayers(player) {
 			noTingPlayers = append(noTingPlayers, player.GetPlayerId())
 		}
-		if player.GetXpState() == majongpb.XingPaiState_give_up {
+		if (player.GetXpState() & majongpb.XingPaiState_give_up) == majongpb.XingPaiState_give_up {
 			giveupPlayers = append(giveupPlayers, playerID)
 		}
 	}
