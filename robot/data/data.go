@@ -112,7 +112,7 @@ func SetRobotPlayerGold(robotPlayer *RobotInfo, playerID uint64, state bool) err
 		logrus.WithError(err).Errorln(fmt.Sprintf("SetRobotPlayerGold 获取金币失败 playerID(%v)", playerID))
 		return fmt.Errorf("SetRobotPlayerGold 获取金币失败 playerID(%v)", playerID)
 	}
-	robotPlayer.Gold = gold + 10
+	robotPlayer.Gold = gold
 	logrus.Debugln(fmt.Sprintf("Gold set %d", robotPlayer.Gold))
 	return nil
 }
