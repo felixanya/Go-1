@@ -66,6 +66,8 @@ func SettleOver(flow interfaces.MajongFlow, message *majongpb.SettleFinishEvent)
 			continue
 		}
 		player.XpState = player.GetXpState() | majongpb.XingPaiState_give_up
+		logrus.Debugf("player:(%d)设置状态为认输-------------:(%v)", pid, player.XpState)
+
 	}
 
 }

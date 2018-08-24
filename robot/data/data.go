@@ -2,6 +2,8 @@ package data
 
 import (
 	"fmt"
+	"steve/external/goldclient"
+	"steve/server_pb/gold"
 	"steve/server_pb/user"
 
 	"github.com/Sirupsen/logrus"
@@ -95,17 +97,39 @@ func ToInitRobotMapReturnLeisure(playerStates []*user.RobotState) (rplayerID uin
 	return rplayerID, robotInfo
 }
 
+//SetRobotPlayerGold 重新获取金币
+func SetRobotPlayerGold(robotPlayer *RobotInfo, playerID uint64, state bool) error {
+	if state { // 空闲才重新获取金币
+		return nil
+	}
+	if robotPlayer == nil {
+		logrus.Debugln("robotPlayer eq nil")
+		return fmt.Errorf("robotPlayer eq nil")
+	}
+	// 从金币服获取
+	gold, err := goldclient.GetGold(uint64(playerID), int16(gold.GoldType_GOLD_COIN))
+	if err != nil {
+		logrus.WithError(err).Errorln(fmt.Sprintf("SetRobotPlayerGold 获取金币失败 playerID(%v)", playerID))
+		return fmt.Errorf("SetRobotPlayerGold 获取金币失败 playerID(%v)", playerID)
+	}
+	robotPlayer.Gold = gold + 10
+	logrus.Debugln(fmt.Sprintf("Gold set %d", robotPlayer.Gold))
+	return nil
+}
+
 // UpdataRobotState 更新机器人状态 true 空闲到使用，false 使用到空闲
 func UpdataRobotState(playerID uint64, state bool) (err error) {
 	curr, isExist2 := initRobotsMap[!state]
 	if isExist2 && curr[playerID] != nil {
 		robot := curr[playerID]
 		delete(initRobotsMap[!state], playerID)
+		SetRobotPlayerGold(robot, playerID, state) //使用到空闲 才从新获取金币
 		initRobotsMap[state][playerID] = robot
 	} else {
 		// 可能重启过,重新从未初始化到初始化
 		if robot, isExist := robotsMap[playerID]; isExist && robot != nil {
 			delete(robotsMap, playerID)
+			SetRobotPlayerGold(robot, playerID, state) //使用到空闲 才从新获取金币
 			initRobotsMap[state][playerID] = robot
 		} else {
 			err = fmt.Errorf("state(%v) initRobotsMap playerID(%d) not Exist", !state, playerID)

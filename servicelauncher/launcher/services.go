@@ -15,7 +15,6 @@ import (
 
 	"steve/servicelauncher/cmd"
 	"steve/structs"
-	"steve/datareport"
 	"steve/configuration/core"
 )
 
@@ -40,7 +39,7 @@ func LoadService() {
 	case "gold":
 		svr = goldcore.NewService()
 	case "datareport":
-		svr = datareport.NewService()
+		//svr = datareport.NewService()
 	case "config":
 		svr = core.NewService()
 	}

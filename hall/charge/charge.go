@@ -58,6 +58,7 @@ func HandleGetChargeInfoReq(playerID uint64, header *steve_proto_gaterpc.Header,
 	fillItems(items, response)
 	response.Result.ErrCode = common.ErrCode_EC_SUCCESS.Enum()
 	response.Result.ErrDesc = proto.String("")
+	entry.WithField("response", response).Debugln("获取商品列表")
 	return
 }
 

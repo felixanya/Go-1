@@ -6,6 +6,7 @@ import (
 	"steve/structs"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/go-xorm/xorm"
 )
 
@@ -78,19 +79,15 @@ func SaveGoldToDB(uid uint64, changeValue int64) error {
 	if err != nil {
 		return err
 	}
-	tpk := &db.TPlayerPacksack{
-		Gold:       int(changeValue),
-		Updatetime: time.Now(),
-		Updateby:   almsServer,
-	}
-	session := engine.Table(pktableName).Where(fmt.Sprintf("playerID=%d", uid))
-	sum, err := session.Update(tpk)
+	sql := fmt.Sprintf("UPDATE %v set gold=%d where playerID=?;", pktableName, changeValue)
+	res, err := engine.Exec(sql, uid)
 	if err != nil {
-		sql, _ := session.LastSQL()
-		return fmt.Errorf("将玩家金币设置到DB失败：(%v), sql:(%s)", err, sql)
+		logrus.Errorf("exec sql err:sql=%s,err=%s", sql, err)
+		return err
 	}
-	if sum == 0 {
-		return fmt.Errorf("修改背包金币失败 playerID(%d) changeValue(%d)", uid, changeValue)
+	if aff, err := res.RowsAffected(); aff == 0 {
+		logrus.Errorf("exec sql Affect err:sql=%s,err=%s", sql, err)
+		return err
 	}
 	return nil
 }

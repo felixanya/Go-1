@@ -148,3 +148,30 @@ func HandlePackSackGold(playerID uint64, header *steve_proto_gaterpc.Header, req
 	}).Debugln("处理背包金币请求成功")
 	return rspMsg
 }
+
+// HandleGetPackSackGold 获取背包金币请求
+func HandleGetPackSackGold(playerID uint64, header *steve_proto_gaterpc.Header, req client_alms.PacksackGetGoldReq) (rspMsg []exchanger.ResponseMsg) {
+	entry := logrus.WithFields(logrus.Fields{
+		"func_name": "HandleGetPackSackGold",
+		"playerID":  playerID,
+	})
+	response := &client_alms.PacksackGetGoldRsp{}
+	response.Result = proto.Bool(false)
+	rspMsg = []exchanger.ResponseMsg{
+		exchanger.ResponseMsg{
+			MsgID: uint32(msgid.MsgID_PACKSACK_GET_GOLD_RSP),
+			Body:  response,
+		},
+	}
+	getPkgold, err := packsack_gold.GetGoldMgr().GetGold(playerID)
+	if err != nil {
+		entry.WithError(err).Debugln("背包金币获取失败")
+		return
+	}
+	response.PacksackGold = proto.Int64(getPkgold)
+	response.Result = proto.Bool(true)
+	entry.WithFields(logrus.Fields{
+		"getGold": getPkgold,
+	}).Debugln("金币服获取金币成功")
+	return rspMsg
+}

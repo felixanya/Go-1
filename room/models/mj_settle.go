@@ -94,8 +94,7 @@ func (majongSettle *MajongSettle) normalSettle(desk *desk.Desk, mjContext *majon
 	deskID := desk.GetUid()
 	deskPlayers := modelMgr.GetPlayerModel(deskID).GetDeskPlayers()
 	giveUpPlayers := getGiveupPlayers(deskPlayers, mjContext) // 认输玩家
-
-	for _, sInfo := range allSettleInfos { // 遍历
+	for _, sInfo := range allSettleInfos {                    // 遍历
 		if majongSettle.handleSettle[sInfo.Id] {
 			continue
 		}
@@ -485,7 +484,7 @@ func (majongSettle *MajongSettle) apartScore2Settle(groupSettleInfos []*majongpb
 func getGiveupPlayers(dPlayers []*playerpkg.Player, mjContext *majongpb.MajongContext) map[uint64]bool {
 	giveupPlayers := make(map[uint64]bool, 0)
 	for _, cPlayer := range mjContext.Players {
-		if cPlayer.GetXpState() == 2 {
+		if (cPlayer.GetXpState() & majongpb.XingPaiState_give_up) == majongpb.XingPaiState_give_up {
 			giveupPlayers[cPlayer.GetPlayerId()] = true
 		}
 	}

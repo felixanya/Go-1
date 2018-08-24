@@ -292,6 +292,7 @@ VALUES
 "showOnlinePeople":1,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 
@@ -307,6 +308,7 @@ VALUES
 "showOnlinePeople":1,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 
@@ -322,6 +324,7 @@ VALUES
 "showOnlinePeople":1,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 
@@ -337,6 +340,7 @@ VALUES
 "showOnlinePeople":1,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 
@@ -352,6 +356,7 @@ VALUES
 "showOnlinePeople":100,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 
@@ -367,6 +372,7 @@ VALUES
 "showOnlinePeople":100,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 
@@ -382,6 +388,7 @@ VALUES
 "showOnlinePeople":100,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 
@@ -397,6 +404,7 @@ VALUES
 "showOnlinePeople":100,
 "status":1,
 "tag":null,
+"isAlms":1,
 "remark":null
 },
 { 

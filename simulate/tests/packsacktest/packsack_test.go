@@ -37,6 +37,22 @@ func Test_Get_Packsack_Info(t *testing.T) {
 	}
 }
 
+//Test_Get_Packsack_Gold 获取背包金币
+func Test_Get_Packsack_Gold(t *testing.T) {
+	player, _ := utils.LoginNewPlayer(msgid.MsgID_PACKSACK_GET_GOLD_RSP)
+	assert.NotNil(t, player)
+
+	client := player.GetClient()
+	req := &alms.PacksackGetGoldReq{}
+	client.SendPackage(utils.CreateMsgHead(msgid.MsgID_PACKSACK_GET_GOLD_REQ), req)
+
+	expector := player.GetExpector(msgid.MsgID_PACKSACK_GET_GOLD_RSP)
+	rsq := &alms.PacksackGetGoldRsp{}
+	assert.Nil(t, expector.Recv(global.DefaultWaitMessageTime, rsq))
+	fmt.Println(rsq.GetResult())
+	fmt.Println(rsq.GetPacksackGold())
+}
+
 // Test_Add_Packsack_Gold 背包金币添加
 func Test_Add_Packsack_Gold(t *testing.T) {
 	player, _ := utils.LoginNewPlayer()

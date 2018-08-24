@@ -18,5 +18,6 @@ func registerHandles(e exchanger.Exchanger) error {
 	panicRegister(msgid.MsgID_ALMS_GET_GOLD_REQ, almsserver.HandleGetAlmsReq)
 	panicRegister(msgid.MsgID_PACKSACK_INFO_REQ, almsserver.HandlePacksackInfo)
 	panicRegister(msgid.MsgID_PACKSACK_GOLD_REQ, almsserver.HandlePackSackGold)
+	panicRegister(msgid.MsgID_PACKSACK_GET_GOLD_REQ, almsserver.HandleGetPackSackGold)
 	return nil
 }

@@ -174,7 +174,7 @@ func GetHuPlayers(mjContext *majongpb.MajongContext, removeHuPlayers []uint64) (
 		remove[removeHuPlayer] = true
 	}
 	for _, player := range mjContext.Players {
-		if player.XpState == majongpb.XingPaiState_hu && !remove[player.PlayerId] {
+		if (player.XpState&majongpb.XingPaiState_hu == majongpb.XingPaiState_hu) && !remove[player.PlayerId] {
 			huPlayers = append(huPlayers, player.GetPlayerId())
 		}
 	}
