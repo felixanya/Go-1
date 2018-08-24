@@ -196,7 +196,7 @@ func GetQuitPlayers(mjContext *majongpb.MajongContext) (quitPlayers []uint64) {
 func GetGiveupPlayers(mjContext *majongpb.MajongContext) (giveupPlayers []uint64) {
 	giveupPlayers = make([]uint64, 0)
 	for _, player := range mjContext.Players {
-		if player.XpState == majongpb.XingPaiState_give_up {
+		if (player.GetXpState() & majongpb.XingPaiState_give_up) == majongpb.XingPaiState_give_up {
 			giveupPlayers = append(giveupPlayers, player.GetPlayerId())
 		}
 	}
