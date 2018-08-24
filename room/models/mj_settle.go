@@ -131,12 +131,13 @@ func (majongSettle *MajongSettle) settleAutoEvent(desk *desk.Desk, settleType ma
 		majongSettle.pushSettleEvent(desk, settleType, giveUpPlayers)
 		return
 	}
+	ticker := time.NewTicker(time.Second * 15)
 	for {
 		select {
 		case <-majongSettle.finish:
 			majongSettle.pushSettleEvent(desk, settleType, giveUpPlayers)
 			return
-		case <-time.NewTicker(time.Second * 15).C:
+		case <-ticker.C:
 			{
 				majongSettle.pushSettleEvent(desk, settleType, giveUpPlayers)
 				return
