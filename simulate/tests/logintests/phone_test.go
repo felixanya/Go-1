@@ -63,7 +63,7 @@ func checkDymcCode(client interfaces.Client, phone string, code string, sendCase
 
 // Test_CheckDymcCode 校验验证码
 func Test_CheckDymcCode(t *testing.T) {
-	useAccountSystem = true
+	//useAccountSystem = true
 	if !useAccountSystem {
 		return
 	}
