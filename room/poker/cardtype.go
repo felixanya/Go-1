@@ -1,6 +1,8 @@
-package states
+package poker
 
-import "steve/entity/poker"
+import (
+	"steve/entity/poker"
+)
 
 func CanBiggerThan(mine poker.CardType, other poker.CardType) bool {
 	if mine == poker.CardType_CT_NONE {
@@ -198,7 +200,7 @@ func IsTriplesAndSingles(cards []Poker) (bool, *Poker) {
 	// 555666777888 KKKK 牌型
 	planes := GetSpecificCountCards(cards, 3)
 	if planeCount%3 == 0 && len(planes) == planeCount+planeCount/3 { //555666777KKK 全三牌型
-		DDZPokerSort(planes)
+		PokerSort(planes)
 		return isMinShunZi(planes[0:len(planes)-planeCount/3], 2)
 	}
 	if len(planes) != planeCount {
@@ -244,7 +246,7 @@ func isMinShunZi(cards []Poker, minLen int) (bool, *Poker) {
 		return false, nil
 	}
 
-	DDZPokerSort(cards)
+	PokerSort(cards)
 	for i := 0; i < len(cards)-1; i++ {
 		if cards[i+1].PointWeight-cards[i].PointWeight != 1 {
 			return false, nil
@@ -317,13 +319,13 @@ func IsSingle(cards []Poker) (bool, *Poker) {
 }
 
 func GetMaxCard(cards []Poker) *Poker {
-	DDZPokerSortDesc(cards)
+	PokerSortDesc(cards)
 	return &cards[0]
 }
 
 // GetMinCard 获取一组牌中最小的那张牌
 func GetMinCard(cards []Poker) *Poker {
-	DDZPokerSort(cards)
+	PokerSort(cards)
 	return &cards[0]
 }
 
@@ -336,7 +338,7 @@ func GetMaxSamePointCards(cards []Poker) []Poker {
 			maxSamePointCards = append(maxSamePointCards, card)
 		}
 	}
-	DDZPokerSortDesc(maxSamePointCards)
+	PokerSortDesc(maxSamePointCards)
 	return maxSamePointCards
 }
 

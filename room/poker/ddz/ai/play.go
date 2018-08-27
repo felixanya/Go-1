@@ -4,6 +4,7 @@ import (
 	"errors"
 	"steve/entity/poker/ddz"
 	"steve/room/ai"
+	. "steve/room/poker"
 	. "steve/room/poker/ddz/states"
 
 	"steve/entity/poker"
@@ -49,9 +50,9 @@ func (playAI *playStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResu
 // Play 生成出牌请求事件(被动出牌)
 func (playAI *playStateAI) getPassivePlayCardEvent(ddzContext *ddz.DDZContext, player *ddz.Player) ai.AIEvent {
 	// 转换为poke
-	handCards := ToDDZCards(player.GetHandCards())
+	handCards := ToPokers(player.GetHandCards())
 	// 上家出的牌，转换为poke
-	outCards := ToDDZCards(ddzContext.GetCurOutCards())
+	outCards := ToPokers(ddzContext.GetCurOutCards())
 
 	bigger, biggerCards := GetMinBiggerCards(handCards, outCards)
 	if !bigger {
@@ -82,9 +83,9 @@ func (playAI *playStateAI) getPassivePlayCardEvent(ddzContext *ddz.DDZContext, p
 // Play 生成出牌请求事件(主动出牌)
 func (playAI *playStateAI) getActivePlayCardEvent(ddzContext *ddz.DDZContext, player *ddz.Player) ai.AIEvent {
 	// 转换为poke
-	handCards := ToDDZCards(player.GetHandCards())
+	handCards := ToPokers(player.GetHandCards())
 	// 按照排序权重进行排序
-	DDZPokerSort(handCards)
+	PokerSort(handCards)
 	outCard := handCards[0]
 	logrus.WithField("handCards", handCards).WithField("outCard", outCard).Debugln("主动出牌")
 	return play(player, []Poker{outCard})

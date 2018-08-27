@@ -3,7 +3,7 @@ author   : 李全林
 date    ：2018-08-03
 */
 
-package states
+package poker
 
 import (
 	"steve/entity/poker"
@@ -111,7 +111,7 @@ func FindMinBiggerCards(handCards []Poker, duplicateCount int, shunZiLen int, ma
 			matchCards = append(matchCards, card)
 		}
 	}
-	DDZPokerSort(matchCards)
+	PokerSort(matchCards)
 
 	gap := shunZiLen - 1
 	for i, card := range matchCards {
@@ -134,7 +134,7 @@ func FindMinBiggerCards(handCards []Poker, duplicateCount int, shunZiLen int, ma
 // Inflate 根据点数还原牌
 func Inflate(handCards []Poker, pointWeight uint32, duplicateCount int) (result []Poker) {
 	countMap := make(map[uint32]int)
-	DDZPokerSort(handCards)
+	PokerSort(handCards)
 	for _, card := range handCards {
 		if card.PointWeight == pointWeight && countMap[pointWeight] < duplicateCount {
 			result = append(result, card)
@@ -177,7 +177,7 @@ func SearchDuplicateCards(handCards []Poker, duplicateCount int, chai bool) []Po
 	}
 
 	if len(matchCards) > 0 {
-		DDZPokerSort(matchCards)
+		PokerSort(matchCards)
 		return Inflate(handCards, matchCards[0].PointWeight, duplicateCount)
 	} else {
 		return nil
