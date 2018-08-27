@@ -235,9 +235,7 @@ func AddTimeCountDown(deskPlayer *playerpkg.Player, startTime time.Time, duratio
 	}
 
 	if addTimeOver && overTime {
-		if !deskPlayer.IsTuoguan() {
-			deskPlayer.SetTuoguan(true, true)
-		}
+		deskPlayer.SetTuoguan(true, true)
 	}
 
 	return !deskPlayer.CountingDown && overTime || deskPlayer.CountingDown && addTimeOver

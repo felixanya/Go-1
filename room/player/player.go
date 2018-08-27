@@ -106,8 +106,9 @@ func (dp *Player) IsTuoguan() bool {
 func (dp *Player) SetTuoguan(tuoguan bool, notify bool) {
 	dp.mu.Lock()
 	defer dp.mu.Unlock()
+	toggle := dp.tuoguan != tuoguan
 	dp.tuoguan = tuoguan
-	if notify {
+	if toggle && notify {
 		dp.notifyTuoguan(dp.PlayerID, tuoguan)
 	}
 }

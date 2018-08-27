@@ -337,9 +337,7 @@ func (model *MjEventModel) processEvent(eventID int, eventContext interface{}) b
 	for _, majongPlayer := range mjContext.Players {
 		if !gutils.IsPlayerContinue(majongPlayer.GetXpState(), &mjContext) {
 			player := playerModel.GetDeskPlayerByID(majongPlayer.PlayerId)
-			if player.IsTuoguan() {
-				player.SetTuoguan(false, true)
-			}
+			player.SetTuoguan(false, true)
 		}
 	}
 
@@ -371,9 +369,7 @@ func (model *MjEventModel) checkGameOver(logEntry *logrus.Entry) bool {
 func (model *MjEventModel) cancelTuoguanGameOver() {
 	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
 	for _, player := range playerModel.GetDeskPlayers() {
-		if player.IsTuoguan() {
-			player.SetTuoguan(false, true)
-		}
+		player.SetTuoguan(false, true)
 	}
 }
 

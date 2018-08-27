@@ -163,7 +163,7 @@ func (model *PlayerModel) handlePlayerLeave(playerID uint64, needTuoguan bool) {
 	playerMgr := playerpkg.GetPlayerMgr()
 	player := playerMgr.GetPlayer(playerID)
 	player.SetQuit(true)
-	if !player.IsTuoguan() && needTuoguan {
+	if needTuoguan {
 		player.SetTuoguan(true, false)
 	}
 	model.playerQuitEnterDeskNtf(player, room.QuitEnterType_QET_QUIT)
