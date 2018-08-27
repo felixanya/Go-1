@@ -1,6 +1,7 @@
 package data
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"steve/external/configclient"
@@ -63,16 +64,45 @@ func GetPlayerGotTimesByPlayerID(playerID uint64) (int, error) {
 }
 
 const (
+	// alms
 	Almsnorm         = "norm"
 	Almsnumber       = "number"
 	Almstimes        = "times"
 	AlmsCountDonw    = "almsCountDonw"
 	DepositCountDonw = "depositCountDonw"
 	Version          = "version"
+	// gamelevel
 )
 
 //InitAlmsConfig 初始话救济金配置
 func InitAlmsConfig() error {
+	// gamelevelConfig
+	gameLevels := make([]*GameLevel, 0)
+	// 获取救济金配置
+	gameLeveConfigMaps, err := configclient.GetAllGameLevelConfig()
+	if err != nil {
+		logrus.WithError(err).Debugln("获取gameLevel配置失败")
+		return err
+	}
+	for _, gameLeveConfigMap := range gameLeveConfigMaps {
+		gl := &GameLevel{
+			GameID:   gameLeveConfigMap.GameID,
+			LevelID:  gameLeveConfigMap.LevelID,
+			LowSorce: gameLeveConfigMap.LowScores,
+			IsOpen:   gameLeveConfigMap.IsAlms,
+		}
+		gameLevels = append(gameLevels, gl)
+	}
+	jons, err := GameLevelsToJSON(gameLevels)
+	if err == nil {
+		// 保存
+		err = SetGameLevlConfig(jons, RedisTimeOut)
+	}
+	if err != nil {
+		logrus.WithError(err).Debugln("init save gamelevelconfig")
+	}
+
+	// almsConfig
 	// 获取救济金配置
 	almsConfigMap, err := configclient.GetAlmsConfigMap()
 	if err != nil {
@@ -147,4 +177,67 @@ func GetAlmsConfig(playerID uint64) (*MyAlmsConfig, error) {
 	// 重新保存
 	SaveAlmsConfigRedis(resultAlmsConfig)
 	return resultAlmsConfig, nil
+}
+
+//GameLevel gamelevelconfig
+type GameLevel struct {
+	GameID   int `json:"gameID"`
+	LevelID  int `json:"levelID"`
+	LowSorce int `json:"lowSorce"`
+	IsOpen   int `json:"isOpen"`
+}
+
+//GetGameLevelConfig 获取游戏场次配置
+func GetGameLevelConfig() ([]*GameLevel, error) {
+	// redis
+	if gamelevelJSON, err := GetGameLevlConfigRedis(); err == nil {
+		return JSONToGameLevels(gamelevelJSON)
+	}
+	// configserver
+	gameLevels := make([]*GameLevel, 0)
+	// 获取救济金配置
+	gameLeveConfigMaps, err := configclient.GetAllGameLevelConfig()
+	if err != nil {
+		logrus.WithError(err).Debugln("获取gameLevel配置失败")
+		return nil, err
+	}
+	for _, gameLeveConfigMap := range gameLeveConfigMaps {
+		gl := &GameLevel{
+			GameID:   gameLeveConfigMap.GameID,
+			LevelID:  gameLeveConfigMap.LevelID,
+			LowSorce: gameLeveConfigMap.LowScores,
+			IsOpen:   gameLeveConfigMap.IsAlms,
+		}
+		gameLevels = append(gameLevels, gl)
+	}
+	jons, err := GameLevelsToJSON(gameLevels)
+	if err == nil {
+		// 保存
+		err = SetGameLevlConfig(jons, RedisTimeOut)
+	}
+	if err != nil {
+		logrus.WithError(err).Debugln("save gamelevelconfig")
+	}
+	return gameLevels, nil
+}
+
+// GameLevelsToJSON gameLevel to JSON
+func GameLevelsToJSON(gameLevels []*GameLevel) (string, error) {
+	if len(gameLevels) == 0 {
+		logrus.Debugln("gameLevels eq 0")
+		return "", nil
+	}
+	bytes, err := json.Marshal(gameLevels)
+	return string(bytes), err
+}
+
+// JSONToGameLevels JSON TO gameLevel
+func JSONToGameLevels(gameLevelJSON string) ([]*GameLevel, error) {
+	if gameLevelJSON == "" {
+		logrus.Debugln("gameLevelJSON eq 0")
+		return nil, nil
+	}
+	gameLevels := []*GameLevel{}
+	err := json.Unmarshal([]byte(gameLevelJSON), &gameLevels)
+	return gameLevels, err
 }

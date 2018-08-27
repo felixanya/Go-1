@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"steve/alms/almsserver"
 	"steve/alms/data"
+	"steve/alms/packsack/packsack_prop"
 	"steve/structs"
 	"steve/structs/service"
 
@@ -37,10 +38,12 @@ func (a *AlmsCore) Init(e *structs.Exposer, param ...string) error {
 		entry.WithError(err).Error("注册客户端Client消息处理器失败")
 		return err
 	}
+	// 初始化道具信息
+	packsack_prop.InitPropInfo()
 	//初始化救济金配置
-	err := data.InitAlmsConfig()
+	data.InitAlmsConfig()
 	entry.Debugf("AlmsCoreserver init succeed ...")
-	return err
+	return nil
 }
 
 func (a *AlmsCore) Start() error {

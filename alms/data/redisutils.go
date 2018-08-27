@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	almsPlayerKey = "almsPlayerID:%v" // 救济玩家对应已经领取的数量
-	almsConfigKey = "almsConfig"      // 救济金配置
+	almsPlayerKey    = "almsPlayerID:%v"     // 救济玩家对应已经领取的数量
+	almsConfigKey    = "almsConfig"          // 救济金配置
+	almsGameLevelKey = "almsGameLevelConfig" // 游戏场次配置
 )
 
 var redisClifunc = getAlmsRedis //获取redisClien
@@ -60,11 +61,7 @@ func UpdateAlmsPlayerGotTimes(playerID uint64, val int, date time.Duration) erro
 	redisCli := redisClifunc()
 	key := fmt.Sprintf(almsPlayerKey, playerID)
 	err := redisCli.Watch(func(tx *redis.Tx) error {
-		err := tx.Get(key).Err()
-		if err != nil && err != redis.Nil {
-			return err
-		}
-		_, err = tx.Pipelined(func(pipe redis.Pipeliner) error {
+		_, err := tx.Pipelined(func(pipe redis.Pipeliner) error {
 			pipe.Set(key, val, date)
 			return nil
 		})
@@ -128,4 +125,28 @@ func setMyAlmsConfiByFiedld(almsConfig *MyAlmsConfig, val string, field string) 
 		almsConfig.Version = int(newVal)
 	}
 	return nil
+}
+
+//SetGameLevlConfig 设置游戏场次配置
+func SetGameLevlConfig(field string, date time.Duration) error {
+	redisCli := redisClifunc()
+	key := almsGameLevelKey
+	status := redisCli.Set(key, field, date)
+	if status.Err() != nil {
+		return fmt.Errorf("设置失败(%v)", status.Err())
+	}
+	redisCli.Expire(key, date)
+	return nil
+}
+
+//GetGameLevlConfigRedis 获取游戏场次配置
+func GetGameLevlConfigRedis() (string, error) {
+	client := redisClifunc()
+	key := almsGameLevelKey
+	data, err := client.Get(key).Result()
+	if err != nil {
+		logrus.WithError(err).Errorln("redis 命令执行失败")
+		return "", err
+	}
+	return data, nil
 }

@@ -7,7 +7,6 @@ import (
 	client_alms "steve/client_pb/alms"
 	"steve/client_pb/msgid"
 	"steve/common/constant"
-	"steve/external/configclient"
 	"steve/external/goldclient"
 	"steve/server_pb/gold"
 	"steve/structs/exchanger"
@@ -108,29 +107,30 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	levelID := int(req.GetLevelId())
 	// 选场判断游戏场次ID是否开启救济
 	if reqType == client_alms.AlmsReqType_SELECTED {
-		// 获取救济金配置
-		gameLeveConfigMaps, err := configclient.GetAllGameLevelConfig()
+		// 获取游戏场次金配置
+		gameLevels, err := data.GetGameLevelConfig()
+
 		if err != nil {
 			response.Result = proto.Bool(false)
-			logrus.WithError(err).Debugln("获取救济金配置失败")
+			logrus.WithError(err).Debugln("获取gameLeveConfigMaps配置失败")
 			return
 		}
 		flag := true
-		for _, gameLeveConfigMap := range gameLeveConfigMaps {
-			if gameLeveConfigMap.GameID == gameID && gameLeveConfigMap.LevelID == levelID {
+		for _, gameLevel := range gameLevels {
+			if gameLevel.GameID == gameID && gameLevel.LevelID == levelID {
 				flag = false
-				if gameLeveConfigMap.IsAlms == 0 {
+				if gameLevel.IsOpen == 0 {
 					response.Result = proto.Bool(false)
-					logrus.Debugln(fmt.Sprintf("该游戏场次未开启救济金  gameID(%d) - levelID(%d) - IsAlms(%d)", gameID, levelID, gameLeveConfigMap.IsAlms))
+					logrus.Debugln(fmt.Sprintf("该游戏场次未开启救济金  gameID(%d) - levelID(%d) - IsAlms(%d)", gameID, levelID, gameLevel.IsOpen))
 					return
 				}
 				// 如果玩家身上的金币已经够了，不应该发救济金
-				if int64(gameLeveConfigMap.LowScores) <= playerGold {
-					logrus.Debugln(fmt.Sprintf("玩家身上的金币，足够该场次的下限 playerGold(%d) -- gameLeveConfigMap(%v)", playerGold, gameLeveConfigMap))
+				if int64(gameLevel.LowSorce) <= playerGold {
+					logrus.Debugln(fmt.Sprintf("玩家身上的金币，足够该场次的下限 playerGold(%d) -- gameLevel(%v)", playerGold, *gameLevel))
 					response.Result = proto.Bool(false)
 					return
 				}
-				logrus.Debugln(fmt.Sprintf("该游戏场次配置  gameID(%d) - levelID(%d) - lowScores(%d)", gameID, levelID, gameLeveConfigMap.LowScores))
+				logrus.Debugln(fmt.Sprintf("该游戏场次配置  gameID(%d) - levelID(%d) - lowScores(%d)", gameID, levelID, gameLevel.LowSorce))
 				break
 			}
 		}

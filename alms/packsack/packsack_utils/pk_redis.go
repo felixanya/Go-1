@@ -75,3 +75,29 @@ func SaveGoldToRedis(uid uint64, gold int64) error {
 func fmtPlayerKey(uid uint64) string {
 	return fmt.Sprintf("packSack_%v", uid)
 }
+
+const packsackPropInfo = "packsackPropInfo"
+
+//SetPropConfigRedis 设置道具配置
+func SetPropConfigRedis(field string) error {
+	redisCli := Myredis()
+	key := packsackPropInfo
+	status := redisCli.Set(key, field, redisTimeOut)
+	if status.Err() != nil {
+		return fmt.Errorf("设置失败(%v)", status.Err())
+	}
+	redisCli.Expire(key, redisTimeOut)
+	return nil
+}
+
+//GetPropConfigRedis 获取道具配置
+func GetPropConfigRedis() (string, error) {
+	client := Myredis()
+	key := packsackPropInfo
+	data, err := client.Get(key).Result()
+	if err != nil {
+		logrus.WithError(err).Errorln("redis 命令执行失败")
+		return "", err
+	}
+	return data, nil
+}

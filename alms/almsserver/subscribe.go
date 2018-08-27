@@ -6,7 +6,6 @@ import (
 	client_alms "steve/client_pb/alms"
 	"steve/client_pb/msgid"
 	"steve/entity/constant"
-	"steve/external/configclient"
 	"steve/external/gateclient"
 	"steve/external/hallclient"
 	"steve/server_pb/user"
@@ -59,18 +58,18 @@ func getPlayerAlmsConfigInfo(playerID uint64) error {
 		return err
 	}
 	// 获取救济金配置
-	gameLeveConfigMaps, err := configclient.GetAllGameLevelConfig()
+	gameLevels, err := data.GetGameLevelConfig()
 	if err != nil {
 		logrus.WithError(err).Debugln("获取救济金配置失败")
 		return err
 	}
 	gamelis := make([]*client_alms.GameLevelIsOpen, 0)
-	for _, gameLeveConfigMap := range gameLeveConfigMaps {
-		if gameLeveConfigMap.IsAlms == 1 { // 只发开启的
+	for _, gameLevel := range gameLevels {
+		if gameLevel.IsOpen == 1 { // 只发开启的
 			gameli := &client_alms.GameLevelIsOpen{
-				GameId:  proto.Int32(int32(gameLeveConfigMap.GameID)),
-				LevelId: proto.Int32(int32(gameLeveConfigMap.LevelID)),
-				IsOpen:  proto.Int32(int32(gameLeveConfigMap.IsAlms)),
+				GameId:  proto.Int32(int32(gameLevel.GameID)),
+				LevelId: proto.Int32(int32(gameLevel.LevelID)),
+				IsOpen:  proto.Int32(int32(gameLevel.IsOpen)),
 			}
 			gamelis = append(gamelis, gameli)
 		}
