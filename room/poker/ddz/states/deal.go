@@ -56,6 +56,11 @@ func (s *dealState) OnEvent(m machine.Machine, event machine.Event) (int, error)
 		"event":   event,
 	}).Debugln("发牌完成")
 	if event.EventID == int(ddz.EventID_event_deal_finish) {
+		context := getDDZContext(m)
+		if context.AllAbandonCount >= 3 {
+			notifyLord(m, getRandPlayerId(context.GetPlayers()))
+			return int(ddz.StateID_state_double), nil
+		}
 		return int(ddz.StateID_state_grab), nil
 	}
 	if event.EventID == int(majong.EventID_event_cartoon_finish_request) { //TODO: Cartoon Finish should be common

@@ -135,26 +135,31 @@ func (s *grabState) OnEvent(m machine.Machine, event machine.Event) (int, error)
 	}
 
 	if lordPlayerID != 0 {
-		lordPlayer := GetPlayerByID(context.GetPlayers(), lordPlayerID)
-		lordPlayer.Lord = true
-
-		context.Dipai = context.WallCards
-		context.WallCards = []uint32{}
-		context.LordPlayerId = lordPlayerID
-		context.Duration = 0 //清除倒计时
-		context.CurStage = ddz.DDZStage_DDZ_STAGE_DOUBLE
-
-		lordPlayer.HandCards = append(lordPlayer.HandCards, context.Dipai...)
-		lordPlayer.HandCards = DDZSortDescend(lordPlayer.HandCards)
-
-		broadcast(m, msgid.MsgID_ROOM_DDZ_LORD_NTF, &room.DDZLordNtf{
-			PlayerId:  &lordPlayerID,
-			TotalGrab: &context.TotalGrab,
-			Dipai:     context.Dipai,
-			NextStage: GenNextStage(room.DDZStage_DDZ_STAGE_DOUBLE),
-		})
+		notifyLord(m, lordPlayerID)
 		return int(ddz.StateID_state_double), nil
 	} else {
 		return int(ddz.StateID_state_grab), nil
 	}
+}
+
+func notifyLord(m machine.Machine, lordPlayerID uint64) {
+	context := getDDZContext(m)
+	lordPlayer := GetPlayerByID(context.GetPlayers(), lordPlayerID)
+	lordPlayer.Lord = true
+
+	context.Dipai = context.WallCards
+	context.WallCards = []uint32{}
+	context.LordPlayerId = lordPlayerID
+	context.Duration = 0 //清除倒计时
+	context.CurStage = ddz.DDZStage_DDZ_STAGE_DOUBLE
+
+	lordPlayer.HandCards = append(lordPlayer.HandCards, context.Dipai...)
+	lordPlayer.HandCards = DDZSortDescend(lordPlayer.HandCards)
+
+	broadcast(m, msgid.MsgID_ROOM_DDZ_LORD_NTF, &room.DDZLordNtf{
+		PlayerId:  &lordPlayerID,
+		TotalGrab: &context.TotalGrab,
+		Dipai:     context.Dipai,
+		NextStage: GenNextStage(room.DDZStage_DDZ_STAGE_DOUBLE),
+	})
 }
