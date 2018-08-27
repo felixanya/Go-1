@@ -8,7 +8,7 @@ import (
 	"steve/entity/gamelog"
 	"steve/entity/poker/ddz"
 	"steve/external/goldclient"
-	"steve/room/flows/ddzflow/machine"
+	"steve/room/poker/machine"
 	server_gold "steve/server_pb/gold"
 
 	"github.com/Sirupsen/logrus"

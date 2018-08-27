@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"math/rand"
-	"steve/room/flows/ddzflow/ddz/states"
+	"steve/room/poker/ddz/states"
 
 	"github.com/stretchr/testify/assert"
 	"steve/entity/poker"

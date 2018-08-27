@@ -10,25 +10,25 @@ import (
 var (
 	RedJoker    = ToDDZCard(0x0F) //大王
 	BlackJoker  = ToDDZCard(0x0E) //小王
-	sDiamond    = uint32(0x10)    //方块
-	sClub       = uint32(0x20)    //梅花
-	sHeart      = uint32(0x30)    //红桃
-	sSpade      = uint32(0x40)    //黑桃
-	pA          = uint32(0x01)
-	p2          = uint32(0x02)
-	p3          = uint32(0x03)
-	p4          = uint32(0x04)
-	p5          = uint32(0x05)
-	p6          = uint32(0x06)
-	p7          = uint32(0x07)
-	p8          = uint32(0x08)
-	p9          = uint32(0x09)
-	p10         = uint32(0x0A)
-	pJ          = uint32(0x0B)
-	pQ          = uint32(0x0C)
-	pK          = uint32(0x0D)
-	pBlackJoker = uint32(0x0E)
-	pRedJoker   = uint32(0x0F)
+	SDiamond    = uint32(0x10)    //方块
+	SClub       = uint32(0x20)    //梅花
+	SHeart      = uint32(0x30)    //红桃
+	SSpade      = uint32(0x40)    //黑桃
+	PA          = uint32(0x01)
+	P2          = uint32(0x02)
+	P3          = uint32(0x03)
+	P4          = uint32(0x04)
+	P5          = uint32(0x05)
+	P6          = uint32(0x06)
+	P7          = uint32(0x07)
+	P8          = uint32(0x08)
+	P9          = uint32(0x09)
+	P10         = uint32(0x0A)
+	PJ          = uint32(0x0B)
+	PQ          = uint32(0x0C)
+	PK          = uint32(0x0D)
+	PBlackJoker = uint32(0x0E)
+	PRedJoker   = uint32(0x0F)
 )
 
 type Poker struct {
@@ -39,13 +39,13 @@ type Poker struct {
 }
 
 func (c Poker) String() string {
-	if c.Suit == sDiamond {
+	if c.Suit == SDiamond {
 		return "♦" + c.GetPointString()
-	} else if c.Suit == sClub {
+	} else if c.Suit == SClub {
 		return "♣" + c.GetPointString()
-	} else if c.Suit == sHeart {
+	} else if c.Suit == SHeart {
 		return "♥" + c.GetPointString()
-	} else if c.Suit == sSpade {
+	} else if c.Suit == SSpade {
 		return "♠" + c.GetPointString()
 	} else {
 		return c.GetPointString()
@@ -53,17 +53,17 @@ func (c Poker) String() string {
 }
 
 func (c Poker) GetPointString() string {
-	if c.Point == pA {
+	if c.Point == PA {
 		return "A"
-	} else if c.Point == pJ {
+	} else if c.Point == PJ {
 		return "J"
-	} else if c.Point == pQ {
+	} else if c.Point == PQ {
 		return "Q"
-	} else if c.Point == pK {
+	} else if c.Point == PK {
 		return "K"
-	} else if c.Point == pBlackJoker {
+	} else if c.Point == PBlackJoker {
 		return "小王"
-	} else if c.Point == pRedJoker {
+	} else if c.Point == PRedJoker {
 		return "大王"
 	} else {
 		return strconv.Itoa(int(c.Point))
@@ -100,12 +100,12 @@ func ToDDZCard(card uint32) Poker {
 	result.Point = card % 16
 
 	// 计算无花色权重
-	if result.Point == pA {
-		result.PointWeight = pK + pA //A为K加1
-	} else if result.Point == p2 {
-		result.PointWeight = pK + p2 + 1 //2为A加1,方便断开顺子,连对等
-	} else if result.Point == pBlackJoker || result.Point == pRedJoker {
-		result.PointWeight = sSpade + pK + result.Point //大小王，加大权重
+	if result.Point == PA {
+		result.PointWeight = PK + PA //A为K加1
+	} else if result.Point == P2 {
+		result.PointWeight = PK + P2 + 1 //2为A加1,方便断开顺子,连对等
+	} else if result.Point == PBlackJoker || result.Point == PRedJoker {
+		result.PointWeight = SSpade + PK + result.Point //大小王，加大权重
 	} else {
 		result.PointWeight = result.Point
 	}

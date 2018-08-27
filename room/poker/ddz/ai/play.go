@@ -4,7 +4,7 @@ import (
 	"errors"
 	"steve/entity/poker/ddz"
 	"steve/room/ai"
-	. "steve/room/flows/ddzflow/ddz/states"
+	. "steve/room/poker/ddz/states"
 
 	"steve/entity/poker"
 

@@ -2,12 +2,12 @@ package main
 
 import (
 	_ "net/http/pprof"
-	_ "steve/room/ai/ddz" // 斗地主 AI
 	_ "steve/room/ai/scxl"
 	"steve/room/common"
 	_ "steve/room/contexts"
 	"steve/room/fixed"
 	"steve/room/models"
+	_ "steve/room/poker/ddz/ai" // 斗地主 AI
 	"steve/room/register"
 	"steve/room/util"
 	"steve/server_pb/room_mgr"

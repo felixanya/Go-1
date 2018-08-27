@@ -5,8 +5,8 @@ import (
 	"steve/client_pb/msgid"
 	"steve/entity/majong"
 	"steve/entity/poker/ddz"
-	"steve/room/flows/ddzflow/ddz/ddzmachine"
-	"steve/room/flows/ddzflow/machine"
+	"steve/room/poker/ddz/ddzmachine"
+	"steve/room/poker/machine"
 	"time"
 
 	"math/rand"

@@ -16,7 +16,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"steve/room/flows/ddzflow/ddz/states"
+	"steve/room/poker/ddz/states"
 
 	"github.com/golang/protobuf/proto"
 )

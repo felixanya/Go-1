@@ -240,7 +240,7 @@ func isMinShunZi(cards []Poker, minLen int) (bool, *Poker) {
 		return false, nil
 	}
 
-	if ContainsPoint(cards, p2) || ContainsPoint(cards, pRedJoker) || ContainsPoint(cards, pBlackJoker) { //有2或着大小王直接返回
+	if ContainsPoint(cards, P2) || ContainsPoint(cards, PRedJoker) || ContainsPoint(cards, PBlackJoker) { //有2或着大小王直接返回
 		return false, nil
 	}
 

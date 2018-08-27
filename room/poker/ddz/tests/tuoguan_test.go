@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"steve/room/flows/ddzflow/ddz/states"
+	"steve/room/poker/ddz/states"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
