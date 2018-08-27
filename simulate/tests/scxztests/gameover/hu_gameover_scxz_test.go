@@ -74,51 +74,51 @@ func Test_SCXZ_Duo_Dianpao_GameOver(t *testing.T) {
 // Test_SCXZ_ZiMo_GameOver 测试自摸，正常玩家不足，游戏结束
 // 步骤：庄家天胡自摸，庄下家自摸，对家自摸
 // 期望:  牌墙还剩余2张,正常玩家只剩下1人，游戏结束
-func Test_SCXZ_ZiMo_GameOver(t *testing.T) {
-	params := global.NewCommonStartGameParams()
-	params.Cards = [][]uint32{
-		{11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14},
-		{15, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 17, 18},
-		{21, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24},
-		{25, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 27, 28},
-	}
-	params.HszCards = [][]uint32{}
-	params.GameID = common.GameId_GAMEID_XUEZHAN // 血战
-	params.PeiPaiGame = "scxz"
-	params.IsHsz = false // 不换三张
-	// 根据座位设置玩家金币数
-	params.PlayerSeatGold = map[int]uint64{
-		0: 1000 * 10000, 1: 1000 * 10000, 2: 1000 * 10000, 3: 1000 * 10000,
-	}
-	params.WallCards = []uint32{18, 24, 31, 31}
-	params.DingqueColor = []room.CardColor{room.CardColor_CC_TIAO, room.CardColor_CC_TIAO, room.CardColor_CC_TONG, room.CardColor_CC_TIAO}
-	deskData, err := utils.StartGame(params)
-	assert.NotNil(t, deskData)
-	assert.Nil(t, err)
+// func Test_SCXZ_ZiMo_GameOver(t *testing.T) {
+// 	params := global.NewCommonStartGameParams()
+// 	params.Cards = [][]uint32{
+// 		{11, 11, 11, 11, 12, 12, 12, 12, 13, 13, 13, 13, 14, 14},
+// 		{15, 15, 15, 15, 16, 16, 16, 16, 17, 17, 17, 17, 18},
+// 		{21, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24},
+// 		{25, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 27, 28},
+// 	}
+// 	params.HszCards = [][]uint32{}
+// 	params.GameID = common.GameId_GAMEID_XUEZHAN // 血战
+// 	params.PeiPaiGame = "scxz"
+// 	params.IsHsz = false // 不换三张
+// 	// 根据座位设置玩家金币数
+// 	params.PlayerSeatGold = map[int]uint64{
+// 		0: 1000 * 10000, 1: 1000 * 10000, 2: 1000 * 10000, 3: 1000 * 10000,
+// 	}
+// 	params.WallCards = []uint32{18, 24, 31, 31}
+// 	params.DingqueColor = []room.CardColor{room.CardColor_CC_TIAO, room.CardColor_CC_TIAO, room.CardColor_CC_TONG, room.CardColor_CC_TIAO}
+// 	deskData, err := utils.StartGame(params)
+// 	assert.NotNil(t, deskData)
+// 	assert.Nil(t, err)
 
-	banker := params.BankerSeat
-	// 庄家自摸11
-	assert.Nil(t, utils.WaitZixunNtf(deskData, banker))
-	assert.Nil(t, utils.SendHuReq(deskData, banker))
-	// 检测所有玩家收到天胡通知
-	utils.CheckHuNotify(t, deskData, []int{banker}, banker, 14, room.HuType_HT_TIANHU)
+// 	banker := params.BankerSeat
+// 	// 庄家自摸11
+// 	assert.Nil(t, utils.WaitZixunNtf(deskData, banker))
+// 	assert.Nil(t, utils.SendHuReq(deskData, banker))
+// 	// 检测所有玩家收到天胡通知
+// 	utils.CheckHuNotify(t, deskData, []int{banker}, banker, 14, room.HuType_HT_TIANHU)
 
-	// 庄家下家自摸18
-	assert.Nil(t, utils.WaitZixunNtf(deskData, 1))
-	assert.Nil(t, utils.SendHuReq(deskData, 1))
-	// 检测所有玩家收到地胡胡通知
-	utils.CheckHuNotify(t, deskData, []int{1}, 1, 18, room.HuType_HT_DIHU)
+// 	// 庄家下家自摸18
+// 	assert.Nil(t, utils.WaitZixunNtf(deskData, 1))
+// 	assert.Nil(t, utils.SendHuReq(deskData, 1))
+// 	// 检测所有玩家收到地胡胡通知
+// 	utils.CheckHuNotify(t, deskData, []int{1}, 1, 18, room.HuType_HT_DIHU)
 
-	// 庄家对家自摸24
-	assert.Nil(t, utils.WaitZixunNtf(deskData, 2))
-	assert.Nil(t, utils.SendHuReq(deskData, 2))
-	// 检测所有玩家收到地胡通知
-	utils.CheckHuNotify(t, deskData, []int{2}, 2, 24, room.HuType_HT_DIHU)
+// 	// 庄家对家自摸24
+// 	assert.Nil(t, utils.WaitZixunNtf(deskData, 2))
+// 	assert.Nil(t, utils.SendHuReq(deskData, 2))
+// 	// 检测所有玩家收到地胡通知
+// 	utils.CheckHuNotify(t, deskData, []int{2}, 2, 24, room.HuType_HT_DIHU)
 
-	//游戏结束
-	utils.WaitGameOverNtf(t, deskData)
+// 	//游戏结束
+// 	utils.WaitGameOverNtf(t, deskData)
 
-}
+// }
 
 // Test_SCXZ_Duo_Qiangganghu_GameOver 测试多家抢杠胡，正常玩家不足，游戏结束
 // 开始游戏，庄家出9万， 1 号玩家可以碰，其他玩家不可以杠和胡

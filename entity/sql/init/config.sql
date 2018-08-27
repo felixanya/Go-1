@@ -170,48 +170,48 @@ INSERT `t_common_config`(`key`, `subkey`, `value`) values (
     '[
 		{
 			"propID": 1,
-			"name": "rose",
+			"name": "玫瑰",
 			"attrType": 1,
 			"attrID":1,
 			"attrValue":-100,
 			"attrLimit":10000,
-			"describe":"rose_sm"
+			"describe":"表情道具，可在麻将或扑克对局中使用"
 		},
 		{
 			"propID": 2,
-			"name": "beer",
+			"name": "啤酒",
 			"attrType": 1,
 			"attrID":1,
 			"attrValue":-100,
 			"attrLimit":10000,
-			"describe":"beer_sm"
+			"describe":"表情道具，可在麻将或扑克对局中使用"
 		},
 		{
 			"propID": 3,
-			"name": "bomb",
+			"name": "炸弹",
 			"attrType": 1,
 			"attrID":1,
 			"attrValue":-100,
 			"attrLimit":10000,
-			"describe":"bomb_sm"
+			"describe":"表情道具，可在麻将或扑克对局中使用"
 		},
 		{
 			"propID": 4,
-			"name": "grabChicken",
+			"name": "抓鸡",
 			"attrType": 1,
 			"attrID":1,
 			"attrValue":-100,
 			"attrLimit":10000,
-			"describe":"grabChicken_sm"
+			"describe":"表情道具，可在麻将或扑克对局中使用"
 		},
 		{
 			"propID": 5,
-			"name": "eggGun",
+			"name": "坏蛋",
 			"attrType": 1,
 			"attrID":1,
 			"attrValue":-10000,
 			"attrLimit":500000,
-			"describe":"eggGun_sm"
+			"describe":"表情道具，可在麻将或扑克对局中使用"
 		}
      ]
     '
@@ -318,7 +318,7 @@ VALUES
 "name":"1级场",
 "fee":100,
 "baseScores":150,
-"lowScores":20000,
+"lowScores":2000,
 "highScores":100000,
 "realOnlinePeople":1,
 "showOnlinePeople":1,
@@ -366,7 +366,7 @@ VALUES
 "name":"2级场",
 "fee":600,
 "baseScores":600,
-"lowScores":80000,
+"lowScores":8000,
 "highScores":1000000,
 "realOnlinePeople":1,
 "showOnlinePeople":100,

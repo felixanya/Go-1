@@ -60,7 +60,7 @@ func TestPlaycard1(t *testing.T) {
 	utils.UpdateDDZPlayerClientInfo(client, player, deskData)
 
 	// 监听恢复对局的回复消息
-	resumeRspExpect, _ := client.ExpectMessage(msgid.MsgID_ROOM_DDZ_RESUME_RSP)
+	resumeRspExpect, _ := client.ExpectMessage(msgid.MsgID_ROOM_RESUME_GAME_RSP)
 	assert.NotNil(t, resumeRspExpect)
 
 	// 发出恢复对局请求
