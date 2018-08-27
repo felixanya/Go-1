@@ -173,7 +173,7 @@ func (majongSettle *MajongSettle) pushSettleEvent(desks *desk.Desk, settleType m
 	}
 	// 推送结算完成事件
 	if majongSettle.NeedSettleFinishEvent(settleType) {
-		event := desk.DeskEvent{EventID: int(majongpb.EventID_event_settle_finish), EventType: fixed.NormalEvent, Desk: desks,
+		event := desk.DeskEvent{EventID: int(majongpb.EventID_event_settle_finish), EventType: fixed.NormalEvent,
 			StateNumber: desks.GetConfig().Context.(*contexts.MajongDeskContext).StateNumber,
 			Context: &majongpb.SettleFinishEvent{
 				PlayerId: brokerPlayers,

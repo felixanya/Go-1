@@ -4,7 +4,7 @@ import (
 	"steve/entity/majong"
 	"steve/entity/poker/ddz"
 	"steve/room/fixed"
-	"steve/room/flows/ddzflow/machine"
+	"steve/room/poker/machine"
 
 	"steve/client_pb/msgid"
 	"steve/client_pb/room"

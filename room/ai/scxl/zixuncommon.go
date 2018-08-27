@@ -5,14 +5,17 @@ import (
 	"steve/entity/majong"
 	"steve/gutils"
 	"steve/room/ai"
+	playerpkg "steve/room/player"
 )
 
 func (h *zixunStateAI) getNormalZiXunAIEvent(player *majong.Player, mjContext *majong.MajongContext) (aiEvent ai.AIEvent) {
 	zxRecord := player.GetZixunRecord()
 	handCards := player.GetHandCards()
 	canHu := zxRecord.GetEnableZimo()
-	if (gutils.IsHu(player) || gutils.IsTing(player)) && canHu {
-		aiEvent = h.hu(player)
+	playerMgr := playerpkg.GetPlayerMgr()
+	deskPlayer := playerMgr.GetPlayer(player.GetPlayerId())
+	if (deskPlayer.IsAutoHu() || gutils.IsHu(player) || gutils.IsTing(player)) && canHu {
+		aiEvent = hu(player)
 		return
 	}
 	// 优先出定缺牌
@@ -21,7 +24,7 @@ func (h *zixunStateAI) getNormalZiXunAIEvent(player *majong.Player, mjContext *m
 			hc := handCards[i]
 			if mjoption.GetXingpaiOption(int(mjContext.GetXingpaiOptionId())).EnableDingque &&
 				hc.GetColor() == player.GetDingqueColor() {
-				aiEvent = h.chupai(player, hc)
+				aiEvent = chupai(player, hc)
 				return
 			}
 		}
@@ -29,42 +32,14 @@ func (h *zixunStateAI) getNormalZiXunAIEvent(player *majong.Player, mjContext *m
 
 	// 正常出牌
 	if player.GetMopaiCount() == 0 || mjContext.GetZixunType() == majong.ZixunType_ZXT_CHI || mjContext.GetZixunType() == majong.ZixunType_ZXT_PENG {
-		aiEvent = h.chupai(player, handCards[len(handCards)-1])
+		aiEvent = chupai(player, handCards[len(handCards)-1])
 	} else {
-		aiEvent = h.chupai(player, mjContext.GetLastMopaiCard())
+		aiEvent = chupai(player, mjContext.GetLastMopaiCard())
 	}
 	return
 }
 
-func (h *zixunStateAI) getNormalZiXunTingStateAIEvent(player *majong.Player, mjContext *majong.MajongContext) (aiEvent ai.AIEvent) {
-	// 生成听AI事件
-	// 听状态下，能胡不做操作等玩家自行选择或者等超时事件，不能胡就打出摸到的牌
-	zxRecord := player.GetZixunRecord()
-	if gutils.IsTing(player) {
-		canHu := zxRecord.GetEnableZimo()
-		if !canHu {
-			aiEvent = h.chupai(player, mjContext.GetLastMopaiCard())
-		}
-	}
-	return
-}
-
-func (h *zixunStateAI) getNormalZiXunHuStateAIEvent(player *majong.Player, mjContext *majong.MajongContext) (aiEvent ai.AIEvent) {
-	// 生成胡AI事件
-	// 胡状态下，能胡直接让胡，不能胡就打出摸到的牌
-	zxRecord := player.GetZixunRecord()
-	if gutils.IsHu(player) {
-		canHu := zxRecord.GetEnableZimo()
-		if canHu {
-			aiEvent = h.hu(player)
-		} else {
-			aiEvent = h.chupai(player, mjContext.GetLastMopaiCard())
-		}
-	}
-	return
-}
-
-func (h *zixunStateAI) chupai(player *majong.Player, card *majong.Card) ai.AIEvent {
+func chupai(player *majong.Player, card *majong.Card) ai.AIEvent {
 	eventContext := majong.ChupaiRequestEvent{
 		Head: &majong.RequestEventHead{
 			PlayerId: player.GetPlayerId(),
@@ -77,7 +52,32 @@ func (h *zixunStateAI) chupai(player *majong.Player, card *majong.Card) ai.AIEve
 	}
 }
 
-func (h *zixunStateAI) gang(player *majong.Player, card *majong.Card) ai.AIEvent {
+func chi(player *majong.Player, chiCards []*majong.Card) ai.AIEvent {
+	eventContext := majong.ChiRequestEvent{
+		Head: &majong.RequestEventHead{
+			PlayerId: player.GetPlayerId(),
+		},
+		Cards: chiCards,
+	}
+	return ai.AIEvent{
+		ID:      int32(majong.EventID_event_chi_request),
+		Context: &eventContext,
+	}
+}
+
+func peng(player *majong.Player) ai.AIEvent {
+	eventContext := majong.PengRequestEvent{
+		Head: &majong.RequestEventHead{
+			PlayerId: player.GetPlayerId(),
+		},
+	}
+	return ai.AIEvent{
+		ID:      int32(majong.EventID_event_peng_request),
+		Context: &eventContext,
+	}
+}
+
+func gang(player *majong.Player, card *majong.Card) ai.AIEvent {
 	eventContext := majong.GangRequestEvent{
 		Head: &majong.RequestEventHead{
 			PlayerId: player.GetPlayerId(),
@@ -90,7 +90,7 @@ func (h *zixunStateAI) gang(player *majong.Player, card *majong.Card) ai.AIEvent
 	}
 }
 
-func (h *zixunStateAI) hu(player *majong.Player) ai.AIEvent {
+func hu(player *majong.Player) ai.AIEvent {
 	eventContext := majong.HuRequestEvent{
 		Head: &majong.RequestEventHead{
 			PlayerId: player.GetPlayerId(),
@@ -98,6 +98,18 @@ func (h *zixunStateAI) hu(player *majong.Player) ai.AIEvent {
 	}
 	return ai.AIEvent{
 		ID:      int32(majong.EventID_event_hu_request),
+		Context: &eventContext,
+	}
+}
+
+func qi(player *majong.Player) ai.AIEvent {
+	eventContext := majong.QiRequestEvent{
+		Head: &majong.RequestEventHead{
+			PlayerId: player.GetPlayerId(),
+		},
+	}
+	return ai.AIEvent{
+		ID:      int32(majong.EventID_event_qi_request),
 		Context: &eventContext,
 	}
 }

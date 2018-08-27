@@ -3,22 +3,26 @@ author   : 李全林
 date    ：2018-08-03
 */
 
-package states
+package poker
 
 import (
 	"steve/entity/poker"
 )
 
-// GetBoom 若有炸弹，返回炸弹;没有则返回false
-func GetBoom(handCards []Poker) (bool, []Poker) {
+// GetBomb 若有炸弹，返回炸弹;没有则返回false
+func GetBomb(handCards []Poker) (bool, []Poker) {
 	bomb := FindSecondaryCards(handCards, 4, 1)
 	return bomb != nil, bomb
 }
 
-// GetKingBoom 若有炸弹，返回炸弹;没有则返回false
-func GetKingBoom(handCards []Poker) (bool, []Poker) {
+// GetKingBomb 若有炸弹，返回炸弹;没有则返回false
+func GetKingBomb(handCards []Poker) (bool, []Poker) {
 	has := Contains(handCards, BlackJoker) && Contains(handCards, RedJoker)
-	return has, append([]Poker{BlackJoker}, RedJoker)
+	if has {
+		return true, append([]Poker{RedJoker}, BlackJoker)
+	} else {
+		return false, nil
+	}
 }
 
 func GetMinBiggerCards(handCards []Poker, outCards []Poker) (bool, []Poker) {
@@ -32,12 +36,16 @@ func GetMinBiggerCards(handCards []Poker, outCards []Poker) (bool, []Poker) {
 		bomb := FindMinBiggerCards(handCards, 4, 1, pivot)
 		remain := RemoveAll(handCards, bomb)
 		pairs := FindSecondaryCards(remain, 2, 2)
-		return bomb != nil && pairs != nil, append(bomb, pairs...)
+		if bomb != nil && pairs != nil {
+			return true, append(bomb, pairs...)
+		}
 	} else if cardType == poker.CardType_CT_4SAND1S {
 		bomb := FindMinBiggerCards(handCards, 4, 1, pivot)
 		remain := RemoveAll(handCards, bomb)
 		singles := FindSecondaryCards(remain, 1, 2)
-		return bomb != nil && singles != nil, append(bomb, singles...)
+		if bomb != nil && singles != nil {
+			return true, append(bomb, singles...)
+		}
 	} else if cardType == poker.CardType_CT_TRIPLES {
 		triple := FindMinBiggerCards(handCards, 3, len(outCards)/3, pivot)
 		return triple != nil, triple
@@ -45,12 +53,16 @@ func GetMinBiggerCards(handCards []Poker, outCards []Poker) (bool, []Poker) {
 		triples := FindMinBiggerCards(handCards, 3, len(outCards)/5, pivot)
 		remain := RemoveAll(handCards, triples)
 		pairs := FindSecondaryCards(remain, 2, len(outCards)/5)
-		return triples != nil && pairs != nil, append(triples, pairs...)
+		if triples != nil && pairs != nil {
+			return true, append(triples, pairs...)
+		}
 	} else if cardType == poker.CardType_CT_3SAND1S {
 		triples := FindMinBiggerCards(handCards, 3, len(outCards)/4, pivot)
 		remain := RemoveAll(handCards, triples)
 		singles := FindSecondaryCards(remain, 1, len(outCards)/4)
-		return triples != nil && singles != nil, append(triples, singles...)
+		if triples != nil && singles != nil {
+			return true, append(triples, singles...)
+		}
 	} else if cardType == poker.CardType_CT_PAIRS {
 		pairs := FindMinBiggerCards(handCards, 2, len(outCards)/2, pivot)
 		return pairs != nil, pairs
@@ -64,12 +76,16 @@ func GetMinBiggerCards(handCards []Poker, outCards []Poker) (bool, []Poker) {
 		triple := FindMinBiggerCards(handCards, 3, 1, pivot)
 		remain := RemoveAll(handCards, triple)
 		pair := FindSecondaryCards(remain, 2, 1)
-		return triple != nil && pair != nil, append(triple, pair...)
+		if triple != nil && pair != nil {
+			return true, append(triple, pair...)
+		}
 	} else if cardType == poker.CardType_CT_3AND1 {
 		triple := FindMinBiggerCards(handCards, 3, 1, pivot)
 		remain := RemoveAll(handCards, triple)
 		single := FindSecondaryCards(remain, 1, 1)
-		return triple != nil && single != nil, append(triple, single...)
+		if triple != nil && single != nil {
+			return true, append(triple, single...)
+		}
 	} else if cardType == poker.CardType_CT_PAIR {
 		pair := FindMinBiggerCards(handCards, 2, 1, pivot)
 		return pair != nil, pair
@@ -95,7 +111,7 @@ func FindMinBiggerCards(handCards []Poker, duplicateCount int, shunZiLen int, ma
 			matchCards = append(matchCards, card)
 		}
 	}
-	DDZPokerSort(matchCards)
+	PokerSort(matchCards)
 
 	gap := shunZiLen - 1
 	for i, card := range matchCards {
@@ -118,7 +134,7 @@ func FindMinBiggerCards(handCards []Poker, duplicateCount int, shunZiLen int, ma
 // Inflate 根据点数还原牌
 func Inflate(handCards []Poker, pointWeight uint32, duplicateCount int) (result []Poker) {
 	countMap := make(map[uint32]int)
-	DDZPokerSort(handCards)
+	PokerSort(handCards)
 	for _, card := range handCards {
 		if card.PointWeight == pointWeight && countMap[pointWeight] < duplicateCount {
 			result = append(result, card)
@@ -161,7 +177,7 @@ func SearchDuplicateCards(handCards []Poker, duplicateCount int, chai bool) []Po
 	}
 
 	if len(matchCards) > 0 {
-		DDZPokerSort(matchCards)
+		PokerSort(matchCards)
 		return Inflate(handCards, matchCards[0].PointWeight, duplicateCount)
 	} else {
 		return nil

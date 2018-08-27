@@ -5,7 +5,7 @@ import (
 	"steve/entity/poker/ddz"
 	"steve/room/common"
 	"steve/room/fixed"
-	"steve/room/flows/ddzflow/machine"
+	"steve/room/poker/machine"
 
 	"math/rand"
 	"steve/client_pb/msgid"

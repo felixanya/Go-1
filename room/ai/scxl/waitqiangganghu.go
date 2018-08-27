@@ -27,8 +27,8 @@ type waitQiangganghuStateAI struct {
 // 可以的话处理
 // 如果玩家开过胡,那么自动给胡
 // 如果玩家没开过胡,那么选择过
-func (h *waitQiangganghuStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
-	result, err = ai.AIEventGenerateResult{
+func (h *waitQiangganghuStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResult, err error) {
+	result, err = ai.AIResult{
 		Events: []ai.AIEvent{},
 	}, nil
 	var aiEvent ai.AIEvent
@@ -52,10 +52,10 @@ func (h *waitQiangganghuStateAI) GenerateAIEvent(params ai.AIEventGenerateParams
 	})
 	if canhu {
 		if gutils.IsHu(player) || gutils.IsTing(player) {
-			aiEvent = h.hu(player)
+			aiEvent = hu(player)
 			entry.Info("生成抢杠胡的自动事件")
 		} else {
-			aiEvent = h.qi(player)
+			aiEvent = qi(player)
 			entry.Info("生成弃的自动事件")
 		}
 	} else {
@@ -65,40 +65,14 @@ func (h *waitQiangganghuStateAI) GenerateAIEvent(params ai.AIEventGenerateParams
 	return
 }
 
-func (h *waitQiangganghuStateAI) qi(player *majong.Player) ai.AIEvent {
-	eventContext := &majong.QiRequestEvent{
-		Head: &majong.RequestEventHead{
-			PlayerId: player.GetPlayerId(),
-		},
-	}
-
-	return ai.AIEvent{
-		ID:      int32(majong.EventID_event_qi_request),
-		Context: eventContext,
-	}
-}
-
-func (h *waitQiangganghuStateAI) hu(player *majong.Player) ai.AIEvent {
-	eventContext := &majong.HuRequestEvent{
-		Head: &majong.RequestEventHead{
-			PlayerId: player.GetPlayerId(),
-		},
-	}
-
-	return ai.AIEvent{
-		ID:      int32(majong.EventID_event_hu_request),
-		Context: eventContext,
-	}
-}
-
-func (h *waitQiangganghuStateAI) checkAIEvent(player *majong.Player, mjContext *majong.MajongContext, params ai.AIEventGenerateParams) error {
+func (h *waitQiangganghuStateAI) checkAIEvent(player *majong.Player, mjContext *majong.MajongContext, params ai.AIParams) error {
 	err := fmt.Errorf("不生成自动事件")
 	if mjContext.GetCurState() != majong.StateID_state_waitqiangganghu ||
 		player.GetPlayerId() == mjContext.GetLastGangPlayer() ||
 		len(player.GetHandCards())%3+1 != 2 ||
 		gutils.CheckHasDingQueCard(mjContext, player) ||
 		len(player.GetPossibleActions()) == 0 ||
-		params.AIType == ai.TingAI {
+		gutils.IsTing(player) {
 		return err
 	}
 	return nil

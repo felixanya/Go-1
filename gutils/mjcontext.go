@@ -3,8 +3,6 @@ package gutils
 import (
 	"steve/common/mjoption"
 	majongpb "steve/entity/majong"
-
-	"github.com/Sirupsen/logrus"
 )
 
 // 牌对应都值
@@ -117,11 +115,11 @@ func IsPlayerContinue(playerState majongpb.XingPaiState, mjContext *majongpb.Maj
 	// 麻将不可行牌数组
 	xpOption := mjoption.GetXingpaiOption(int(mjContext.GetXingpaiOptionId()))
 	flag := xpOption.PlayerNoNormalStates&int32(playerState) == 0
-	logrus.WithFields(logrus.Fields{
-		"playerStater":   playerState,
-		"canNotXpStates": xpOption.PlayerNoNormalStates,
-		"isCanXp":        flag,
-	}).Info("判断玩家是否可以继续")
+	//logrus.WithFields(logrus.Fields{
+	//	"playerState":    playerState,
+	//	"canNotXpStates": xpOption.PlayerNoNormalStates,
+	//	"isCanXp":        flag,
+	//}).Info("判断玩家是否可以继续")
 	return flag
 }
 

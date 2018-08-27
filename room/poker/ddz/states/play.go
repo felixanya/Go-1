@@ -4,7 +4,8 @@ import (
 	"steve/entity/poker"
 	"steve/entity/poker/ddz"
 	"steve/room/fixed"
-	"steve/room/flows/ddzflow/machine"
+	. "steve/room/poker"
+	"steve/room/poker/machine"
 
 	"errors"
 	"fmt"
@@ -42,7 +43,7 @@ func (s *playState) OnEvent(m machine.Machine, event machine.Event) (int, error)
 
 	context := getDDZContext(m)
 	playerID := message.GetHead().GetPlayerId()
-	outCards := ToDDZCards(message.GetCards())
+	outCards := ToPokers(message.GetCards())
 	logEntry := logrus.WithField("playerId", playerID).WithField("outCards", outCards)
 
 	//修复玩家有手牌黑桃3时，伪造四个黑桃3能成功出炸弹的问题
@@ -57,7 +58,7 @@ func (s *playState) OnEvent(m machine.Machine, event machine.Event) (int, error)
 	}
 	for card, count := range counts {
 		if count > 1 {
-			msg := fmt.Sprintf("存在重复牌%s", ToDDZCard(card))
+			msg := fmt.Sprintf("存在重复牌%s", ToPoker(card))
 			logEntry.Warnln(msg)
 			sendToPlayer(m, playerID, msgid.MsgID_ROOM_DDZ_PLAY_CARD_RSP, &room.DDZPlayCardRsp{
 				Result: genResult(7, msg),
@@ -121,7 +122,7 @@ func (s *playState) OnEvent(m machine.Machine, event machine.Event) (int, error)
 	}
 	logEntry.Infoln("玩家出牌")
 
-	handCards := ToDDZCards(player.HandCards)
+	handCards := ToPokers(player.HandCards)
 	if !ContainsAll(handCards, outCards) { //检查所出的牌是否在手牌中
 		sendToPlayer(m, playerID, msgid.MsgID_ROOM_DDZ_PLAY_CARD_RSP, &room.DDZPlayCardRsp{
 			Result: genResult(2, "所出的牌不在手牌中"),
@@ -146,7 +147,7 @@ func (s *playState) OnEvent(m machine.Machine, event machine.Event) (int, error)
 		return int(ddz.StateID_state_playing), errors.New("牌型与上家不符")
 	}
 
-	lastPivot := ToDDZCard(context.CardTypePivot)
+	lastPivot := ToPoker(context.CardTypePivot)
 	currPivot := *pivot
 	bigger := false
 	if cardType == poker.CardType_CT_KINGBOMB {
@@ -175,7 +176,7 @@ func (s *playState) OnEvent(m machine.Machine, event machine.Event) (int, error)
 	player.HandCards = ToInts(handCards)
 	player.OutCards = message.GetCards()
 
-	lastOutCards := ToDDZCards(player.AllOutCards)
+	lastOutCards := ToPokers(player.AllOutCards)
 	lastOutCards = append(lastOutCards, outCards...)
 	player.AllOutCards = ToInts(lastOutCards) // for 记牌器
 
