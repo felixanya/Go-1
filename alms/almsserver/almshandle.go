@@ -48,7 +48,7 @@ func HandleGetAlmsReq(playerID uint64, header *steve_proto_gaterpc.Header, req c
 	}
 	version := req.GetVersion() // 版本号
 	// 获取配置用于验证
-	ac, err := data.GetAlmsConfigByPlayerID(playerID)
+	ac, err := data.GetAlmsConfig(playerID)
 	if err != nil {
 		entry.WithError(err).Errorln(fmt.Sprintf("根据玩家ID获取救济金配置失败 playerID(%d)", playerID))
 		response.Result = proto.Bool(false)

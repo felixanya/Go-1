@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"steve/external/configclient"
 
 	"github.com/Sirupsen/logrus"
@@ -61,13 +62,69 @@ func GetPlayerGotTimesByPlayerID(playerID uint64) (int, error) {
 	return dbtimes, nil
 }
 
-//GetAlmsConfigByPlayerID 根据玩家ID获取救济金配置
-func GetAlmsConfigByPlayerID(playerID uint64) (*MyAlmsConfig, error) {
+const (
+	Almsnorm         = "norm"
+	Almsnumber       = "number"
+	Almstimes        = "times"
+	AlmsCountDonw    = "almsCountDonw"
+	DepositCountDonw = "depositCountDonw"
+	Version          = "version"
+)
+
+//InitAlmsConfig 初始话救济金配置
+func InitAlmsConfig() error {
+	// 获取救济金配置
+	almsConfigMap, err := configclient.GetAlmsConfigMap()
+	if err != nil {
+		logrus.WithError(err).Debugln("获取救济金配置失败")
+		return err
+	}
+	if len(almsConfigMap) == 0 {
+		return errors.New("救济金配置为0")
+	}
+	acf := almsConfigMap[0]
+	resultAlmsConfig := &MyAlmsConfig{
+		GetNorm:          int64(acf.GetNorm),
+		GetNumber:        int64(acf.GetNumber),
+		GetTimes:         acf.GetTimes,
+		AlmsCountDonw:    acf.AlmsCountDown,
+		DepositCountDonw: acf.DepositCountDown,
+		Version:          acf.Version,
+	}
+	// 保存
+	return SaveAlmsConfigRedis(resultAlmsConfig)
+}
+
+//SaveAlmsConfigRedis 保存配置到redis
+func SaveAlmsConfigRedis(almsConfig *MyAlmsConfig) error {
+	if almsConfig == nil {
+		logrus.Debugln("save almsConfig 失败  almsConfig eq nil")
+		return fmt.Errorf("save almsConfig 失败  almsConfig eq nil")
+	}
+	fields := make(map[string]interface{})
+	fields[Almsnorm] = almsConfig.GetNorm
+	fields[Almsnumber] = almsConfig.GetNumber
+	fields[Almstimes] = almsConfig.GetTimes
+	fields[AlmsCountDonw] = almsConfig.AlmsCountDonw
+	fields[DepositCountDonw] = almsConfig.DepositCountDonw
+	fields[Version] = almsConfig.Version
+	return SetAlmsConfig(fields, RedisTimeOut)
+}
+
+//GetAlmsConfig 获取救济金配置
+func GetAlmsConfig(playerID uint64) (*MyAlmsConfig, error) {
 	// 获取玩家已经领取次数
 	gotTimes, err := GetPlayerGotTimesByPlayerID(playerID)
 	if err != nil {
 		return nil, err
 	}
+	// 先从redis
+	resultAlmsConfig, err := GetAlmsConfigRedis(Almsnorm, Almsnumber, Almstimes, AlmsCountDonw, DepositCountDonw, Version)
+	if err == nil {
+		resultAlmsConfig.PlayerGotTimes = gotTimes
+		return resultAlmsConfig, nil
+	}
+	logrus.WithError(err).Debugln("GetAlmsConfig redis")
 	// 获取救济金配置
 	almsConfigMap, err := configclient.GetAlmsConfigMap()
 	if err != nil {
@@ -78,7 +135,7 @@ func GetAlmsConfigByPlayerID(playerID uint64) (*MyAlmsConfig, error) {
 		return nil, errors.New("救济金配置为0")
 	}
 	acf := almsConfigMap[0]
-	resultAlmsConfig := &MyAlmsConfig{
+	resultAlmsConfig = &MyAlmsConfig{
 		GetNorm:          int64(acf.GetNorm),
 		GetNumber:        int64(acf.GetNumber),
 		GetTimes:         acf.GetTimes,
@@ -87,5 +144,7 @@ func GetAlmsConfigByPlayerID(playerID uint64) (*MyAlmsConfig, error) {
 		Version:          acf.Version,
 		PlayerGotTimes:   gotTimes,
 	}
+	// 重新保存
+	SaveAlmsConfigRedis(resultAlmsConfig)
 	return resultAlmsConfig, nil
 }

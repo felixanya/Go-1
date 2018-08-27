@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"steve/structs"
+	"strconv"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -12,6 +13,7 @@ import (
 
 const (
 	almsPlayerKey = "almsPlayerID:%v" // 救济玩家对应已经领取的数量
+	almsConfigKey = "almsConfig"      // 救济金配置
 )
 
 var redisClifunc = getAlmsRedis //获取redisClien
@@ -71,6 +73,59 @@ func UpdateAlmsPlayerGotTimes(playerID uint64, val int, date time.Duration) erro
 	if err == redis.TxFailedErr {
 		entry.WithError(err).Errorln("重试")
 		return UpdateAlmsPlayerGotTimes(playerID, val, date)
+	}
+	return nil
+}
+
+//SetAlmsConfig 设置救济金配置
+func SetAlmsConfig(fields map[string]interface{}, date time.Duration) error {
+	redisCli := redisClifunc()
+	key := almsConfigKey
+	status := redisCli.HMSet(key, fields)
+	if status.Err() != nil {
+		return fmt.Errorf("设置失败(%v)", status.Err())
+	}
+	redisCli.Expire(key, date)
+	return nil
+}
+
+//GetAlmsConfigRedis 获取救济金配置
+func GetAlmsConfigRedis(fields ...string) (*MyAlmsConfig, error) {
+	redisCli := redisClifunc()
+	key := almsConfigKey
+	result, err := redisCli.HMGet(key, fields...).Result()
+	if err != nil || len(result) != len(fields) {
+		return nil, fmt.Errorf("获取 redis 结果失败(%s) fields=(%v)", err.Error(), fields)
+	}
+	almsConfig := &MyAlmsConfig{}
+	for index, field := range fields {
+		v, ok := result[index].(string)
+		if !ok {
+			return nil, fmt.Errorf("错误的数据类型。field=(%s) val=(%v)", field, result[index])
+		}
+		setMyAlmsConfiByFiedld(almsConfig, v, field)
+	}
+	return almsConfig, nil
+}
+
+func setMyAlmsConfiByFiedld(almsConfig *MyAlmsConfig, val string, field string) error {
+	newVal, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return err
+	}
+	switch field {
+	case Almsnorm:
+		almsConfig.GetNorm = newVal
+	case Almsnumber:
+		almsConfig.GetNumber = newVal
+	case Almstimes:
+		almsConfig.GetTimes = int(newVal)
+	case AlmsCountDonw:
+		almsConfig.AlmsCountDonw = int(newVal)
+	case DepositCountDonw:
+		almsConfig.DepositCountDonw = int(newVal)
+	case Version:
+		almsConfig.Version = int(newVal)
 	}
 	return nil
 }

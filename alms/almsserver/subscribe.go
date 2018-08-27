@@ -53,7 +53,7 @@ func getPlayerAlmsConfigInfo(playerID uint64) error {
 		logrus.WithError(err).Errorln("判断玩家是否在线")
 		return err
 	}
-	ac, err := data.GetAlmsConfigByPlayerID(playerID)
+	ac, err := data.GetAlmsConfig(playerID)
 	if ac == nil {
 		entry.WithError(err).Errorf("根据玩家ID获取救济金配置失败 playerID(%v)", playerID)
 		return err
