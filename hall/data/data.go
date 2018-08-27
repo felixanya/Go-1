@@ -504,7 +504,7 @@ func CreatePlayer(player db.TPlayer, currency db.TPlayerCurrency, playerpProps [
 	if err != nil || affected == 0 {
 		sql, _ := session.LastSQL()
 		session.Rollback()
-		return fmt.Errorf("insert sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
+		return fmt.Errorf("insert t_player sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
 	}
 	affected, err = session.Insert(&currency)
 	if err != nil || affected == 0 {
@@ -512,11 +512,13 @@ func CreatePlayer(player db.TPlayer, currency db.TPlayerCurrency, playerpProps [
 		session.Rollback()
 		return fmt.Errorf("insert t_player_cuccency error：(%v), sql：(%v)， affect=(%d)", err, sql, affected)
 	}
+
 	affected, err = session.Insert(&playerpProps)
-	if err != nil || affected == 0 {
+	if err != nil || affected != int64(len(playerpProps)) {
 		sql, _ := session.LastSQL()
-		return fmt.Errorf("insert sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
+		return fmt.Errorf("insert t_player_props sql error：(%v)， affect=(%d), sql=(%s)", err, affected, sql)
 	}
+
 	// add Commit() after all actions
 	err = session.Commit()
 	if err != nil {
