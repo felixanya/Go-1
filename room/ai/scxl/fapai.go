@@ -14,8 +14,8 @@ type fapaiStateAI struct {
 
 // GenerateAIEvent 生成 发牌AI 事件
 // 无论是超时、托管还是机器人，发牌发牌动画完成产生相应的事件
-func (f *fapaiStateAI) GenerateAIEvent(params ai.AIEventGenerateParams) (result ai.AIEventGenerateResult, err error) {
-	result, err = ai.AIEventGenerateResult{
+func (f *fapaiStateAI) GenerateAIEvent(params ai.AIParams) (result ai.AIResult, err error) {
+	result, err = ai.AIResult{
 		Events: []ai.AIEvent{},
 	}, nil
 	if params.AIType != ai.RobotAI { //不是机器人不能发送动画完成请求

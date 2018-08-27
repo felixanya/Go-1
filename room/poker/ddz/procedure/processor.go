@@ -4,10 +4,10 @@ import (
 	"steve/client_pb/room"
 	"steve/entity/poker/ddz"
 	"steve/external/hallclient"
-	"steve/room/flows/ddzflow/ddz/ddzmachine"
-	"steve/room/flows/ddzflow/ddz/states"
-	"steve/room/flows/ddzflow/machine"
 	playerpkg "steve/room/player"
+	"steve/room/poker/ddz/ddzmachine"
+	"steve/room/poker/ddz/states"
+	"steve/room/poker/machine"
 	"time"
 
 	"github.com/Sirupsen/logrus"

@@ -6,5 +6,4 @@ type DeskEvent struct {
 	Context     interface{}
 	PlayerID    uint64
 	StateNumber int
-	Desk        *Desk
 }

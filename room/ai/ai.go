@@ -8,6 +8,19 @@ import (
 // AIType AI 类型
 type AIType int
 
+func (ai AIType) String() string {
+	switch ai {
+	case OverTimeAI:
+		return "OverTime"
+	case TuoGuangAI:
+		return "TuoGuan"
+	case RobotAI:
+		return "Robot"
+	default:
+		return "Unknow AI"
+	}
+}
+
 const (
 	// OverTimeAI 超时 AI
 	OverTimeAI AIType = iota
@@ -15,20 +28,10 @@ const (
 	TuoGuangAI
 	// RobotAI 机器人 AI
 	RobotAI
-	// HuAI 胡牌状态下的AI
-	HuAI
-	// TingAI 听状态下的AI
-	TingAI
 )
 
-// PlayerAIInfo 玩家 AI 信息
-type PlayerAIInfo struct {
-	AIType  AIType // AI 类型
-	RobotLv int    // 机器人级别
-}
-
-// AIEventGenerateParams 生成 AI 事件需要的参数
-type AIEventGenerateParams struct {
+// AIParams 生成 AI 事件需要的参数
+type AIParams struct {
 	MajongContext *majong.MajongContext
 	DDZContext    *ddz.DDZContext
 	PlayerID      uint64
@@ -42,16 +45,11 @@ type AIEvent struct {
 	Context interface{}
 }
 
-// AIEventGenerateResult AI 事件生成结果
-type AIEventGenerateResult struct {
+// AIResult AI 事件生成结果
+type AIResult struct {
 	Events []AIEvent
 }
 
-// MajongAI 麻将 AI
-type MajongAI interface {
-	GenerateAIEvent(params AIEventGenerateParams) (AIEventGenerateResult, error)
-}
-
 type CommonAI interface {
-	GenerateAIEvent(params AIEventGenerateParams) (AIEventGenerateResult, error)
+	GenerateAIEvent(params AIParams) (AIResult, error)
 }

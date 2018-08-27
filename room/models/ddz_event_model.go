@@ -10,10 +10,10 @@ import (
 	context2 "steve/room/contexts"
 	"steve/room/desk"
 	"steve/room/fixed"
-	"steve/room/flows/ddzflow/ddz/ddzmachine"
-	"steve/room/flows/ddzflow/ddz/procedure"
-	"steve/room/flows/ddzflow/ddz/states"
 	"steve/room/player"
+	"steve/room/poker/ddz/ddzmachine"
+	"steve/room/poker/ddz/procedure"
+	"steve/room/poker/ddz/states"
 	"steve/structs/proto/gate_rpc"
 	"sync"
 	"time"
@@ -75,7 +75,7 @@ func (model *DDZEventModel) StartProcessEvents() {
 		continueModel := GetContinueModel(model.GetDesk().GetUid())
 		continueModel.ContinueDesk(false, 0, statistics)
 	}()
-	event := desk.DeskEvent{EventID: int(ddz.EventID_event_start_game), EventType: fixed.NormalEvent, Desk: model.GetDesk()}
+	event := desk.DeskEvent{EventID: int(ddz.EventID_event_start_game), EventType: fixed.NormalEvent}
 	model.PushEvent(event)
 }
 
@@ -119,7 +119,7 @@ func (model *DDZEventModel) PushRequest(playerID uint64, head *steve_proto_gater
 		entry.Warningln("没有对应事件")
 		return
 	}
-	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent, Context: eventData, PlayerID: playerID, Desk: model.GetDesk()}
+	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent, Context: eventData, PlayerID: playerID}
 	model.PushEvent(event)
 }
 
@@ -137,7 +137,7 @@ func (model *DDZEventModel) processEvents(ctx context.Context) {
 	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
 	playerEnterChannel := playerModel.getEnterChannel()
 	playerLeaveChannel := playerModel.getLeaveChannel()
-	tick := time.NewTicker(time.Millisecond * 200)
+	tick := time.NewTicker(ai.TickTime)
 	defer tick.Stop()
 
 	for {
@@ -157,6 +157,12 @@ func (model *DDZEventModel) processEvents(ctx context.Context) {
 			}
 		case event := <-model.event:
 			{
+				playerMgr := player.GetPlayerMgr()
+				eventPlayer := playerMgr.GetPlayer(event.PlayerID)
+				if eventPlayer != nil {
+					eventPlayer.CountingDown = false
+				}
+
 				eventContext := model.getEventContext(event)
 				if model.processEvent(event.EventID, eventContext) {
 					return
@@ -170,7 +176,6 @@ func (model *DDZEventModel) processEvents(ctx context.Context) {
 					if model.processEvent(event.EventID, context) {
 						return
 					}
-					model.recordTuoguanOverTimeCount(event)
 				}
 			}
 		}
@@ -398,21 +403,6 @@ func (model *DDZEventModel) getEventContext(event desk.DeskEvent) interface{} {
 	return event.Context
 }
 
-// recordTuoguanOverTimeCount 记录托管超时计数
-func (model *DDZEventModel) recordTuoguanOverTimeCount(event desk.DeskEvent) {
-	if event.EventType != fixed.OverTimeEvent {
-		return
-	}
-	playerID := model.getEventPlayerID(event)
-	if playerID == 0 {
-		return
-	}
-	deskPlayer := player.GetPlayerMgr().GetPlayer(playerID)
-	if deskPlayer != nil {
-		deskPlayer.OnPlayerOverTime()
-	}
-}
-
 func (model *DDZEventModel) getMessageSender() ddzmachine.MessageSender {
 	messageModel := GetModelManager().GetMessageModel(model.GetDesk().GetUid())
 	return func(players []uint64, msgID msgid.MsgID, body proto.Message) error {
@@ -454,7 +444,7 @@ func (model *DDZEventModel) processEvent(eventID int, eventContext interface{}) 
 		go func() {
 			timer := time.NewTimer(result.AutoEventDuration)
 			<-timer.C
-			model.PushEvent(desk.DeskEvent{EventID: result.AutoEventID, EventType: fixed.NormalEvent, Context: result.AutoEventContext, Desk: model.GetDesk()})
+			model.PushEvent(desk.DeskEvent{EventID: result.AutoEventID, EventType: fixed.NormalEvent, Context: result.AutoEventContext})
 		}()
 	}
 	return model.checkGameOver(entry)
@@ -476,23 +466,13 @@ func (model *DDZEventModel) checkGameOver(logEntry *logrus.Entry) bool {
 
 // genTimerEvent 生成计时事件
 func (model *DDZEventModel) genTimerEvent() []desk.DeskEvent {
-	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
 	dContext := model.GetDesk().GetConfig().Context.(*context2.DDZDeskContext)
 	ddzContext := &dContext.DDZContext
 
-	deskPlayers := playerModel.GetDeskPlayers()
-	robotLvs := make(map[uint64]int, len(deskPlayers))
-	for _, deskPlayer := range deskPlayers {
-		robotLv := deskPlayer.GetRobotLv()
-		if robotLv != 0 {
-			robotLvs[deskPlayer.GetPlayerID()] = robotLv
-		}
-	}
 	// 产生AI事件
-	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventGenerateParams{
+	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventParams{
 		Desk:      model.GetDesk(),
 		StartTime: ddzContext.GetStartTime(),
-		RobotLv:   robotLvs,
 	})
 	return result.Events
 }

@@ -9,23 +9,24 @@ import (
 	"steve/room/util"
 	"steve/server_pb/gold"
 	"sync"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/golang/protobuf/proto"
 )
 
 type Player struct {
-	PlayerID    uint64
-	seat        uint32 // 座号
-	ecoin       uint64 // 进牌桌金币数
-	quit        bool   // 是否已经退出牌桌
-	overTime    int    // 超时计数
-	maxOverTime int    // 最大超时次数
-	tuoguan     bool   // 是否在托管中
-	autoHu      bool   // 是否自动胡牌
-	robotLv     int    // 机器人等级
-	brokerCount int    // 破产次数
-	desk        *desk.Desk
+	PlayerID     uint64
+	seat         uint32        // 座号
+	ecoin        uint64        // 进牌桌金币数
+	quit         bool          // 是否已经退出牌桌
+	tuoguan      bool          // 是否在托管中
+	autoHu       bool          // 是否自动胡牌
+	CountingDown bool          // 开始补时倒计时
+	AddTime      time.Duration // 补时时间,毫秒为单位
+	robotLv      int           // 机器人等级
+	brokerCount  int           // 破产次数
+	desk         *desk.Desk
 
 	mu sync.RWMutex
 }
@@ -79,12 +80,6 @@ func (dp *Player) SetEcoin(coin uint64) {
 	dp.ecoin = coin
 }
 
-func (p *Player) SetMaxOverTime(time int) {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	p.maxOverTime = time
-}
-
 func (p *Player) SetRobotLv(lv int) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
@@ -98,20 +93,6 @@ func (p *Player) GetRobotLv() int {
 // IsQuit 是否已经退出
 func (dp *Player) IsQuit() bool {
 	return dp.quit
-}
-
-// OnPlayerOverTime 玩家超时
-func (dp *Player) OnPlayerOverTime() {
-	dp.mu.Lock()
-	defer dp.mu.Unlock()
-	dp.overTime++
-
-	logrus.WithFields(logrus.Fields{"player_id": dp.PlayerID, "over_time_count": dp.overTime}).Debugln("玩家超时")
-
-	if dp.overTime >= dp.maxOverTime && !dp.tuoguan {
-		dp.tuoguan = true
-		dp.notifyTuoguan(dp.PlayerID, true)
-	}
 }
 
 // IsTuoguan 玩家是否在托管中

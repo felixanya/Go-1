@@ -4,7 +4,7 @@ import (
 	"fmt"
 	msgid "steve/client_pb/msgid"
 	"steve/entity/poker/ddz"
-	"steve/room/flows/ddzflow/machine"
+	"steve/room/poker/machine"
 	"time"
 
 	"github.com/golang/protobuf/proto"

@@ -182,7 +182,7 @@ func (mgr *DeskManager) CreateDeskObj(deskID uint64, length int, players []uint6
 	config.PlayerIds = players
 	desk := deskpkg.NewDesk(deskID, gameID, levelID, players, &config)
 
-	player.GetPlayerMgr().InitDeskData(players, 2, robotLvs)
+	player.GetPlayerMgr().InitDeskData(players, robotLvs)
 	player.GetPlayerMgr().BindPlayerRoomAddr(players, gameID, int(levelID))
 	GetModelManager().InitDeskModel(desk.GetUid(), desk.GetConfig().Models, &desk)
 	return &desk, nil

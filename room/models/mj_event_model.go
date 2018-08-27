@@ -59,7 +59,7 @@ func (model *MjEventModel) StartProcessEvents() {
 		continueModel.ContinueDesk(mjContext.GetFixNextBankerSeat(), int(mjContext.GetNextBankerSeat()), statistics)
 	}()
 
-	event := desk.DeskEvent{EventID: int(server_pb.EventID_event_start_game), EventType: fixed.NormalEvent, Desk: model.GetDesk(),
+	event := desk.DeskEvent{EventID: int(server_pb.EventID_event_start_game), EventType: fixed.NormalEvent,
 		StateNumber: model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).StateNumber,
 	}
 	logrus.Debugf("mjContext----------------------(%v)", model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).MjContext.BaseCoin)
@@ -99,7 +99,7 @@ func (model *MjEventModel) pushAutoEvent(autoEvent *server_pb.AutoEvent, stateNu
 		return
 	}
 
-	event := desk.DeskEvent{EventID: int(autoEvent.EventId), EventType: fixed.NormalEvent, Context: autoEvent.EventContext, StateNumber: stateNumber, Desk: model.GetDesk()}
+	event := desk.DeskEvent{EventID: int(autoEvent.EventId), EventType: fixed.NormalEvent, Context: autoEvent.EventContext, StateNumber: stateNumber}
 	model.PushEvent(event)
 }
 
@@ -119,7 +119,7 @@ func (model *MjEventModel) PushRequest(playerID uint64, head *steve_proto_gaterp
 		logEntry.WithError(err).Errorln("消息转事件失败")
 		return
 	}
-	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent, Desk: model.GetDesk(),
+	event := desk.DeskEvent{EventID: eventID, EventType: fixed.NormalEvent,
 		StateNumber: model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext).StateNumber,
 		Context:     eventContext,
 		PlayerID:    playerID,
@@ -144,7 +144,7 @@ func (model *MjEventModel) processEvents(ctx context.Context) {
 	playerModel := GetModelManager().GetPlayerModel(model.GetDesk().GetUid())
 	playerEnterChannel := playerModel.getEnterChannel()
 	playerLeaveChannel := playerModel.getLeaveChannel()
-	tick := time.NewTicker(time.Millisecond * 200)
+	tick := time.NewTicker(ai.TickTime)
 	defer tick.Stop()
 
 	for {
@@ -164,6 +164,12 @@ func (model *MjEventModel) processEvents(ctx context.Context) {
 			}
 		case event := <-model.event:
 			{
+				playerMgr := player.GetPlayerMgr()
+				eventPlayer := playerMgr.GetPlayer(event.PlayerID)
+				if eventPlayer != nil {
+					eventPlayer.CountingDown = false
+				}
+
 				mjContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext)
 				stateNumber := event.StateNumber
 				context := event.Context
@@ -182,7 +188,6 @@ func (model *MjEventModel) processEvents(ctx context.Context) {
 					if model.processEvent(event.EventID, context) {
 						return
 					}
-					model.recordTuoguanOverTimeCount(event)
 				}
 			}
 		}
@@ -307,25 +312,6 @@ func (model *MjEventModel) handlePlayerLeave(leaveInfo playerIDWithChannel) {
 	close(leaveInfo.finishChannel)
 }
 
-// recordTuoguanOverTimeCount 记录托管超时计数
-func (model *MjEventModel) recordTuoguanOverTimeCount(event desk.DeskEvent) {
-	if event.EventType != fixed.OverTimeEvent {
-		return
-	}
-	playerID := event.PlayerID
-	if playerID == 0 {
-		return
-	}
-	id := event.EventID
-	if id == int(server_pb.EventID_event_huansanzhang_request) || id == int(server_pb.EventID_event_dingque_request) {
-		return
-	}
-	deskPlayer := player.GetPlayerMgr().GetPlayer(playerID)
-	if deskPlayer != nil {
-		deskPlayer.OnPlayerOverTime()
-	}
-}
-
 // processEvent 处理单个事件
 // step 1. 调用麻将逻辑的接口来处理事件(返回最新麻将现场, 自动事件， 发送给玩家的消息)， 并且更新 mjContext
 // step 2. 将消息发送给玩家
@@ -445,19 +431,9 @@ func needCompareStateNumber(event *desk.DeskEvent) bool {
 func (model *MjEventModel) genTimerEvent() []desk.DeskEvent {
 	// 先将 context 指针读出来拷贝， 后面的 context 修改都会分配一块新的内存
 	dContext := model.GetDesk().GetConfig().Context.(*context2.MajongDeskContext)
-
-	deskPlayers := GetModelManager().GetPlayerModel(model.GetDesk().GetUid()).GetDeskPlayers()
-	robotLvs := make(map[uint64]int, len(deskPlayers))
-	for _, deskPlayer := range deskPlayers {
-		robotLv := deskPlayer.GetRobotLv()
-		if robotLv != 0 {
-			robotLvs[deskPlayer.GetPlayerID()] = robotLv
-		}
-	}
-	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventGenerateParams{
+	result := ai.GetAtEvent().GenerateV2(&ai.AutoEventParams{
 		Desk:      model.GetDesk(),
 		StartTime: dContext.StateTime,
-		RobotLv:   robotLvs,
 	})
 	return result.Events
 }
